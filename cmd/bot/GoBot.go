@@ -4,21 +4,12 @@ import (
 	"fmt"
 	"github.com/go-telegram-bot-api/telegram-bot-api"
 	"log"
-	"gopkg.in/ini.v1"
 )
 
 func main() {
 	fmt.Println("Bot initializing")
-	cfg, err := ini.Load("cfg/bot.ini")
-	if err != nil {
-		log.Printf("Config loading error >>> %v\n", err)
-	}
-	token := cfg.Section("privacy").Key("token").String()
 
-	bot, err := tgbotapi.NewBotAPI(token)
-	if err != nil {
-		log.Panic(err)
-	}
+	bot := NewBot()
 
 	bot.Debug = true
 
@@ -27,7 +18,7 @@ func main() {
 	updateMsg := tgbotapi.NewUpdate(0)
 	updateMsg.Timeout = 20
 
-	updates, err := bot.GetUpdatesChan(updateMsg)
+	updates, _:= bot.GetUpdatesChan(updateMsg)
 
 	for update := range updates {
 		if update.Message == nil {

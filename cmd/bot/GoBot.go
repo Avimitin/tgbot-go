@@ -18,32 +18,21 @@ func main() {
 	updateMsg := tgbotapi.NewUpdate(0)
 	updateMsg.Timeout = 20
 
-	updates, _:= bot.GetUpdatesChan(updateMsg)
+	updates, err := bot.GetUpdatesChan(updateMsg)
+
+	if err != nil {
+		log.Printf("Some error occur when getting update.\nDescriptions: %v", err)
+	}
 
 	for update := range updates {
+
 		if update.Message == nil {
 			continue
 		}
 
 		log.Printf("[%s] %s", update.Message.From.UserName, update.Message.Text)
 		if update.Message.IsCommand() {
-			msg := tgbotapi.NewMessage(update.Message.Chat.ID, "")
-			switch update.Message.Command() {
-			case "start":
-				msg.Text = "echo start."
-			case "about":
-				msg.Text = "I am a bot written by Golang."
-			case "help":
-				msg.Text = "Now I only have\n\n" +
-							"/start  -------  For starting me\n\n" +
-							"/about  -------  Information about me\n\n" +
-							"/help   -------  Get some help information\n\n"
-			default:
-				msg.Text = "I Don't know about this command."
-			}
-
-			bot.Send(msg)
+			COMMAND[update.Message.Command()](bot, update.Message)
 		}
-
 	}
 }

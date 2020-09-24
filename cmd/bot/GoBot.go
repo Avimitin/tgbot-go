@@ -38,7 +38,8 @@ func main() {
 
 				if err != nil {
 					msg := tgbotapi.NewMessage(update.Message.Chat.ID, fmt.Sprintf(
-						"Some error happen when sending message. \nDescriptions: %v", err))
+						"<b>Some error happen when sending message.</b> \n\nDescriptions: \n\n<code>%v</code>", err))
+					msg.ParseMode = "HTML"
 					_, _ = bot.Send(msg)
 				}
 			}

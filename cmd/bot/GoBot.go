@@ -32,7 +32,16 @@ func main() {
 
 		log.Printf("[%s] %s", update.Message.From.UserName, update.Message.Text)
 		if update.Message.IsCommand() {
-			COMMAND[update.Message.Command()](bot, update.Message)
+			cmd, hasElem := COMMAND[update.Message.Command()]
+			if hasElem {
+				_, err := cmd(bot, update.Message)
+
+				if err != nil {
+					msg := tgbotapi.NewMessage(update.Message.Chat.ID, fmt.Sprintf(
+						"Some error happen when sending message. \nDescriptions: %v", err))
+					_, _ = bot.Send(msg)
+				}
+			}
 		}
 	}
 }

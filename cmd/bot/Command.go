@@ -2,8 +2,10 @@ package main
 
 import (
 	"fmt"
+	"github.com/Avimitin/go-bot/utils/modules/hardwareInfo"
 	"github.com/Avimitin/go-bot/utils/modules/timer"
 	"github.com/go-telegram-bot-api/telegram-bot-api"
+	"strings"
 )
 
 type SendMethod func(bot *tgbotapi.BotAPI, message *tgbotapi.Message) (m tgbotapi.Message, err error)
@@ -12,6 +14,7 @@ var COMMAND = map[string]SendMethod{
 	"start": start,
 	"help":  help,
 	"ping":  ping,
+	"sysinfo": sysInfo,
 }
 
 func start(bot *tgbotapi.BotAPI, message *tgbotapi.Message) (m tgbotapi.Message, err error) {
@@ -54,4 +57,34 @@ func ping(bot *tgbotapi.BotAPI, message *tgbotapi.Message) (m tgbotapi.Message, 
 		response, err = bot.Send(newMsg)
 	}
 	return response, err
+}
+
+
+func sysInfo(bot *tgbotapi.BotAPI, message *tgbotapi.Message) (m tgbotapi.Message, err error) {
+	args := strings.Fields(message.Text)
+	var text string
+
+	if len(args) != 3 {
+		text = "请输入正确的参数数量！"
+	} else {
+		switch args[1] {
+		case "cpu":
+			switch args[2] {
+			case "model":
+				text, _ = hardwareInfo.GetCpuModel()
+			case "percent":
+				text, _ = hardwareInfo.GetCpuPercent()
+			case "load":
+				text, _ = hardwareInfo.GetCpuLoad()
+			default:
+				text = "未知参数。"
+			}
+		default:
+			text = "未知参数。"
+		}
+	}
+
+	msg := tgbotapi.NewMessage(message.Chat.ID, text)
+	m, err = bot.Send(msg)
+	return m, err
 }

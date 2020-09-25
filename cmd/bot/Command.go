@@ -79,6 +79,16 @@ func sysInfo(bot *tgbotapi.BotAPI, message *tgbotapi.Message) (m tgbotapi.Messag
 			default:
 				text = "未知参数。"
 			}
+		case "disk":
+			switch args[2] {
+			case "stats":
+				text , _ = hardwareInfo.GetDiskUsage("\\")
+			default:
+				text , err = hardwareInfo.GetDiskUsage(args[2])
+				if err != nil {
+					text += fmt.Sprintf("\nDescriptions: %v", err)
+				}
+			}
 		default:
 			text = "未知参数。"
 		}

@@ -5,6 +5,7 @@ import (
 	"github.com/shirou/gopsutil/cpu"
 	"github.com/shirou/gopsutil/disk"
 	"github.com/shirou/gopsutil/load"
+	"github.com/shirou/gopsutil/mem"
 	"time"
 )
 
@@ -51,4 +52,13 @@ func GetDiskUsage(path string) (string, error) {
 		"DiskPath: %v\nTotal: %v GB\nFree: %v GB\nUsed: %v GB\nPercent: %.2f %%",
 		usageStat.Path, usageStat.Total/1000000000, usageStat.Free/1000000000, usageStat.Used/1000000000, usageStat.UsedPercent),
 		nil
+}
+
+func GetMemUsage() (string, error) {
+	swapMem, err := mem.VirtualMemory()
+	if err != nil { return "Fail loading.", err }
+
+	return fmt.Sprintf("Total: %v GB\nFree: %v GB\nUsed: %v GB\nPercent: %.2f %%",
+		swapMem.Total/1000000000, swapMem.Free/1000000000, swapMem.Used/1000000000, swapMem.UsedPercent),
+	nil
 }

@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"github.com/Avimitin/go-bot/cmd/bot/internal/auth"
 	"github.com/Avimitin/go-bot/utils/modules/hardwareInfo"
 	"github.com/Avimitin/go-bot/utils/modules/timer"
 	"github.com/go-telegram-bot-api/telegram-bot-api"
@@ -61,6 +62,12 @@ func ping(bot *tgbotapi.BotAPI, message *tgbotapi.Message) (m tgbotapi.Message, 
 
 
 func sysInfo(bot *tgbotapi.BotAPI, message *tgbotapi.Message) (m tgbotapi.Message, err error) {
+	if !auth.IsCreator(message.From.ID) {
+		msg := tgbotapi.NewMessage(message.Chat.ID, "您无权使用该命令。")
+		m, err = bot.Send(msg)
+		return m, err
+	}
+
 	args := strings.Fields(message.Text)
 	var text string
 
@@ -77,7 +84,7 @@ func sysInfo(bot *tgbotapi.BotAPI, message *tgbotapi.Message) (m tgbotapi.Messag
 			case "load":
 				text, _ = hardwareInfo.GetCpuLoad()
 			default:
-				text = "未知参数。"
+				text = "未知参数。你是不是想说： /sysinfo cpu percent ?"
 			}
 		case "disk":
 			switch args[2] {
@@ -86,9 +93,18 @@ func sysInfo(bot *tgbotapi.BotAPI, message *tgbotapi.Message) (m tgbotapi.Messag
 			default:
 				text , err = hardwareInfo.GetDiskUsage(args[2])
 				if err != nil {
-					text += fmt.Sprintf("\nDescriptions: %v", err)
+					text += fmt.Sprintf("\n错误: %v", err)
 				}
 			}
+
+		case "mem":
+			switch args[2] {
+			case "stats":
+				text, _ = hardwareInfo.GetMemUsage()
+			default:
+				text = "未知参数，你是不是想说： /sysinfo mem stats ?"
+			}
+
 		default:
 			text = "未知参数。"
 		}

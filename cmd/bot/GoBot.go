@@ -32,17 +32,21 @@ func main() {
 
 		log.Printf("[%s] %s", update.Message.From.UserName, update.Message.Text)
 		if update.Message.IsCommand() {
-			cmd, hasElem := COMMAND[update.Message.Command()]
-			if hasElem {
-				_, err := cmd(bot, update.Message)
+			go commandHandler(bot, update.Message)
+		}
+	}
+}
 
-				if err != nil {
-					msg := tgbotapi.NewMessage(update.Message.Chat.ID, fmt.Sprintf(
-						"<b>Some error happen when sending message.</b> \n\nDescriptions: \n\n<code>%v</code>", err))
-					msg.ParseMode = "HTML"
-					_, _ = bot.Send(msg)
-				}
-			}
+func commandHandler(bot *tgbotapi.BotAPI, message *tgbotapi.Message) {
+	cmd, hasElem := COMMAND[message.Command()]
+	if hasElem {
+		_, err := cmd(bot, message)
+
+		if err != nil {
+			msg := tgbotapi.NewMessage(message.Chat.ID, fmt.Sprintf(
+				"<b>Some error happen when sending message.</b> \n\nDescriptions: \n\n<code>%v</code>", err))
+			msg.ParseMode = "HTML"
+			_, _ = bot.Send(msg)
 		}
 	}
 }

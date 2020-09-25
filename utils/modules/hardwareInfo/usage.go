@@ -3,6 +3,7 @@ package hardwareInfo
 import (
 	"fmt"
 	"github.com/shirou/gopsutil/cpu"
+	"github.com/shirou/gopsutil/disk"
 	"github.com/shirou/gopsutil/load"
 	"time"
 )
@@ -26,9 +27,7 @@ func GetCpuModel() (string, error) {
 func GetCpuPercent() (string, error) {
 	percents, err := cpu.Percent(time.Second, true)
 
-	if err != nil {
-		return "Fail loading.", err
-	}
+	if err != nil { return "Fail loading.", err }
 
 	var eachCPUInfo string
 	for id, percent := range percents {
@@ -40,5 +39,16 @@ func GetCpuPercent() (string, error) {
 
 func GetCpuLoad() (string, error) {
 	info, err := load.Avg()
+	if err != nil { return "Fail loading.", err }
 	return fmt.Sprintf("CPU Load: %v", info), err
+}
+
+func GetDiskUsage(path string) (string, error) {
+	usageStat, err := disk.Usage(path)
+	if err != nil { return "Fail loading.", err }
+
+	return fmt.Sprintf(
+		"DiskPath: %v\nTotal: %v GB\nFree: %v GB\nUsed: %v GB\nPercent: %.2f %%",
+		usageStat.Path, usageStat.Total/1000000000, usageStat.Free/1000000000, usageStat.Used/1000000000, usageStat.UsedPercent),
+		nil
 }

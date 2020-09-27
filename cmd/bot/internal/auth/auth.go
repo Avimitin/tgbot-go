@@ -1,24 +1,28 @@
 package auth
 
 import (
-	"fmt"
 	"gopkg.in/yaml.v2"
 	"io/ioutil"
 )
 
-var creator int
-
-func Init(filepath string) error {
-	file, err := ioutil.ReadFile(filepath)
-	if err != nil {
-		return err
-	}
-	m := make(map[interface{}]interface{})
-	err = yaml.Unmarshal(file, &m)
-	fmt.Printf("m: %v", m)
-	return nil
+type config struct {
+	creator int
+	groups []int
 }
 
-func IsCreator(uid int) bool {
-	return uid == creator
+func Init(cfg *config,filepath string) error {
+	file, err := ioutil.ReadFile(filepath)
+	if err != nil { return err }
+	return yaml.Unmarshal(file, cfg)
+}
+
+func IsCreator(cfg config, uid int) bool {
+	return uid == cfg.creator
+}
+
+func IsAuthGroups(cfg config, gid int) bool {
+	for authGid := range cfg.groups {
+		if gid == authGid { return true }
+	}
+	return false
 }

@@ -7,7 +7,7 @@ import (
 
 type Config struct {
 	LOADED		bool		`yaml:"LOADED"`
-	Groups   	[]int		`yaml:"groups"`
+	Groups   	[]int64		`yaml:"groups"`
 	BotToken 	string		`yaml:"bot_token"`
 }
 

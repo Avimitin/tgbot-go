@@ -1,4 +1,4 @@
-package main
+package bot
 
 import (
 	"fmt"
@@ -62,7 +62,7 @@ func ping(bot *tgbotapi.BotAPI, message *tgbotapi.Message) (m tgbotapi.Message, 
 
 
 func sysInfo(bot *tgbotapi.BotAPI, message *tgbotapi.Message) (m tgbotapi.Message, err error) {
-	if !auth.IsCreator(message.From.ID) {
+	if !auth.IsCreator(CREATOR, message.From.ID) {
 		msg := tgbotapi.NewMessage(message.Chat.ID, "您无权使用该命令。")
 		m, err = bot.Send(msg)
 		return m, err

@@ -7,7 +7,7 @@ import (
 )
 
 const (
-	VERSION = 0.01
+	VERSION = "0.0.1"
 	CREATOR = 649191333
 )
 
@@ -39,6 +39,16 @@ func Run() {
 		}
 
 		log.Printf("[%s] %s", update.Message.From.UserName, update.Message.Text)
+
+		if update.Message.Chat.Type == "supergroup" && !cfg.IsAuthGroups(update.Message.Chat.ID) {
+			msg := tgbotapi.NewMessage(update.Message.Chat.ID, "你们这啥群啊，别乱拉人，爬爬爬！")
+			_, err := bot.Send(msg)
+			if err != nil { log.Printf("[ERROR] %s", err) }
+
+			_, err = bot.LeaveChat(update.Message.Chat.ChatConfig())
+			if err != nil { log.Printf("[ERROR] %s", err) }
+		}
+
 		if update.Message.IsCommand() {
 			go commandHandler(update.Message)
 		}

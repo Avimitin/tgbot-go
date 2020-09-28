@@ -1,4 +1,4 @@
-package main
+package bot
 
 import (
 	"fmt"
@@ -6,10 +6,18 @@ import (
 	"log"
 )
 
-func main() {
-	fmt.Println("Bot initializing")
+const (
+	VERSION = 0.01
+	CREATOR = 649191333
+)
 
-	bot := NewBot()
+var (
+	cfg = NewCFG()
+	bot = NewBot(cfg.BotToken)
+)
+
+func Run() {
+	fmt.Printf("Bot initializing... Version: %v\n", VERSION)
 
 	bot.Debug = true
 
@@ -32,12 +40,12 @@ func main() {
 
 		log.Printf("[%s] %s", update.Message.From.UserName, update.Message.Text)
 		if update.Message.IsCommand() {
-			go commandHandler(bot, update.Message)
+			go commandHandler(update.Message)
 		}
 	}
 }
 
-func commandHandler(bot *tgbotapi.BotAPI, message *tgbotapi.Message) {
+func commandHandler(message *tgbotapi.Message) {
 	cmd, hasElem := COMMAND[message.Command()]
 	if hasElem {
 		_, err := cmd(bot, message)

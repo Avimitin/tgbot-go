@@ -6,6 +6,7 @@ import (
 	"github.com/Avimitin/go-bot/utils/modules/hardwareInfo"
 	"github.com/Avimitin/go-bot/utils/modules/timer"
 	"github.com/go-telegram-bot-api/telegram-bot-api"
+	"strconv"
 	"strings"
 )
 
@@ -16,6 +17,8 @@ var COMMAND = map[string]SendMethod{
 	"help":  help,
 	"ping":  ping,
 	"sysinfo": sysInfo,
+	"authgroups": authGroups,
+	"ver": ver,
 }
 
 func start(bot *tgbotapi.BotAPI, message *tgbotapi.Message) (m tgbotapi.Message, err error) {
@@ -71,8 +74,8 @@ func sysInfo(bot *tgbotapi.BotAPI, message *tgbotapi.Message) (m tgbotapi.Messag
 	args := strings.Fields(message.Text)
 	var text string
 
-	if len(args) != 3 {
-		text = "请输入正确的参数数量！"
+	if length := len(args); length != 3 {
+		text = fmt.Sprintf("请输入正确的参数数量！只需要2个参数但是捕获到%d", length)
 	} else {
 		switch args[1] {
 		case "cpu":
@@ -113,4 +116,38 @@ func sysInfo(bot *tgbotapi.BotAPI, message *tgbotapi.Message) (m tgbotapi.Messag
 	msg := tgbotapi.NewMessage(message.Chat.ID, text)
 	m, err = bot.Send(msg)
 	return m, err
+}
+
+func authGroups (bot *tgbotapi.BotAPI, message *tgbotapi.Message) (m tgbotapi.Message, err error) {
+	if !auth.IsCreator(CREATOR, message.From.ID) {
+		msg := tgbotapi.NewMessage(message.Chat.ID, "您无权使用该命令。")
+		m, err = bot.Send(msg)
+		return m, err
+	}
+	var text string
+
+	args := strings.Fields(message.Text)
+	if length := len(args); length != 3 {
+		text = fmt.Sprintf("请输入正确的参数数量！只需要2个参数但是捕获到%d", length)
+	}
+
+	switch args[1] {
+	case "add":
+		chatID, err := strconv.ParseInt(args[2], 20, 64)
+		if err != nil { text = fmt.Sprintf("参数出错了！\n错误：%s", err)}
+		newAuthGroups := append(cfg.Groups, chatID)
+		cfg.Groups = newAuthGroups
+		err = cfg.SaveConfig("F:\\go-bot\\cfg\\auth.yml")
+		if err != nil { text = fmt.Sprintf("保存出错了！\n错误：%s", err)}
+	default:
+		text = "未知参数，您可以输入： /authgroups add 123 增加认证或 /authgroups del 123 删除群组"
+	}
+
+	msg := tgbotapi.NewMessage(message.Chat.ID, text)
+	return bot.Send(msg)
+}
+
+func ver (bot *tgbotapi.BotAPI, message *tgbotapi.Message) (tgbotapi.Message, error) {
+	msg := tgbotapi.NewMessage(message.Chat.ID, fmt.Sprintf("当前版本：%s", VERSION))
+	return bot.Send(msg)
 }

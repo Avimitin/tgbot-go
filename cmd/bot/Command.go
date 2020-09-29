@@ -19,6 +19,7 @@ var COMMAND = map[string]SendMethod{
 	"sysinfo": sysInfo,
 	"authgroups": authGroups,
 	"ver": ver,
+	"dump": dump,
 }
 
 func start(bot *tgbotapi.BotAPI, message *tgbotapi.Message) (m tgbotapi.Message, err error) {
@@ -149,5 +150,57 @@ func authGroups (bot *tgbotapi.BotAPI, message *tgbotapi.Message) (m tgbotapi.Me
 
 func ver (bot *tgbotapi.BotAPI, message *tgbotapi.Message) (tgbotapi.Message, error) {
 	msg := tgbotapi.NewMessage(message.Chat.ID, fmt.Sprintf("当前版本：%s", VERSION))
+	return bot.Send(msg)
+}
+
+func dump (bot *tgbotapi.BotAPI, message *tgbotapi.Message) (tgbotapi.Message, error) {
+	var text string
+	if reply := message.ReplyToMessage; reply != nil {
+		text = fmt.Sprintf(
+			"<b>Reply To Message Info</b>\n"+
+			"|==<b>DATE</b>\n" +
+			"|====%v\n" +
+			"|==<b>CHAT</b>\n" +
+			"|====<b>ID:</b> <code>%v</code>\n" +
+			"|====<b>TYPE:</b> <code>%v</code>\n" +
+			"|====<b>USERNAME:</b> <code>%v</code>\n" +
+			"|==<b>USER</b>\n" +
+			"|====<b>ID:</b> <code>%v</code>\n" +
+			"|====<b>USERNAME:</b> <code>%v</code>\n" +
+			"|====<b>NICKNAME:</b> <code>%v %v</code>\n" +
+			"|====<b>LANGUAGE:</b> <code>%v</code>\n" +
+			"|==<b>MSG</b>\n" +
+			"|====<b>ID:</b> <code>%v</code>\n" +
+			"|====<b>TEXT:</b> %v",
+			timer.UnixToString(int64(reply.Date)),
+			reply.Chat.ID, reply.Chat.Type, reply.Chat.UserName,
+			reply.From.ID, reply.From.UserName, reply.From.FirstName, reply.From.LastName, reply.From.LanguageCode,
+			reply.MessageID, reply.Text)
+	} else {
+		text = fmt.Sprintf(
+			"<b>Info</b>\n"+
+				"|==<b>DATE</b>\n"+
+				"|====%v\n"+
+				"|==<b>CHAT</b>\n"+
+				"|====<b>ID:</b> <code>%v</code>\n"+
+				"|====<b>TYPE:</b> <code>%v</code>\n"+
+				"|====<b>USERNAME:</b> <code>%v</code>\n"+
+				"|==<b>USER</b>\n"+
+				"|====<b>ID:</b> <code>%v</code>\n"+
+				"|====<b>USERNAME:</b> <code>%v</code>\n"+
+				"|====<b>NICKNAME:</b> <code>%v %v</code>\n"+
+				"|====<b>LANGUAGE:</b> <code>%v</code>\n"+
+				"|==<b>MSG</b>\n"+
+				"|====<b>ID:</b> <code>%v</code>\n"+
+				"|====<b>TEXT:</b> %v",
+			timer.UnixToString(int64(message.Date)),
+			message.Chat.ID, message.Chat.Type, message.Chat.UserName,
+			message.From.ID, message.From.UserName, message.From.FirstName, message.From.LastName, message.From.LanguageCode,
+			message.MessageID, message.Text)
+	}
+
+	msg := tgbotapi.NewMessage(message.Chat.ID, text)
+	msg.ParseMode = "HTML"
+	msg.DisableWebPagePreview = true
 	return bot.Send(msg)
 }

@@ -3,6 +3,7 @@ package bot
 import (
 	"fmt"
 	"github.com/Avimitin/go-bot/cmd/bot/internal/auth"
+	"github.com/Avimitin/go-bot/cmd/bot/internal/manage"
 	"github.com/Avimitin/go-bot/utils/modules/hardwareInfo"
 	"github.com/Avimitin/go-bot/utils/modules/timer"
 	"github.com/go-telegram-bot-api/telegram-bot-api"
@@ -20,6 +21,7 @@ var COMMAND = map[string]SendMethod{
 	"authgroups": authGroups,
 	"ver": ver,
 	"dump": dump,
+	"kick": kick,
 }
 
 func start(bot *tgbotapi.BotAPI, message *tgbotapi.Message) (m tgbotapi.Message, err error) {
@@ -76,7 +78,7 @@ func sysInfo(bot *tgbotapi.BotAPI, message *tgbotapi.Message) (m tgbotapi.Messag
 	var text string
 
 	if length := len(args); length != 3 {
-		text = fmt.Sprintf("请输入正确的参数数量！只需要2个参数但是捕获到%d", length)
+		text = fmt.Sprintf("请输入正确的参数数量！只需要2个参数但是捕获到%d", length-1)
 	} else {
 		switch args[1] {
 		case "cpu":
@@ -129,7 +131,7 @@ func authGroups (bot *tgbotapi.BotAPI, message *tgbotapi.Message) (m tgbotapi.Me
 
 	args := strings.Fields(message.Text)
 	if length := len(args); length != 3 {
-		text = fmt.Sprintf("请输入正确的参数数量！只需要2个参数但是捕获到%d", length)
+		text = fmt.Sprintf("请输入正确的参数数量！只需要2个参数但是捕获到%d", length-1)
 	}
 
 	switch args[1] {
@@ -202,5 +204,40 @@ func dump (bot *tgbotapi.BotAPI, message *tgbotapi.Message) (tgbotapi.Message, e
 	msg := tgbotapi.NewMessage(message.Chat.ID, text)
 	msg.ParseMode = "HTML"
 	msg.DisableWebPagePreview = true
+	return bot.Send(msg)
+}
+
+func kick(bot *tgbotapi.BotAPI, message *tgbotapi.Message) (tgbotapi.Message, error) {
+	var msg tgbotapi.MessageConfig
+	isAdmin, err := auth.IsAdmin(message.From.ID, bot, message.Chat)
+	// acquire admins list
+	if err != nil {
+		msg = tgbotapi.NewMessage(message.Chat.ID, fmt.Sprintf("在获取管理员列表时发生了一些错误：%v", err))
+		return bot.Send(msg)
+	}
+	// check if the command caller is admin or not
+	if !isAdmin {
+		msg = tgbotapi.NewMessage(message.Chat.ID, "你没有权限，不许乱碰！")
+		return bot.Send(msg)
+	}
+	// see if it's use for reply or just user id
+	if reply := message.ReplyToMessage; reply != nil {
+		args := strings.Fields(message.Text)
+		switch len(args) {
+		case 1:
+			return manage.KickUser(bot, reply.From.ID, reply.Chat.ID, 0)
+		case 2:
+			if date, err := strconv.ParseInt(args[1], 10, 64); err == nil {
+				return manage.KickUser(bot, reply.From.ID, reply.Chat.ID, date)
+			}
+			msg = tgbotapi.NewMessage(reply.Chat.ID, "参数错误！")
+			return bot.Send(msg)
+		default:
+			msg = tgbotapi.NewMessage(reply.Chat.ID, fmt.Sprintf("请输入正确的参数数量: 需要0或1个参数但得到了 %v 个参数", len(args)-1))
+			return bot.Send(msg)
+		}
+	}
+
+	msg = tgbotapi.NewMessage(message.Chat.ID, "请回复一名用户的信息来踢出他")
 	return bot.Send(msg)
 }

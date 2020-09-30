@@ -22,6 +22,7 @@ var COMMAND = map[string]SendMethod{
 	"ver": ver,
 	"dump": dump,
 	"kick": kick,
+	"shutup": shutUp,
 }
 
 func start(bot *tgbotapi.BotAPI, message *tgbotapi.Message) (m tgbotapi.Message, err error) {
@@ -227,8 +228,8 @@ func kick(bot *tgbotapi.BotAPI, message *tgbotapi.Message) (tgbotapi.Message, er
 		case 1:
 			return manage.KickUser(bot, reply.From.ID, reply.Chat.ID, 0)
 		case 2:
-			if date, err := strconv.ParseInt(args[1], 10, 64); err == nil {
-				return manage.KickUser(bot, reply.From.ID, reply.Chat.ID, date)
+			if time, err := strconv.ParseInt(args[1], 10, 64); err == nil {
+				return manage.KickUser(bot, reply.From.ID, reply.Chat.ID, time)
 			}
 			msg = tgbotapi.NewMessage(reply.Chat.ID, "参数错误！")
 			return bot.Send(msg)
@@ -240,4 +241,48 @@ func kick(bot *tgbotapi.BotAPI, message *tgbotapi.Message) (tgbotapi.Message, er
 
 	msg = tgbotapi.NewMessage(message.Chat.ID, "请回复一名用户的信息来踢出他")
 	return bot.Send(msg)
+}
+
+func shutUp(bot *tgbotapi.BotAPI, message *tgbotapi.Message) (tgbotapi.Message, error) {
+	var msg tgbotapi.MessageConfig
+	isAdmin, err := auth.IsAdmin(message.From.ID, bot, message.Chat)
+	// acquire admins list
+	if err != nil {
+		msg = tgbotapi.NewMessage(message.Chat.ID, fmt.Sprintf("在获取管理员列表时发生了一些错误：%v", err))
+		return bot.Send(msg)
+	}
+	// check if the command caller is reply to someone or not
+	if reply := message.ReplyToMessage; reply != nil {
+		// check permission
+		if !isAdmin {
+			msg = tgbotapi.NewMessage(message.Chat.ID, "你没有权限，不许乱碰！")
+			return bot.Send(msg)
+		}
+		// check arguments
+		args := strings.Fields(message.Text)
+		if len(args) == 1 {
+			until, _ :=  timer.CalcTime(180, "s")
+			return manage.ShutTheMouseUp(bot, message.Chat.ID, reply.From.ID, until, false)
+		} else if len(args) == 2 {
+			unit := args[1][len(args[1])-2:]
+			addStr := args[1][:len(args[1])-1]
+
+			add, err := strconv.ParseInt(addStr, 10, 64)
+			if err != nil {
+				msg = tgbotapi.NewMessage(message.Chat.ID, fmt.Sprintf("参数错误：%v", err))
+				return bot.Send(msg)
+			}
+			until, err := timer.CalcTime(add, unit)
+			if err != nil {
+				msg = tgbotapi.NewMessage(message.Chat.ID, fmt.Sprintf("参数错误：%v", err))
+				return bot.Send(msg)
+			}
+			return manage.ShutTheMouseUp(bot, message.Chat.ID, reply.From.ID, until, false)
+		}
+
+		msg = tgbotapi.NewMessage(message.Chat.ID, fmt.Sprintf("参数过多：需要0或1个参数但是得到了 %d 个参数", len(args)))
+	}
+
+	until := timer.AddRandTimeFromNow()
+	return manage.ShutTheMouseUp(bot, message.Chat.ID, message.From.ID, until, false)
 }

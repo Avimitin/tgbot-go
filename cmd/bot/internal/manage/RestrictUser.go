@@ -2,8 +2,10 @@ package manage
 
 import (
 	"fmt"
+	"github.com/Avimitin/go-bot/cmd/bot/internal/tools"
 	"github.com/Avimitin/go-bot/utils/modules/timer"
 	tgbot "github.com/go-telegram-bot-api/telegram-bot-api"
+	"time"
 )
 
 func ShutTheMouseUp(bot *tgbot.BotAPI, cid int64, uid int, until int64, canSendMessages bool) (tgbot.Message, error) {
@@ -12,29 +14,34 @@ func ShutTheMouseUp(bot *tgbot.BotAPI, cid int64, uid int, until int64, canSendM
 			ChatID: cid,
 			UserID: uid,
 		},
-		CanSendMessages: &canSendMessages,
-		CanSendMediaMessages: &canSendMessages,
+		CanSendMessages:       &canSendMessages,
+		CanSendMediaMessages:  &canSendMessages,
 		CanAddWebPagePreviews: &canSendMessages,
-		CanSendOtherMessages: &canSendMessages,
-		UntilDate: until,
+		CanSendOtherMessages:  &canSendMessages,
+		UntilDate:             until,
 	}
 	_, err := bot.RestrictChatMember(user)
-
-	var msg tgbot.MessageConfig
+	// handle error
 	if err != nil {
+		// remake response
 		response := map[string]string{
-			"Bad Request: user is an administrator of the chat": "对面是管理员！我没法让他闭嘴qwq",
-			"Bad Request: can't remove chat owner": "啊不会吧，不会吧，不会真的有人觉得我权限比群主大吧",
+			"Bad Request: user is an administrator of the chat":                 "对面是管理员！我没法让他闭嘴qwq",
+			"Bad Request: can't remove chat owner":                              "啊不会吧，不会吧，不会真的有人觉得我权限比群主大吧",
 			"Bad Request: not enough rights to restrict/unrestrict chat member": "拜托诶你不给我权限我怎么帮你禁言啦!",
 		}
+
+		var text string
 		if responseMsg, ok := response[err.Error()]; ok {
-			msg = tgbot.NewMessage(cid, fmt.Sprintf("发生错误啦: %v", responseMsg))
+			text = responseMsg
 		} else {
-			msg = tgbot.NewMessage(cid, fmt.Sprintf("发生错误啦: %v", err))
+			text = fmt.Sprintf("发生错误啦: %v", err)
 		}
-		return bot.Send(msg)
+		return tools.SendTextMsg(bot, cid, text)
 	}
-	msg = tgbot.NewMessage(cid,
-		fmt.Sprintf("Restrict User: %v for sending any message until %v", cid, timer.UnixToString(until)))
-	return bot.Send(msg)
+
+	// if no error
+	if until-time.Now().Unix() < 31 || until-time.Now().Unix() > 885427200 {
+		return tools.SendTextMsg(bot, cid, fmt.Sprintf("用户: %v 被永久禁言", cid))
+	}
+	return tools.SendTextMsg(bot, cid, fmt.Sprintf("用户: %v 直到 %v 都不准说话", cid, timer.UnixToString(until)))
 }

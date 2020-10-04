@@ -10,7 +10,7 @@ func (w *WrongInput) Error() string {
 	return w.specification
 }
 
-func CalcTime(add int64, unit string,) (int64, error) {
+func CalcTime(add int64, unit string) (int64, error) {
 	now := time.Now().Unix()
 
 	contrast := map[string]int64{

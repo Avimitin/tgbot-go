@@ -2,12 +2,13 @@ package bot
 
 import (
 	"fmt"
+	"github.com/Avimitin/go-bot/cmd/bot/internal/tools"
 	"github.com/go-telegram-bot-api/telegram-bot-api"
 	"log"
 )
 
 const (
-	VERSION = "0.0.1"
+	VERSION = "0.4.4"
 	CREATOR = 649191333
 )
 
@@ -16,8 +17,8 @@ var (
 	bot = NewBot(cfg.BotToken)
 )
 
-func Run() {
-	fmt.Printf("Bot initializing... Version: %v\n", VERSION)
+func Run(CleanMode bool) {
+	log.Printf("Bot initializing... Version: %v\n", VERSION)
 
 	bot.Debug = true
 
@@ -32,6 +33,10 @@ func Run() {
 		log.Printf("Some error occur when getting update.\nDescriptions: %v", err)
 	}
 
+	for CleanMode {
+		updates.Clear()
+	}
+
 	for update := range updates {
 
 		if update.Message == nil {
@@ -43,10 +48,14 @@ func Run() {
 		if update.Message.Chat.Type == "supergroup" && !cfg.IsAuthGroups(update.Message.Chat.ID) {
 			msg := tgbotapi.NewMessage(update.Message.Chat.ID, "你们这啥群啊，别乱拉人，爬爬爬！")
 			_, err := bot.Send(msg)
-			if err != nil { log.Printf("[ERROR] %s", err) }
+			if err != nil {
+				log.Printf("[ERROR] %s", err)
+			}
 
 			_, err = bot.LeaveChat(update.Message.Chat.ChatConfig())
-			if err != nil { log.Printf("[ERROR] %s", err) }
+			if err != nil {
+				log.Printf("[ERROR] %s", err)
+			}
 		}
 
 		if update.Message.IsCommand() {
@@ -61,10 +70,9 @@ func commandHandler(message *tgbotapi.Message) {
 		_, err := cmd(bot, message)
 
 		if err != nil {
-			msg := tgbotapi.NewMessage(message.Chat.ID, fmt.Sprintf(
-				"<b>Some error happen when sending message.</b> \n\nDescriptions: \n\n<code>%v</code>", err))
-			msg.ParseMode = "HTML"
-			_, _ = bot.Send(msg)
+			_, _ = tools.SendParseTextMsg(bot, message.Chat.ID,
+				fmt.Sprintf("<b>Some error happen when sending message.</b> \n\nDescriptions: \n\n<code>%v</code>", err),
+				"html")
 		}
 	}
 }

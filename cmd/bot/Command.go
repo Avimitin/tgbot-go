@@ -24,6 +24,7 @@ var COMMAND = map[string]SendMethod{
 	"dump":       dump,
 	"kick":       kick,
 	"shutup":     shutUp,
+	"unshutup":   unShutUp,
 }
 
 func start(bot *tgbotapi.BotAPI, message *tgbotapi.Message) (m tgbotapi.Message, err error) {
@@ -267,17 +268,23 @@ func shutUp(bot *tgbotapi.BotAPI, message *tgbotapi.Message) (tgbotapi.Message, 
 			until, _ := timer.CalcTime(180, "s")
 			return manage.ShutTheMouseUp(bot, message.Chat.ID, reply.From.ID, until, false)
 		} else if len(args) == 2 {
-			unit := args[1][len(args[1])-1:]
-			addStr := args[1][:len(args[1])-1]
-
-			add, err := strconv.ParseInt(addStr, 10, 64)
-			if err != nil {
-				return tools.SendTextMsg(bot, message.Chat.ID, fmt.Sprintf("参数错误：%v", err))
-			}
-
-			until, err := timer.CalcTime(add, unit)
-			if err != nil {
-				return tools.SendTextMsg(bot, message.Chat.ID, fmt.Sprintf("参数错误：%v", err))
+			// init until time
+			var until int64
+			if args[1] == "rand" {
+				until = timer.AddRandTimeFromNow()
+			} else {
+				unit := args[1][len(args[1])-1:]
+				addStr := args[1][:len(args[1])-1]
+				// convert string to int64
+				add, err := strconv.ParseInt(addStr, 10, 64)
+				if err != nil {
+					return tools.SendTextMsg(bot, message.Chat.ID, fmt.Sprintf("参数错误：%v", err))
+				}
+				// add time from now.unix()
+				until, err = timer.CalcTime(add, unit)
+				if err != nil {
+					return tools.SendTextMsg(bot, message.Chat.ID, fmt.Sprintf("参数错误：%v", err))
+				}
 			}
 			return manage.ShutTheMouseUp(bot, message.Chat.ID, reply.From.ID, until, false)
 		}
@@ -292,10 +299,28 @@ func shutUp(bot *tgbotapi.BotAPI, message *tgbotapi.Message) (tgbotapi.Message, 
 	}
 
 	return tools.SendParseTextMsg(bot, message.Chat.ID,
-		"Usage: Reply to a member and add a time for until date. "+
+		"Usage: *Reply* to a member and add a time for until date. "+
 			"Support Seconds, minutes, hours, days... as time unit. Or you can just use `rand` as param to get random limit time."+
 			"And if limit time is lower than 30s or longer than 366d it means this user is restricted forever.\n"+
 			"Exp:\n"+
 			"`/shutup 14h`\n"+
 			"`/shutup rand`", "markdown")
+}
+
+func unShutUp(bot *tgbotapi.BotAPI, message *tgbotapi.Message) (tgbotapi.Message, error) {
+	if reply := message.ReplyToMessage; reply != nil {
+		return manage.OpenMouse(bot, message.Chat.ID, reply.From.ID, true)
+	}
+	args := strings.Split(message.Text, "/unshutup ")
+	if len(args) == 1 {
+		return tools.SendTextMsg(bot, message.Chat.ID, "请回复一个用户的信息或者输入他的UID来解封")
+	}
+	if len(args) == 2 {
+		uid, err := strconv.ParseInt(args[1], 10, 64)
+		if err != nil {
+			return tools.SendTextMsg(bot, message.Chat.ID, fmt.Sprintf("参数错误！需要用户的 USERID"))
+		}
+		return manage.OpenMouse(bot, message.Chat.ID, int(uid), true)
+	}
+	return tools.SendTextMsg(bot, message.Chat.ID, "参数过多！")
 }

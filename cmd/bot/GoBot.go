@@ -8,7 +8,7 @@ import (
 )
 
 const (
-	VERSION = "0.4.4"
+	VERSION = "0.4.9"
 	CREATOR = 649191333
 )
 

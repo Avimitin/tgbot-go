@@ -23,6 +23,7 @@ func CreateGroup(groupName string) error {
 		) DEFAULT CHARSET=utf8`, groupName)
 
 	stmt, err := db.Prepare(sqlQuery)
+	defer stmt.Close()
 	if err != nil {
 		log.Printf("[Database]%v\n", err)
 		return err

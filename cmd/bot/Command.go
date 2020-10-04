@@ -3,6 +3,7 @@ package bot
 import (
 	"fmt"
 	"github.com/Avimitin/go-bot/cmd/bot/internal/auth"
+	"github.com/Avimitin/go-bot/cmd/bot/internal/database"
 	"github.com/Avimitin/go-bot/cmd/bot/internal/manage"
 	"github.com/Avimitin/go-bot/cmd/bot/internal/tools"
 	"github.com/Avimitin/go-bot/utils/modules/hardwareInfo"
@@ -128,6 +129,11 @@ func authGroups(bot *tgbotapi.BotAPI, message *tgbotapi.Message) (m tgbotapi.Mes
 		msg := tgbotapi.NewMessage(message.Chat.ID, "您无权使用该命令。")
 		m, err = bot.Send(msg)
 		return m, err
+	}
+	isExist, err := database.TableExist(message.Chat.UserName)
+	if !isExist {
+		err := database.CreateGroup(message.Chat.UserName)
+		return tools.SendTextMsg(bot, message.Chat.ID, fmt.Sprintf("生成表时出现了错误：%v", err))
 	}
 	var text string
 

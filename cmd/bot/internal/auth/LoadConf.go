@@ -5,10 +5,18 @@ import (
 	"io/ioutil"
 )
 
+type dbCfg struct {
+	User     string `yaml:"user"`
+	Password string `yaml:password`
+	Host     string `yaml:"host"`
+	Database string `yaml:database`
+}
+
 type Config struct {
-	LOADED		bool		`yaml:"LOADED"`
-	Groups   	[]int64		`yaml:"groups"`
-	BotToken 	string		`yaml:"bot_token"`
+	LOADED   bool    `yaml:"LOADED"`
+	Groups   []int64 `yaml:"groups"`
+	BotToken string  `yaml:"bot_token"`
+	DBCfg    dbCfg   `yaml:"db_cfg"`
 }
 
 func NewCFG() (Config, error) {
@@ -17,9 +25,10 @@ func NewCFG() (Config, error) {
 	return cfg, err
 }
 
-func decode(cfg *Config,filepath string) error {
+func decode(cfg *Config, filepath string) error {
 	file, err := ioutil.ReadFile(filepath)
-	if err != nil { return err }
+	if err != nil {
+		return err
+	}
 	return yaml.Unmarshal(file, cfg)
 }
-

@@ -1,7 +1,7 @@
 package database
 
 func TableExist(tableName string) (bool, error) {
-	db, err := connect()
+	db, err := NewDB()
 	if err != nil {
 		return false, err
 	}

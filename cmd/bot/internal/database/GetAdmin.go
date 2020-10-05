@@ -5,7 +5,7 @@ import (
 )
 
 func GetAdmin(groupName string) ([]int, error) {
-	db, err := connect()
+	db, err := NewDB()
 	if err != nil {
 		return nil, err
 	}

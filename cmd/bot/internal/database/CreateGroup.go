@@ -7,7 +7,7 @@ import (
 
 // Use this methods to create a new table
 func CreateGroup(groupName string) error {
-	db, err := connect()
+	db, err := NewDB()
 	defer db.Close()
 	if err != nil {
 		log.Printf("[Database]%v\n", err)

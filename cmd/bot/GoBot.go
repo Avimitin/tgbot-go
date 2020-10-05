@@ -2,6 +2,7 @@ package bot
 
 import (
 	"fmt"
+	"github.com/Avimitin/go-bot/cmd/bot/internal/auth"
 	"github.com/Avimitin/go-bot/cmd/bot/internal/tools"
 	"github.com/go-telegram-bot-api/telegram-bot-api"
 	"log"
@@ -45,7 +46,7 @@ func Run(CleanMode bool) {
 
 		log.Printf("[%s] %s", update.Message.From.UserName, update.Message.Text)
 
-		if update.Message.Chat.Type == "supergroup" && !cfg.IsAuthGroups(update.Message.Chat.ID) {
+		if update.Message.Chat.Type == "supergroup" && !auth.IsAuthGroups(cfg, update.Message.Chat.ID) {
 			msg := tgbotapi.NewMessage(update.Message.Chat.ID, "你们这啥群啊，别乱拉人，爬爬爬！")
 			_, err := bot.Send(msg)
 			if err != nil {

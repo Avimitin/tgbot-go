@@ -1,4 +1,4 @@
-package auth
+package CFGLoader
 
 import (
 	"gopkg.in/yaml.v2"
@@ -7,9 +7,9 @@ import (
 
 type dbCfg struct {
 	User     string `yaml:"user"`
-	Password string `yaml:password`
+	Password string `yaml:"password"`
 	Host     string `yaml:"host"`
-	Database string `yaml:database`
+	Database string `yaml:"database"`
 }
 
 type Config struct {
@@ -19,7 +19,7 @@ type Config struct {
 	DBCfg    dbCfg   `yaml:"db_cfg"`
 }
 
-func NewCFG() (Config, error) {
+func LoadCFG() (Config, error) {
 	cfg := Config{}
 	err := decode(&cfg, "F:\\go-bot\\cfg\\auth.yml")
 	return cfg, err

@@ -1,6 +1,7 @@
 package auth
 
 import (
+	"github.com/Avimitin/go-bot/cmd/bot/internal/CFGLoader"
 	"github.com/Avimitin/go-bot/cmd/bot/internal/database"
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api"
 )
@@ -17,7 +18,7 @@ func IsCreator(creator int, uid int) bool {
 	return uid == creator
 }
 
-func (cfg Config) IsAuthGroups(gid int64) bool {
+func IsAuthGroups(cfg *CFGLoader.Config, gid int64) bool {
 	for _, authGid := range cfg.Groups {
 		return gid == authGid
 	}

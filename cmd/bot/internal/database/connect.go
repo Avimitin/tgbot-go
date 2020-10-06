@@ -8,18 +8,18 @@ import (
 	"time"
 )
 
-var (
-	DB       sql.DB
-	hasSetUp bool
-)
-
-func register(database *sql.DB) error {
+func register() (*sql.DB, error) {
 	cfg, err := CFGLoader.LoadCFG()
 	if err != nil {
-		return err
+		return nil, err
 	}
-	database, err = sql.Open("mysql",
+
+	database, err := sql.Open("mysql",
 		fmt.Sprintf("%v:%v@tcp(%v)/%v?charset=utf8", cfg.DBCfg.User, cfg.DBCfg.Password, cfg.DBCfg.Host, cfg.DBCfg.Database))
+
+	if err != nil {
+		return nil, err
+	}
 
 	// Set limit
 	if database != nil {
@@ -28,21 +28,13 @@ func register(database *sql.DB) error {
 		database.SetMaxIdleConns(10)
 	}
 
-	return nil
-}
-
-func connect() (*sql.DB, error) {
-	err := register(&DB)
-	if err != nil {
-		return nil, err
-	}
-	hasSetUp = true
-	return &DB, nil
+	return database, nil
 }
 
 func NewDB() (*sql.DB, error) {
-	if !hasSetUp {
-		return connect()
+	DB, err := register()
+	if err != nil {
+		return nil, err
 	}
-	return &DB, nil
+	return DB, nil
 }

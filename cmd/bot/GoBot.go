@@ -1,11 +1,14 @@
 package bot
 
 import (
+	"database/sql"
 	"fmt"
+	"github.com/Avimitin/go-bot/cmd/bot/internal/CFGLoader"
 	"github.com/Avimitin/go-bot/cmd/bot/internal/auth"
 	"github.com/Avimitin/go-bot/cmd/bot/internal/tools"
 	"github.com/go-telegram-bot-api/telegram-bot-api"
 	"log"
+	"os"
 )
 
 const (
@@ -14,12 +17,21 @@ const (
 )
 
 var (
-	cfg = NewCFG()
-	bot = NewBot(cfg.BotToken)
+	DB  *sql.DB
+	cfg *CFGLoader.Config
+	bot *tgbotapi.BotAPI
 )
 
 func Run(CleanMode bool) {
+	log.Printf("Fetching config...\n")
+	cfg = NewCFG()
+	log.Printf("Config loading successfully.\n")
+
 	log.Printf("Bot initializing... Version: %v\n", VERSION)
+	bot = NewBot(cfg.BotToken)
+
+	log.Printf("Fetching database connection...\n")
+	DB = NewDB()
 
 	bot.Debug = true
 
@@ -34,7 +46,14 @@ func Run(CleanMode bool) {
 		log.Printf("Some error occur when getting update.\nDescriptions: %v", err)
 	}
 
+	// 清理模式
 	for CleanMode {
+		log.Printf("Cleaning MSG...")
+		update := <-updates
+		if update.Message == nil {
+			log.Printf("Cleaning done.")
+			os.Exit(0)
+		}
 		updates.Clear()
 	}
 

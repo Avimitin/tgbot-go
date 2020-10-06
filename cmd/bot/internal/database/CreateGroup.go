@@ -1,19 +1,13 @@
 package database
 
 import (
+	"database/sql"
 	"fmt"
 	"log"
 )
 
 // Use this methods to create a new table
-func CreateGroup(groupName string) error {
-	db, err := NewDB()
-	defer db.Close()
-	if err != nil {
-		log.Printf("[Database]%v\n", err)
-		return err
-	}
-
+func CreateGroup(db *sql.DB, groupName string) error {
 	sqlQuery := fmt.Sprintf(`
 		CREATE TABLE IF NOT EXISTS %v (
 		uid 		INT NOT NULL,

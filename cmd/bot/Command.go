@@ -3,7 +3,6 @@ package bot
 import (
 	"fmt"
 	"github.com/Avimitin/go-bot/cmd/bot/internal/auth"
-	"github.com/Avimitin/go-bot/cmd/bot/internal/database"
 	"github.com/Avimitin/go-bot/cmd/bot/internal/manage"
 	"github.com/Avimitin/go-bot/cmd/bot/internal/tools"
 	"github.com/Avimitin/go-bot/utils/modules/hardwareInfo"
@@ -130,11 +129,7 @@ func authGroups(bot *tgbotapi.BotAPI, message *tgbotapi.Message) (m tgbotapi.Mes
 		m, err = bot.Send(msg)
 		return m, err
 	}
-	isExist, err := database.TableExist(message.Chat.UserName)
-	if !isExist {
-		err := database.CreateGroup(message.Chat.UserName)
-		return tools.SendTextMsg(bot, message.Chat.ID, fmt.Sprintf("生成表时出现了错误：%v", err))
-	}
+
 	var text string
 
 	args := strings.Fields(message.Text)
@@ -221,7 +216,7 @@ func dump(bot *tgbotapi.BotAPI, message *tgbotapi.Message) (tgbotapi.Message, er
 
 func kick(bot *tgbotapi.BotAPI, message *tgbotapi.Message) (tgbotapi.Message, error) {
 	var msg tgbotapi.MessageConfig
-	isAdmin, err := auth.IsAdmin(message.From.ID, bot, message.Chat)
+	isAdmin, err := auth.IsAdmin(DB, message.From.ID, message.Chat)
 	// acquire admins list
 	if err != nil {
 		msg = tgbotapi.NewMessage(message.Chat.ID, fmt.Sprintf("在获取管理员列表时发生了一些错误：%v", err))
@@ -255,7 +250,7 @@ func kick(bot *tgbotapi.BotAPI, message *tgbotapi.Message) (tgbotapi.Message, er
 }
 
 func shutUp(bot *tgbotapi.BotAPI, message *tgbotapi.Message) (tgbotapi.Message, error) {
-	isAdmin, err := auth.IsAdmin(message.From.ID, bot, message.Chat)
+	isAdmin, err := auth.IsAdmin(DB, message.From.ID, message.Chat)
 	// acquire admins list
 	if err != nil {
 		return tools.SendTextMsg(bot, message.Chat.ID, fmt.Sprintf("在获取管理员列表时发生了一些错误：%v", err))

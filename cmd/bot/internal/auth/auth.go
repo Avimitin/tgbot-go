@@ -1,7 +1,7 @@
 package auth
 
 import (
-	"github.com/Avimitin/go-bot/cmd/bot/internal/CFGLoader"
+	"database/sql"
 	"github.com/Avimitin/go-bot/cmd/bot/internal/database"
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api"
 )
@@ -18,9 +18,15 @@ func IsCreator(creator int, uid int) bool {
 	return uid == creator
 }
 
-func IsAuthGroups(cfg *CFGLoader.Config, gid int64) bool {
-	for _, authGid := range cfg.Groups {
-		return gid == authGid
+func IsAuthGroups(DB *sql.DB, gid int64) bool {
+	groups, err := database.SearchGroups(DB)
+	if err != nil {
+		return false
+	}
+
+	id := binarySearch(gid, groups)
+	if id != -1 {
+		return true
 	}
 	return false
 }
@@ -38,8 +44,8 @@ func getAdmin(bot *tgbotapi.BotAPI, chat *tgbotapi.Chat, c chan []int) {
 	c <- admins
 }
 
-func IsAdmin(uid int, chat *tgbotapi.Chat) (bool, error) {
-	admins, err := database.GetAdmin(chat.UserName)
+func IsAdmin(db *sql.DB, uid int, chat *tgbotapi.Chat) (bool, error) {
+	admins, err := database.GetAdmin(db, chat.UserName)
 
 	if admins == nil || err != nil {
 		return false, &MyError{info: "Error fetching admin"}
@@ -51,4 +57,23 @@ func IsAdmin(uid int, chat *tgbotapi.Chat) (bool, error) {
 		}
 	}
 	return false, nil
+}
+
+func binarySearch(target int64, groups []database.Group) int {
+	var lo, hi = 0, len(groups) - 1
+	for lo <= hi {
+		mid := lo + (hi-lo)/2
+		if target < groups[mid].GroupID {
+			hi = mid - 1
+			continue
+		}
+		if target > groups[mid].GroupID {
+			lo = mid + 1
+			continue
+		}
+		if target == groups[mid].GroupID {
+			return mid
+		}
+	}
+	return -1
 }

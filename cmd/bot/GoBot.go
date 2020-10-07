@@ -32,6 +32,7 @@ func Run(CleanMode bool) {
 
 	log.Printf("Fetching database connection...\n")
 	DB = NewDB()
+	defer DB.Close()
 
 	bot.Debug = true
 
@@ -65,7 +66,7 @@ func Run(CleanMode bool) {
 
 		log.Printf("[%s] %s", update.Message.From.UserName, update.Message.Text)
 
-		if update.Message.Chat.Type == "supergroup" && !auth.IsAuthGroups(cfg, update.Message.Chat.ID) {
+		if update.Message.Chat.Type == "supergroup" && !auth.IsAuthGroups(DB, update.Message.Chat.ID) {
 			msg := tgbotapi.NewMessage(update.Message.Chat.ID, "你们这啥群啊，别乱拉人，爬爬爬！")
 			_, err := bot.Send(msg)
 			if err != nil {

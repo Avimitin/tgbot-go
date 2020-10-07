@@ -10,7 +10,7 @@ import (
 func CreateGroup(db *sql.DB, groupName string) error {
 	sqlQuery := fmt.Sprintf(`
 		CREATE TABLE IF NOT EXISTS %v (
-		uid 		INT NOT NULL,
+		uid 		BIGINT NOT NULL,
 		username 	VARCHAR(255) NOT NULL, 
 		permission  VARCHAR(10) NOT NULL DEFAULT 'member',
 		PRIMARY KEY (uid)

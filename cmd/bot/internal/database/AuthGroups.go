@@ -45,18 +45,22 @@ func DeleteGroups(db *sql.DB, groupID int64) error {
 	}
 
 	ID, err := result.RowsAffected()
+	if ID == 0 {
+		log.Println("[DATABASE]Group's ID not found when delete group.")
+		return nil
+	}
 	log.Printf("[DATABASE]Successfully delete group's record. Affect %v row.\n", ID)
 	return nil
 }
 
 // Group's data structure
-type group struct {
+type Group struct {
 	GroupID       int64
 	GroupUsername string
 }
 
 // SearchGroups return a list with all the record in authGroups table.
-func SearchGroups(db *sql.DB) ([]group, error) {
+func SearchGroups(db *sql.DB) ([]Group, error) {
 	rows, err := db.Query("SELECT GroupID,GroupUsername FROM authgroups")
 	if err != nil {
 		log.Println("[DATABASE]Error occur when fetching result")
@@ -64,9 +68,9 @@ func SearchGroups(db *sql.DB) ([]group, error) {
 	}
 	defer rows.Close()
 
-	var Groups []group
+	var Groups []Group
 	for rows.Next() {
-		var g group
+		var g Group
 		err := rows.Scan(&g.GroupID, &g.GroupUsername)
 		if err != nil {
 			log.Printf("[DATABASE]Error occur when parsing data. Descriptions: %v\n", err)
@@ -96,6 +100,10 @@ func ChangeGroupsName(db *sql.DB, originGroupID int64, groupNameAfter string) er
 		log.Printf("[DATABASE]Error occur when fetching affected rows. Descriptions: %v", err)
 		return err
 	}
-	log.Printf("[DATABASE]Successfully delete records. Affected %v rows", counts)
+	if counts == 0 {
+		log.Println("[DATABASE]Group's ID not found when change group's name.")
+		return nil
+	}
+	log.Printf("[DATABASE]Successfully change group's name. Affected %v rows", counts)
 	return nil
 }

@@ -2,8 +2,10 @@ package auth
 
 import (
 	"database/sql"
+	"github.com/Avimitin/go-bot/cmd/bot/internal/CFGLoader"
 	"github.com/Avimitin/go-bot/cmd/bot/internal/database"
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api"
+	"log"
 )
 
 type MyError struct {
@@ -18,7 +20,7 @@ func IsCreator(creator int, uid int) bool {
 	return uid == creator
 }
 
-func IsAuthGroups(DB *sql.DB, gid int64) bool {
+func DBIsAuthGroups(DB *sql.DB, gid int64) bool {
 	groups, err := database.SearchGroups(DB)
 	if err != nil {
 		return false
@@ -31,9 +33,32 @@ func IsAuthGroups(DB *sql.DB, gid int64) bool {
 	return false
 }
 
+func CFGIsAuthGroups(cfg *CFGLoader.Config, gid int64) bool {
+	if SearchGroupsAlg(cfg, gid) != -1 {
+		return true
+	}
+	return false
+}
+
+func SearchGroupsAlg(cfg *CFGLoader.Config, gid int64) int {
+	lo, hi := 0, len(cfg.Groups)-1
+	for lo <= hi {
+		mid := lo + (hi-lo)/2
+		if gid < cfg.Groups[mid] {
+			hi = mid - 1
+		} else if gid > cfg.Groups[mid] {
+			lo = mid + 1
+		} else {
+			return mid
+		}
+	}
+	return -1
+}
+
 func getAdmin(bot *tgbotapi.BotAPI, chat *tgbotapi.Chat, c chan []int) {
 	members, err := bot.GetChatAdministrators(chat.ChatConfig())
 	if err != nil {
+		log.Print("[GET_ADMIN_ERROR]", err)
 		c <- nil
 		close(c)
 	}
@@ -44,10 +69,11 @@ func getAdmin(bot *tgbotapi.BotAPI, chat *tgbotapi.Chat, c chan []int) {
 	c <- admins
 }
 
-func IsAdmin(db *sql.DB, uid int, chat *tgbotapi.Chat) (bool, error) {
-	admins, err := database.GetAdmin(db, chat.UserName)
-
-	if admins == nil || err != nil {
+func IsAdmin(bot *tgbotapi.BotAPI, uid int, chat *tgbotapi.Chat) (bool, error) {
+	c := make(chan []int)
+	go getAdmin(bot, chat, c)
+	admins := <-c
+	if admins == nil {
 		return false, &MyError{info: "Error fetching admin"}
 	}
 
@@ -65,13 +91,9 @@ func binarySearch(target int64, groups []database.Group) int {
 		mid := lo + (hi-lo)/2
 		if target < groups[mid].GroupID {
 			hi = mid - 1
-			continue
-		}
-		if target > groups[mid].GroupID {
+		} else if target > groups[mid].GroupID {
 			lo = mid + 1
-			continue
-		}
-		if target == groups[mid].GroupID {
+		} else {
 			return mid
 		}
 	}

@@ -13,15 +13,15 @@ type dbCfg struct {
 }
 
 type Config struct {
-	LOADED   bool    `yaml:"LOADED"`
-	Groups   []int64 `yaml:"groups"`
-	BotToken string  `yaml:"bot_token"`
-	DBCfg    dbCfg   `yaml:"db_cfg"`
+	LOADED   bool `yaml:"LOADED"`
+	Groups   []int64
+	BotToken string `yaml:"bot_token"`
+	DBCfg    dbCfg  `yaml:"db_cfg"`
 }
 
-func LoadCFG() (Config, error) {
-	cfg := Config{}
-	err := decode(&cfg, "F:\\go-bot\\cfg\\auth.yml")
+func LoadCFG() (*Config, error) {
+	cfg := &Config{}
+	err := decode(cfg, "F:\\go-bot\\cfg\\auth.yml")
 	return cfg, err
 }
 

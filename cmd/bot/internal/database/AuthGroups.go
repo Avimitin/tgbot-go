@@ -61,7 +61,7 @@ type Group struct {
 
 // SearchGroups return a list with all the record in authGroups table.
 func SearchGroups(db *sql.DB) ([]Group, error) {
-	rows, err := db.Query("SELECT GroupID,GroupUsername FROM authgroups")
+	rows, err := db.Query("SELECT GroupID,GroupUsername FROM authgroups ORDER BY GroupID")
 	if err != nil {
 		log.Println("[DATABASE]Error occur when fetching result")
 		return nil, err

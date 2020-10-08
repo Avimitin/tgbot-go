@@ -23,20 +23,24 @@ var (
 )
 
 func Run(CleanMode bool) {
-	log.Printf("Fetching config...\n")
+	log.Printf("Fetching config...")
 	cfg = NewCFG()
-	log.Printf("Config loading successfully.\n")
+	log.Printf("Done.\n")
 
-	log.Printf("Bot initializing... Version: %v\n", VERSION)
+	log.Printf("Bot initializing... Version: %v", VERSION)
 	bot = NewBot(cfg.BotToken)
+	log.Printf("Done.\n")
+	bot.Debug = true
+	log.Printf("Authorized on accout %s", bot.Self.UserName)
 
-	log.Printf("Fetching database connection...\n")
+	log.Printf("Fetching database connection...")
 	DB = NewDB()
 	defer DB.Close()
+	log.Printf("Done.\n")
 
-	bot.Debug = true
-
-	log.Printf("Authorized on accout %s", bot.Self.UserName)
+	log.Printf("Fetching authorized groups...")
+	cfg.Groups = NewAuthGroups()
+	log.Printf("Done.\n")
 
 	updateMsg := tgbotapi.NewUpdate(0)
 	updateMsg.Timeout = 20
@@ -66,7 +70,7 @@ func Run(CleanMode bool) {
 
 		log.Printf("[%s] %s", update.Message.From.UserName, update.Message.Text)
 
-		if update.Message.Chat.Type == "supergroup" && !auth.IsAuthGroups(DB, update.Message.Chat.ID) {
+		if update.Message.Chat.Type == "supergroup" && !auth.CFGIsAuthGroups(cfg, update.Message.Chat.ID) {
 			msg := tgbotapi.NewMessage(update.Message.Chat.ID, "你们这啥群啊，别乱拉人，爬爬爬！")
 			_, err := bot.Send(msg)
 			if err != nil {
@@ -75,7 +79,7 @@ func Run(CleanMode bool) {
 
 			_, err = bot.LeaveChat(update.Message.Chat.ChatConfig())
 			if err != nil {
-				log.Printf("[ERROR] %s", err)
+				log.Printf("[ERROR] Error happen when leave chat %s", err)
 			}
 		}
 

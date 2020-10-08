@@ -3,6 +3,7 @@ package bot
 import (
 	"fmt"
 	"github.com/Avimitin/go-bot/cmd/bot/internal/auth"
+	"github.com/Avimitin/go-bot/cmd/bot/internal/database"
 	"github.com/Avimitin/go-bot/cmd/bot/internal/manage"
 	"github.com/Avimitin/go-bot/cmd/bot/internal/tools"
 	"github.com/Avimitin/go-bot/utils/modules/hardwareInfo"
@@ -125,36 +126,90 @@ func sysInfo(bot *tgbotapi.BotAPI, message *tgbotapi.Message) (m tgbotapi.Messag
 
 func authGroups(bot *tgbotapi.BotAPI, message *tgbotapi.Message) (m tgbotapi.Message, err error) {
 	if !auth.IsCreator(CREATOR, message.From.ID) {
-		msg := tgbotapi.NewMessage(message.Chat.ID, "您无权使用该命令。")
-		m, err = bot.Send(msg)
-		return m, err
+		return tools.SendTextMsg(bot, message.Chat.ID, "不许乱碰！")
 	}
-
-	var text string
 
 	args := strings.Fields(message.Text)
 	if length := len(args); length != 3 {
-		text = fmt.Sprintf("请输入正确的参数数量！只需要2个参数但是捕获到%d", length-1)
+		return tools.SendTextMsg(bot, message.Chat.ID, fmt.Sprintf("请输入正确的参数数量！只需要2个参数但是捕获到%d", length-1))
 	}
 
+	var text string
 	switch args[1] {
+	// Add authorized groups ID.
 	case "add":
-		chatID, err := strconv.ParseInt(args[2], 20, 64)
+		// Get supergroup's username.
+		chatUserName := args[2]
+
+		// Get specific chat username.
+		targetChat, err := bot.GetChat(tgbotapi.ChatConfig{SuperGroupUsername: chatUserName})
 		if err != nil {
-			text = fmt.Sprintf("参数出错了！\n错误：%s", err)
+			return tools.SendTextMsg(bot, message.Chat.ID, fmt.Sprintf("获取群组信息时出现错误\n错误信息：%v", err))
 		}
-		newAuthGroups := append(cfg.Groups, chatID)
-		cfg.Groups = newAuthGroups
-		err = cfg.SaveConfig("F:\\go-bot\\cfg\\auth.yml")
+
+		// Store groups information.
+		err = database.AddGroups(DB, targetChat.ID, targetChat.UserName)
 		if err != nil {
-			text = fmt.Sprintf("保存出错了！\n错误：%s", err)
+			return tools.SendTextMsg(bot, message.Chat.ID, fmt.Sprintf("保存出错了！\n错误：%s", err))
+		}
+
+		// If all things behind has done, store groups id into memory.
+		// This cycle is for appending value with order.
+		for i, group := range cfg.Groups {
+			if targetChat.ID < group {
+				current := append([]int64{targetChat.ID}, cfg.Groups[i:]...)
+				cfg.Groups = append(cfg.Groups[:i], current...)
+				return tools.SendTextMsg(bot, message.Chat.ID, "保存认证群组成功")
+			}
+		}
+
+		// If targetChat's ID is the biggest just insert it.
+		cfg.Groups = append(cfg.Groups, targetChat.ID)
+		return tools.SendTextMsg(bot, message.Chat.ID, "保存认证群组成功")
+
+	// Delete authorized group's record.
+	case "del":
+		// Convert string arguments to int64.
+		i, err := strconv.ParseInt(args[2], 10, 64)
+		if err != nil {
+			return tools.SendTextMsg(bot, message.Chat.ID, fmt.Sprintf("参数出错了！\n错误：%s", err))
+		}
+
+		// Search group is exist or not, if exist, delete it from memory and database.
+		if int(i) > len(cfg.Groups) {
+			return tools.SendTextMsg(bot, message.Chat.ID, "找不到指定序号的群组。")
+		}
+		chatID := cfg.Groups[i]
+		cfg.Groups = append(cfg.Groups[:i], cfg.Groups[i+1:]...)
+
+		// Delete chat record in database
+		err = database.DeleteGroups(DB, chatID)
+		if err != nil {
+			return tools.SendTextMsg(bot, message.Chat.ID, fmt.Sprintf("删除出错了！\n错误：%s", err))
+		}
+		return tools.SendTextMsg(bot, message.Chat.ID, "成功删除！")
+	// list all groups
+	case "list":
+		if args[2] == "db" {
+			groups, err := database.SearchGroups(DB)
+			if err != nil {
+				return tools.SendTextMsg(bot, message.Chat.ID, fmt.Sprintf("获取群组信息时发生了一些错误。"))
+			}
+			for i, group := range groups {
+				text += fmt.Sprintf("%d. GID: %v GNAME: %v\n", i, group.GroupID, group.GroupUsername)
+			}
+		} else if args[2] == "mem" {
+			for i, group := range cfg.Groups {
+				text += fmt.Sprintf("%d. GID: %v \n", i, group)
+			}
+		} else {
+			text = "未知参数，你可以输入 /authgroups list mem 或者 db 查询内存或数据库内群组信息。"
 		}
 	default:
 		text = "未知参数，您可以输入： /authgroups add 123 增加认证或 /authgroups del 123 删除群组"
 	}
 
-	msg := tgbotapi.NewMessage(message.Chat.ID, text)
-	return bot.Send(msg)
+	return tools.SendTextMsg(bot, message.Chat.ID, text)
 }
 
 func ver(bot *tgbotapi.BotAPI, message *tgbotapi.Message) (tgbotapi.Message, error) {
@@ -216,7 +271,7 @@ func dump(bot *tgbotapi.BotAPI, message *tgbotapi.Message) (tgbotapi.Message, er
 
 func kick(bot *tgbotapi.BotAPI, message *tgbotapi.Message) (tgbotapi.Message, error) {
 	var msg tgbotapi.MessageConfig
-	isAdmin, err := auth.IsAdmin(DB, message.From.ID, message.Chat)
+	isAdmin, err := auth.IsAdmin(bot, message.From.ID, message.Chat)
 	// acquire admins list
 	if err != nil {
 		msg = tgbotapi.NewMessage(message.Chat.ID, fmt.Sprintf("在获取管理员列表时发生了一些错误：%v", err))
@@ -250,7 +305,7 @@ func kick(bot *tgbotapi.BotAPI, message *tgbotapi.Message) (tgbotapi.Message, er
 }
 
 func shutUp(bot *tgbotapi.BotAPI, message *tgbotapi.Message) (tgbotapi.Message, error) {
-	isAdmin, err := auth.IsAdmin(DB, message.From.ID, message.Chat)
+	isAdmin, err := auth.IsAdmin(bot, message.From.ID, message.Chat)
 	// acquire admins list
 	if err != nil {
 		return tools.SendTextMsg(bot, message.Chat.ID, fmt.Sprintf("在获取管理员列表时发生了一些错误：%v", err))

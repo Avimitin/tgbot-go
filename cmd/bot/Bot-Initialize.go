@@ -2,7 +2,7 @@ package bot
 
 import (
 	"database/sql"
-	"github.com/Avimitin/go-bot/cmd/bot/internal/CFGLoader"
+	"github.com/Avimitin/go-bot/cmd/bot/internal/conf"
 	"github.com/Avimitin/go-bot/cmd/bot/internal/database"
 	"github.com/go-telegram-bot-api/telegram-bot-api"
 	"log"
@@ -16,8 +16,8 @@ func NewBot(token string) *tgbotapi.BotAPI {
 	return bot
 }
 
-func NewCFG() *CFGLoader.Config {
-	config, err := CFGLoader.LoadCFG()
+func NewCFG() *conf.Config {
+	config, err := conf.LoadCFG()
 	if err != nil {
 		log.Panic(err)
 	}

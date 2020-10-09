@@ -1,23 +1,9 @@
-package CFGLoader
+package conf
 
 import (
 	"gopkg.in/yaml.v2"
 	"io/ioutil"
 )
-
-type dbCfg struct {
-	User     string `yaml:"user"`
-	Password string `yaml:"password"`
-	Host     string `yaml:"host"`
-	Database string `yaml:"database"`
-}
-
-type Config struct {
-	LOADED   bool `yaml:"LOADED"`
-	Groups   []int64
-	BotToken string `yaml:"bot_token"`
-	DBCfg    dbCfg  `yaml:"db_cfg"`
-}
 
 func LoadCFG() (*Config, error) {
 	cfg := &Config{}

@@ -2,7 +2,7 @@ package auth
 
 import (
 	"database/sql"
-	"github.com/Avimitin/go-bot/cmd/bot/internal/CFGLoader"
+	"github.com/Avimitin/go-bot/cmd/bot/internal/conf"
 	"github.com/Avimitin/go-bot/cmd/bot/internal/database"
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api"
 	"log"
@@ -33,14 +33,14 @@ func DBIsAuthGroups(DB *sql.DB, gid int64) bool {
 	return false
 }
 
-func CFGIsAuthGroups(cfg *CFGLoader.Config, gid int64) bool {
+func CFGIsAuthGroups(cfg *conf.Config, gid int64) bool {
 	if SearchGroupsAlg(cfg, gid) != -1 {
 		return true
 	}
 	return false
 }
 
-func SearchGroupsAlg(cfg *CFGLoader.Config, gid int64) int {
+func SearchGroupsAlg(cfg *conf.Config, gid int64) int {
 	lo, hi := 0, len(cfg.Groups)-1
 	for lo <= hi {
 		mid := lo + (hi-lo)/2

@@ -3,8 +3,8 @@ package bot
 import (
 	"database/sql"
 	"fmt"
-	"github.com/Avimitin/go-bot/cmd/bot/internal/CFGLoader"
 	"github.com/Avimitin/go-bot/cmd/bot/internal/auth"
+	"github.com/Avimitin/go-bot/cmd/bot/internal/conf"
 	"github.com/Avimitin/go-bot/cmd/bot/internal/tools"
 	"github.com/go-telegram-bot-api/telegram-bot-api"
 	"log"
@@ -18,7 +18,7 @@ const (
 
 var (
 	DB  *sql.DB
-	cfg *CFGLoader.Config
+	cfg *conf.Config
 	bot *tgbotapi.BotAPI
 )
 

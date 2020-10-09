@@ -3,4 +3,4 @@ CREATE TABLE IF NOT EXISTS Keywords (
     keywords VARCHAR(255) NOT NULL,
     count int DEFAULT 0,
     PRIMARY KEY (kid)
-)
+)CHARSET=utf8

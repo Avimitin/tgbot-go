@@ -4,4 +4,4 @@ CREATE TABLE IF NOT EXISTS replies(
     keyword INT NOT NULL,
     PRIMARY KEY (rid),
     FOREIGN KEY (keyword) REFERENCES keywords(kid)
-)
+) CHARSET=utf8

@@ -64,3 +64,25 @@ func PeekReply(DB *sql.DB, reply string) (int, error) {
 	}
 	return rid, nil
 }
+
+func FetchReplies(DB *sql.DB) ([]string, error) {
+	rows, err := DB.Query("SELECT reply FROM replies")
+	if err != nil {
+		Pln("Error occur when preparing query. Info:", err.Error())
+		return nil, err
+	}
+
+	var reply string
+	var replies []string
+
+	for rows.Next() {
+		err = rows.Scan(&reply)
+		if err != nil {
+			Pln("Error occur when scanning value. Info:", err.Error())
+			return nil, err
+		}
+		replies = append(replies, reply)
+	}
+
+	return replies, nil
+}

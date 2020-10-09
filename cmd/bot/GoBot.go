@@ -23,24 +23,28 @@ var (
 )
 
 func Run(CleanMode bool) {
-	log.Printf("Fetching config...")
+	log.Print("Fetching config...")
 	cfg = NewCFG()
-	log.Printf("Done.\n")
+	log.Println("Done.")
 
 	log.Printf("Bot initializing... Version: %v", VERSION)
 	bot = NewBot(cfg.BotToken)
-	log.Printf("Done.\n")
+	log.Println("Done.")
 	bot.Debug = true
 	log.Printf("Authorized on accout %s", bot.Self.UserName)
 
-	log.Printf("Fetching database connection...")
+	log.Print("Fetching database connection...")
 	DB = NewDB()
 	defer DB.Close()
-	log.Printf("Done.\n")
+	log.Println("Done.")
 
-	log.Printf("Fetching authorized groups...")
+	log.Print("Fetching authorized groups...")
 	cfg.Groups = NewAuthGroups()
-	log.Printf("Done.\n")
+	log.Println("Done.")
+
+	log.Print("Fetching keywords and replies...")
+	NewKeywordReplies()
+	log.Println("Done.")
 
 	updateMsg := tgbotapi.NewUpdate(0)
 	updateMsg.Timeout = 20
@@ -85,6 +89,12 @@ func Run(CleanMode bool) {
 
 		if update.Message.IsCommand() {
 			go commandHandler(update.Message)
+			continue
+		}
+
+		_, err := Reply(update.Message)
+		if err != nil {
+			log.Printf("[TGBOT]Error occur when sending message. Info: %v", err.Error())
 		}
 	}
 }

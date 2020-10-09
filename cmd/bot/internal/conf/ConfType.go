@@ -12,4 +12,15 @@ type Config struct {
 	Groups   []int64
 	BotToken string `yaml:"bot_token"`
 	DBCfg    dbCfg  `yaml:"db_cfg"`
+	Keywords []*KeywordsReplyType
+}
+
+type KeywordsReplyType struct {
+	Keyword *KeywordType
+	Replies []string
+}
+
+type KeywordType struct {
+	Kid  int
+	Word string
 }

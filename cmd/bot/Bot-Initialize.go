@@ -46,3 +46,10 @@ func NewAuthGroups() []int64 {
 	}
 	return groupsID
 }
+
+func NewKeywordReplies() {
+	err := LoadKeywordReply(DB, cfg)
+	if err != nil {
+		log.Panic(err)
+	}
+}

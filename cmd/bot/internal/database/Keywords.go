@@ -3,6 +3,7 @@ package database
 import (
 	"database/sql"
 	"fmt"
+	"github.com/Avimitin/go-bot/cmd/bot/internal/conf"
 )
 
 func PeekKeywords(DB *sql.DB, keyword string) (int, error) {
@@ -108,4 +109,25 @@ func DelKeyword(DB *sql.DB, k int) error {
 	row, _ = result.RowsAffected()
 	Pln(fmt.Sprintf("Delete keyword successfully. Affected %v rows", row))
 	return nil
+}
+
+func FetchKeyword(DB *sql.DB) ([]conf.KeywordType, error) {
+	rows, err := DB.Query("SELECT kid,keyword FROM keywords")
+	if err != nil {
+		Pln("Error occur when preparing query. Info:", err.Error())
+		return nil, err
+	}
+	var k conf.KeywordType
+	var keywords []conf.KeywordType
+
+	for rows.Next() {
+		err = rows.Scan(&k.Kid, &k.Word)
+		if err != nil {
+			Pln("Error occur when scanning value. Info:", err.Error())
+			return nil, err
+		}
+		keywords = append(keywords, k)
+	}
+
+	return keywords, nil
 }

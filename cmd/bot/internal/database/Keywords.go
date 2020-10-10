@@ -28,34 +28,34 @@ func PeekKeywords(DB *sql.DB, keyword string) (int, error) {
 	return -1, nil
 }
 
-func AddKeywords(DB *sql.DB, keyword string, reply string) error {
+func AddKeywords(DB *sql.DB, keyword string, reply string) (int, error) {
 	// peek if keyword has existed or not.
 	kid, err := PeekKeywords(DB, keyword)
 	if err != nil {
-		return err
+		return -1, err
 	}
 
 	// if keyword has existed, add new reply.
 	if kid != -1 {
-		return SetReply(DB, reply, kid)
+		return kid, SetReply(DB, reply, kid)
 	}
 
 	// If keyword isn't exist, insert keyword first.
 	stmt, err := DB.Prepare("INSERT INTO keywords (keyword) VALUES (?)")
 	if err != nil {
 		Pln("Error occur when preparing insert. Info:", err.Error())
-		return err
+		return -1, err
 	}
 	defer stmt.Close()
 	result, err := stmt.Exec(keyword)
 	if err != nil {
 		Pln("Error occur when executive value. Info:", err.Error())
-		return err
+		return -1, err
 	}
 	ID, _ := result.LastInsertId()
 	Pln(fmt.Sprintf("Successfully insert keyword. Insert ID: %v", ID))
-	// Then insert reply.
-	return SetReply(DB, reply, kid)
+	// Then use insert reply.
+	return int(ID), SetReply(DB, reply, int(ID))
 }
 
 func RenameKeywords(DB *sql.DB, kid int, newKeyword string) error {

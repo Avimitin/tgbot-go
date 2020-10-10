@@ -26,6 +26,8 @@ var COMMAND = map[string]SendMethod{
 	"kick":       kick,
 	"shutup":     shutUp,
 	"unshutup":   unShutUp,
+	"keyadd":     keyAdd,
+	"keylist":    KeyList,
 }
 
 func start(bot *tgbotapi.BotAPI, message *tgbotapi.Message) (m tgbotapi.Message, err error) {
@@ -379,4 +381,73 @@ func unShutUp(bot *tgbotapi.BotAPI, message *tgbotapi.Message) (tgbotapi.Message
 		return manage.OpenMouse(bot, message.Chat.ID, int(uid), true)
 	}
 	return tools.SendTextMsg(bot, message.Chat.ID, "参数过多！")
+}
+
+func keyAdd(bot *tgbotapi.BotAPI, message *tgbotapi.Message) (tgbotapi.Message, error) {
+	isAdmin, err := auth.IsAdmin(bot, message.From.ID, message.Chat)
+	if err != nil {
+		return tools.SendTextMsg(bot, message.Chat.ID, fmt.Sprintf("获取管理员列表时发生错误：%v", err))
+	}
+	if !isAdmin {
+		return tools.SendTextMsg(bot, message.Chat.ID, "不许乱碰！")
+	}
+	order := strings.Split(message.Text, "/keyadd ")
+	if len(order) != 2 {
+		return tools.SendParseTextMsg(bot, message.Chat.ID, "使用 `/keyadd key=reply` 增加关键词。", "markdown")
+	}
+	args := strings.SplitN(order[1], "=", 2)
+	keyword := args[0]
+	reply := args[1]
+	c := make(chan int, 1)
+
+	// Make new goroutine for add record.
+	// First add into database
+	go func(c chan int) {
+		kid, err := SetKeywordIntoDB(keyword, reply)
+		if err != nil {
+			c <- -1
+		}
+		c <- kid
+	}(c)
+
+	// Then add record into memory.
+	kid := <-c
+	go SetKeywordIntoCFG(kid, keyword, reply)
+
+	return tools.SendParseTextMsg(bot, message.Chat.ID,
+		fmt.Sprintf("我已经学会啦！当你说 *%s* 的时候， 我会回复 *%s*。", keyword, reply), "markdown")
+}
+
+func KeyList(bot *tgbotapi.BotAPI, message *tgbotapi.Message) (tgbotapi.Message, error) {
+	return tools.SendTextMsg(bot, message.Chat.ID, ListKeywordAndReply())
+}
+
+func KeyDel(bot *tgbotapi.BotAPI, message *tgbotapi.Message) (tgbotapi.Message, error) {
+	order := strings.SplitN(message.Text, "/keydel ", 2)
+	args := strings.Fields(order[1])
+	successCount := 0
+	c := make(chan string, 2)
+	d := make(chan bool, 1)
+	// Delete keyword in database
+	go func(c chan string, d chan bool) {
+		kw := <-c
+		err := DelKeyword(kw)
+		if err == nil {
+			d <- true
+		}
+	}(c, d)
+
+	// If success add into successCount
+	go func(d chan bool) {
+		success := <-d
+		if success {
+			successCount += 1
+		}
+	}(d)
+
+	// Passing value to methods.
+	for _, arg := range args {
+		c <- arg
+	}
+	return tools.SendTextMsg(bot, message.Chat.ID, fmt.Sprintf("成功删除 %d 个关键词。", successCount))
 }

@@ -2,6 +2,7 @@ package bot
 
 import (
 	"database/sql"
+	"fmt"
 	"github.com/Avimitin/go-bot/cmd/bot/internal/conf"
 	"github.com/Avimitin/go-bot/cmd/bot/internal/database"
 	"github.com/Avimitin/go-bot/cmd/bot/internal/tools"
@@ -31,8 +32,30 @@ func Regexp(s string, c *conf.Config) (*conf.KeywordsReplyType, bool) {
 	return nil, false
 }
 
-func SetKeyword(keyword string, reply string) error {
+// Function for set add new keyword and related reply.
+func SetKeywordIntoDB(keyword string, reply string) (int, error) {
 	return database.AddKeywords(DB, keyword, reply)
+}
+
+func SetKeywordIntoCFG(kid int, keyword string, reply string) {
+	currentKeywords := &cfg.Keywords
+	var currentKAndR *conf.KeywordsReplyType
+	for _, kar := range cfg.Keywords {
+		if keyword == kar.Keyword.Word {
+			currentKAndR = kar
+		}
+	}
+	if currentKAndR != nil {
+		currentKAndR.Replies = append(currentKAndR.Replies, reply)
+		return
+	}
+	kw := conf.KeywordType{
+		Kid:  kid,
+		Word: keyword,
+	}
+
+	newKAR := conf.KeywordsReplyType{Keyword: &kw, Replies: []string{reply}}
+	*currentKeywords = append(*currentKeywords, &newKAR)
 }
 
 type KeyWordNotFoundError struct{}
@@ -50,6 +73,17 @@ func DelKeyword(keyword string) error {
 		return &KeyWordNotFoundError{}
 	}
 	return database.DelKeyword(DB, ID)
+}
+
+func DelKeywordFromCFG(kid int) error {
+	for i, kw := range cfg.Keywords {
+		if kw.Keyword.Kid == kid {
+			leftPart := cfg.Keywords[:i]
+			cfg.Keywords = append(leftPart, cfg.Keywords[i+1:]...)
+			return nil
+		}
+	}
+	return &KeyWordNotFoundError{}
 }
 
 // This method is used for loading all the keyword and reply.
@@ -72,4 +106,16 @@ func LoadKeywordReply(db *sql.DB, c *conf.Config) error {
 		c.Keywords = append(c.Keywords, &keywordAndReply)
 	}
 	return nil
+}
+
+func ListKeywordAndReply() string {
+	text := "KEYS AND REPLIES:\n"
+	for place, kar := range cfg.Keywords {
+		text += fmt.Sprintf("%d. K: %s\n", place, kar.Keyword.Word)
+		for _, r := range kar.Replies {
+			text += fmt.Sprintf("|--: %s\n", r)
+		}
+		text += "\n"
+	}
+	return text
 }

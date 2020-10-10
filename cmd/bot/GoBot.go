@@ -58,12 +58,8 @@ func Run(CleanMode bool) {
 	// 清理模式
 	for CleanMode {
 		log.Printf("Cleaning MSG...")
-		update := <-updates
-		if update.Message == nil {
-			log.Printf("Cleaning done.")
-			os.Exit(0)
-		}
-		updates.Clear()
+		<-updates
+		os.Exit(0)
 	}
 
 	for update := range updates {

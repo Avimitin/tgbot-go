@@ -2,12 +2,12 @@ package bot
 
 import (
 	"fmt"
-	"github.com/Avimitin/go-bot/cmd/bot/internal/auth"
-	"github.com/Avimitin/go-bot/cmd/bot/internal/database"
-	"github.com/Avimitin/go-bot/cmd/bot/internal/manage"
-	"github.com/Avimitin/go-bot/cmd/bot/internal/tools"
-	"github.com/Avimitin/go-bot/utils/modules/hardwareInfo"
-	"github.com/Avimitin/go-bot/utils/modules/timer"
+	"github.com/Avimitin/go-bot/internal/auth"
+	"github.com/Avimitin/go-bot/internal/bot/internal"
+	"github.com/Avimitin/go-bot/internal/bot/internal/manage"
+	"github.com/Avimitin/go-bot/internal/database"
+	"github.com/Avimitin/go-bot/internal/utils/hardwareInfo"
+	"github.com/Avimitin/go-bot/internal/utils/timer"
 	"github.com/go-telegram-bot-api/telegram-bot-api"
 	"strconv"
 	"strings"
@@ -128,12 +128,12 @@ func sysInfo(bot *tgbotapi.BotAPI, message *tgbotapi.Message) (m tgbotapi.Messag
 
 func authGroups(bot *tgbotapi.BotAPI, message *tgbotapi.Message) (m tgbotapi.Message, err error) {
 	if !auth.IsCreator(CREATOR, message.From.ID) {
-		return tools.SendTextMsg(bot, message.Chat.ID, "不许乱碰！")
+		return internal.SendTextMsg(bot, message.Chat.ID, "不许乱碰！")
 	}
 
 	args := strings.Fields(message.Text)
 	if length := len(args); length != 3 {
-		return tools.SendTextMsg(bot, message.Chat.ID, fmt.Sprintf("请输入正确的参数数量！只需要2个参数但是捕获到%d", length-1))
+		return internal.SendTextMsg(bot, message.Chat.ID, fmt.Sprintf("请输入正确的参数数量！只需要2个参数但是捕获到%d", length-1))
 	}
 
 	var text string
@@ -146,13 +146,13 @@ func authGroups(bot *tgbotapi.BotAPI, message *tgbotapi.Message) (m tgbotapi.Mes
 		// Get specific chat username.
 		targetChat, err := bot.GetChat(tgbotapi.ChatConfig{SuperGroupUsername: chatUserName})
 		if err != nil {
-			return tools.SendTextMsg(bot, message.Chat.ID, fmt.Sprintf("获取群组信息时出现错误\n错误信息：%v", err))
+			return internal.SendTextMsg(bot, message.Chat.ID, fmt.Sprintf("获取群组信息时出现错误\n错误信息：%v", err))
 		}
 
 		// Store groups information.
 		err = database.AddGroups(DB, targetChat.ID, targetChat.UserName)
 		if err != nil {
-			return tools.SendTextMsg(bot, message.Chat.ID, fmt.Sprintf("保存出错了！\n错误：%s", err))
+			return internal.SendTextMsg(bot, message.Chat.ID, fmt.Sprintf("保存出错了！\n错误：%s", err))
 		}
 
 		// If all things behind has done, store groups id into memory.
@@ -161,25 +161,25 @@ func authGroups(bot *tgbotapi.BotAPI, message *tgbotapi.Message) (m tgbotapi.Mes
 			if targetChat.ID < group {
 				current := append([]int64{targetChat.ID}, cfg.Groups[i:]...)
 				cfg.Groups = append(cfg.Groups[:i], current...)
-				return tools.SendTextMsg(bot, message.Chat.ID, "保存认证群组成功")
+				return internal.SendTextMsg(bot, message.Chat.ID, "保存认证群组成功")
 			}
 		}
 
 		// If targetChat's ID is the biggest just insert it.
 		cfg.Groups = append(cfg.Groups, targetChat.ID)
-		return tools.SendTextMsg(bot, message.Chat.ID, "保存认证群组成功")
+		return internal.SendTextMsg(bot, message.Chat.ID, "保存认证群组成功")
 
 	// Delete authorized group's record.
 	case "del":
 		// Convert string arguments to int64.
 		i, err := strconv.ParseInt(args[2], 10, 64)
 		if err != nil {
-			return tools.SendTextMsg(bot, message.Chat.ID, fmt.Sprintf("参数出错了！\n错误：%s", err))
+			return internal.SendTextMsg(bot, message.Chat.ID, fmt.Sprintf("参数出错了！\n错误：%s", err))
 		}
 
 		// Search group is exist or not, if exist, delete it from memory and database.
 		if int(i) > len(cfg.Groups) {
-			return tools.SendTextMsg(bot, message.Chat.ID, "找不到指定序号的群组。")
+			return internal.SendTextMsg(bot, message.Chat.ID, "找不到指定序号的群组。")
 		}
 		chatID := cfg.Groups[i]
 		cfg.Groups = append(cfg.Groups[:i], cfg.Groups[i+1:]...)
@@ -187,15 +187,15 @@ func authGroups(bot *tgbotapi.BotAPI, message *tgbotapi.Message) (m tgbotapi.Mes
 		// Delete chat record in database
 		err = database.DeleteGroups(DB, chatID)
 		if err != nil {
-			return tools.SendTextMsg(bot, message.Chat.ID, fmt.Sprintf("删除出错了！\n错误：%s", err))
+			return internal.SendTextMsg(bot, message.Chat.ID, fmt.Sprintf("删除出错了！\n错误：%s", err))
 		}
-		return tools.SendTextMsg(bot, message.Chat.ID, "成功删除！")
+		return internal.SendTextMsg(bot, message.Chat.ID, "成功删除！")
 	// list all groups
 	case "list":
 		if args[2] == "db" {
 			groups, err := database.SearchGroups(DB)
 			if err != nil {
-				return tools.SendTextMsg(bot, message.Chat.ID, fmt.Sprintf("获取群组信息时发生了一些错误。"))
+				return internal.SendTextMsg(bot, message.Chat.ID, fmt.Sprintf("获取群组信息时发生了一些错误。"))
 			}
 			for i, group := range groups {
 				text += fmt.Sprintf("%d. GID: %v GNAME: %v\n", i, group.GroupID, group.GroupUsername)
@@ -211,7 +211,7 @@ func authGroups(bot *tgbotapi.BotAPI, message *tgbotapi.Message) (m tgbotapi.Mes
 		text = "未知参数，您可以输入： /authgroups add 123 增加认证或 /authgroups del 123 删除群组"
 	}
 
-	return tools.SendTextMsg(bot, message.Chat.ID, text)
+	return internal.SendTextMsg(bot, message.Chat.ID, text)
 }
 
 func ver(bot *tgbotapi.BotAPI, message *tgbotapi.Message) (tgbotapi.Message, error) {
@@ -310,14 +310,14 @@ func shutUp(bot *tgbotapi.BotAPI, message *tgbotapi.Message) (tgbotapi.Message, 
 	isAdmin, err := auth.IsAdmin(bot, message.From.ID, message.Chat)
 	// acquire admins list
 	if err != nil {
-		return tools.SendTextMsg(bot, message.Chat.ID, fmt.Sprintf("在获取管理员列表时发生了一些错误：%v", err))
+		return internal.SendTextMsg(bot, message.Chat.ID, fmt.Sprintf("在获取管理员列表时发生了一些错误：%v", err))
 	}
 
 	// check if the command caller is reply to someone or not
 	if reply := message.ReplyToMessage; reply != nil {
 		// check permission
 		if !isAdmin {
-			return tools.SendTextMsg(bot, message.Chat.ID, "你没有权限，不许乱碰！")
+			return internal.SendTextMsg(bot, message.Chat.ID, "你没有权限，不许乱碰！")
 		}
 		// check arguments
 		args := strings.Fields(message.Text)
@@ -336,18 +336,18 @@ func shutUp(bot *tgbotapi.BotAPI, message *tgbotapi.Message) (tgbotapi.Message, 
 				// convert string to int64
 				add, err := strconv.ParseInt(addStr, 10, 64)
 				if err != nil {
-					return tools.SendTextMsg(bot, message.Chat.ID, fmt.Sprintf("参数错误：%v", err))
+					return internal.SendTextMsg(bot, message.Chat.ID, fmt.Sprintf("参数错误：%v", err))
 				}
 				// add time from now.unix()
 				until, err = timer.CalcTime(add, unit)
 				if err != nil {
-					return tools.SendTextMsg(bot, message.Chat.ID, fmt.Sprintf("参数错误：%v", err))
+					return internal.SendTextMsg(bot, message.Chat.ID, fmt.Sprintf("参数错误：%v", err))
 				}
 			}
 			return manage.ShutTheMouseUp(bot, message.Chat.ID, reply.From.ID, until, false)
 		}
 
-		return tools.SendTextMsg(bot, message.Chat.ID, fmt.Sprintf("参数过多：需要0或1个参数但是得到了 %d 个参数", len(args)))
+		return internal.SendTextMsg(bot, message.Chat.ID, fmt.Sprintf("参数过多：需要0或1个参数但是得到了 %d 个参数", len(args)))
 	}
 
 	// If the message is use directly this will ban the sender randomly
@@ -356,7 +356,7 @@ func shutUp(bot *tgbotapi.BotAPI, message *tgbotapi.Message) (tgbotapi.Message, 
 		return manage.ShutTheMouseUp(bot, message.Chat.ID, message.From.ID, until, false)
 	}
 
-	return tools.SendParseTextMsg(bot, message.Chat.ID,
+	return internal.SendParseTextMsg(bot, message.Chat.ID,
 		"Usage: *Reply* to a member and add a time for until date. "+
 			"Support Seconds, minutes, hours, days... as time unit. Or you can just use `rand` as param to get random limit time."+
 			"And if limit time is lower than 30s or longer than 366d it means this user is restricted forever.\n"+
@@ -371,29 +371,29 @@ func unShutUp(bot *tgbotapi.BotAPI, message *tgbotapi.Message) (tgbotapi.Message
 	}
 	args := strings.Split(message.Text, "/unshutup ")
 	if len(args) == 1 {
-		return tools.SendTextMsg(bot, message.Chat.ID, "请回复一个用户的信息或者输入他的UID来解封")
+		return internal.SendTextMsg(bot, message.Chat.ID, "请回复一个用户的信息或者输入他的UID来解封")
 	}
 	if len(args) == 2 {
 		uid, err := strconv.ParseInt(args[1], 10, 64)
 		if err != nil {
-			return tools.SendTextMsg(bot, message.Chat.ID, fmt.Sprintf("参数错误！需要用户的 USERID"))
+			return internal.SendTextMsg(bot, message.Chat.ID, fmt.Sprintf("参数错误！需要用户的 USERID"))
 		}
 		return manage.OpenMouse(bot, message.Chat.ID, int(uid), true)
 	}
-	return tools.SendTextMsg(bot, message.Chat.ID, "参数过多！")
+	return internal.SendTextMsg(bot, message.Chat.ID, "参数过多！")
 }
 
 func keyAdd(bot *tgbotapi.BotAPI, message *tgbotapi.Message) (tgbotapi.Message, error) {
 	isAdmin, err := auth.IsAdmin(bot, message.From.ID, message.Chat)
 	if err != nil {
-		return tools.SendTextMsg(bot, message.Chat.ID, fmt.Sprintf("获取管理员列表时发生错误：%v", err))
+		return internal.SendTextMsg(bot, message.Chat.ID, fmt.Sprintf("获取管理员列表时发生错误：%v", err))
 	}
 	if !isAdmin {
-		return tools.SendTextMsg(bot, message.Chat.ID, "不许乱碰！")
+		return internal.SendTextMsg(bot, message.Chat.ID, "不许乱碰！")
 	}
 	order := strings.Split(message.Text, "/keyadd ")
 	if len(order) != 2 {
-		return tools.SendParseTextMsg(bot, message.Chat.ID, "使用 `/keyadd key=reply` 增加关键词。", "markdown")
+		return internal.SendParseTextMsg(bot, message.Chat.ID, "使用 `/keyadd key=reply` 增加关键词。", "markdown")
 	}
 	args := strings.SplitN(order[1], "=", 2)
 	keyword := args[0]
@@ -414,12 +414,12 @@ func keyAdd(bot *tgbotapi.BotAPI, message *tgbotapi.Message) (tgbotapi.Message, 
 	kid := <-c
 	go SetKeywordIntoCFG(kid, keyword, reply)
 
-	return tools.SendParseTextMsg(bot, message.Chat.ID,
+	return internal.SendParseTextMsg(bot, message.Chat.ID,
 		fmt.Sprintf("我已经学会啦！当你说 *%s* 的时候， 我会回复 *%s*。", keyword, reply), "markdown")
 }
 
 func KeyList(bot *tgbotapi.BotAPI, message *tgbotapi.Message) (tgbotapi.Message, error) {
-	return tools.SendTextMsg(bot, message.Chat.ID, ListKeywordAndReply())
+	return internal.SendTextMsg(bot, message.Chat.ID, ListKeywordAndReply())
 }
 
 func KeyDel(bot *tgbotapi.BotAPI, message *tgbotapi.Message) (tgbotapi.Message, error) {
@@ -449,5 +449,5 @@ func KeyDel(bot *tgbotapi.BotAPI, message *tgbotapi.Message) (tgbotapi.Message, 
 	for _, arg := range args {
 		c <- arg
 	}
-	return tools.SendTextMsg(bot, message.Chat.ID, fmt.Sprintf("成功删除 %d 个关键词。", successCount))
+	return internal.SendTextMsg(bot, message.Chat.ID, fmt.Sprintf("成功删除 %d 个关键词。", successCount))
 }

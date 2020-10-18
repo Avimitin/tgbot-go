@@ -3,9 +3,9 @@ package bot
 import (
 	"database/sql"
 	"fmt"
-	"github.com/Avimitin/go-bot/cmd/bot/internal/auth"
-	"github.com/Avimitin/go-bot/cmd/bot/internal/conf"
-	"github.com/Avimitin/go-bot/cmd/bot/internal/tools"
+	"github.com/Avimitin/go-bot/internal/auth"
+	"github.com/Avimitin/go-bot/internal/bot/internal"
+	"github.com/Avimitin/go-bot/internal/conf"
 	"github.com/go-telegram-bot-api/telegram-bot-api"
 	"log"
 	"os"
@@ -101,7 +101,7 @@ func commandHandler(message *tgbotapi.Message) {
 		_, err := cmd(bot, message)
 
 		if err != nil {
-			_, _ = tools.SendParseTextMsg(bot, message.Chat.ID,
+			_, _ = internal.SendParseTextMsg(bot, message.Chat.ID,
 				fmt.Sprintf("<b>Some error happen when sending message.</b> \n\nDescriptions: \n\n<code>%v</code>", err),
 				"html")
 		}

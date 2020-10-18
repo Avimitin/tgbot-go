@@ -3,9 +3,9 @@ package bot
 import (
 	"database/sql"
 	"fmt"
-	"github.com/Avimitin/go-bot/cmd/bot/internal/conf"
-	"github.com/Avimitin/go-bot/cmd/bot/internal/database"
-	"github.com/Avimitin/go-bot/cmd/bot/internal/tools"
+	"github.com/Avimitin/go-bot/internal/bot/internal"
+	"github.com/Avimitin/go-bot/internal/conf"
+	"github.com/Avimitin/go-bot/internal/database"
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api"
 	"math/rand"
 	"strings"
@@ -15,10 +15,10 @@ func Reply(msg *tgbotapi.Message) (tgbotapi.Message, error) {
 	kws, isExist := Regexp(msg.Text, cfg)
 	if isExist {
 		if len(kws.Replies) == 1 {
-			return tools.SendTextMsg(bot, msg.Chat.ID, kws.Replies[0])
+			return internal.SendTextMsg(bot, msg.Chat.ID, kws.Replies[0])
 		}
 		randNum := rand.Intn(len(kws.Replies))
-		return tools.SendTextMsg(bot, msg.Chat.ID, kws.Replies[randNum])
+		return internal.SendTextMsg(bot, msg.Chat.ID, kws.Replies[randNum])
 	}
 	return tgbotapi.Message{}, nil
 }

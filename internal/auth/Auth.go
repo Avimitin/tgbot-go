@@ -2,8 +2,8 @@ package auth
 
 import (
 	"database/sql"
-	"github.com/Avimitin/go-bot/cmd/bot/internal/conf"
-	"github.com/Avimitin/go-bot/cmd/bot/internal/database"
+	"github.com/Avimitin/go-bot/internal/conf"
+	"github.com/Avimitin/go-bot/internal/database"
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api"
 	"log"
 )

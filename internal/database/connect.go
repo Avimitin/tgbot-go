@@ -3,7 +3,7 @@ package database
 import (
 	"database/sql"
 	"fmt"
-	"github.com/Avimitin/go-bot/cmd/bot/internal/conf"
+	"github.com/Avimitin/go-bot/internal/conf"
 	_ "github.com/go-sql-driver/mysql"
 	"time"
 )

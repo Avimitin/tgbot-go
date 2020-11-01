@@ -3,7 +3,6 @@ package database
 import (
 	"database/sql"
 	"fmt"
-	"github.com/Avimitin/go-bot/internal/conf"
 )
 
 func PeekKeywords(DB *sql.DB, keyword string) (int, error) {
@@ -78,7 +77,7 @@ func RenameKeywords(DB *sql.DB, kid int, newKeyword string) error {
 
 func DelKeyword(DB *sql.DB, k int) error {
 	// Delete reply relate with keyword first.
-	stmt, err := DB.Prepare("DELETE FROM replies WHERE kid = ?")
+	stmt, err := DB.Prepare("DELETE FROM replies WHERE keyword = ?")
 	if err != nil {
 		Pln("Error occur when preparing delete keyword. Info:", err.Error())
 		return err
@@ -111,23 +110,27 @@ func DelKeyword(DB *sql.DB, k int) error {
 	return nil
 }
 
-func FetchKeyword(DB *sql.DB) ([]conf.KeywordType, error) {
-	rows, err := DB.Query("SELECT kid,keyword FROM keywords")
+type KT struct {
+	K string
+	I int
+}
+
+func FetchKeyword(DB *sql.DB) ([]KT, error) {
+	rows, err := DB.Query("SELECT kid, keyword FROM keywords")
 	if err != nil {
 		Pln("Error occur when preparing query. Info:", err.Error())
 		return nil, err
 	}
-	var k conf.KeywordType
-	var keywords []conf.KeywordType
 
+	var k KT
+	var ks []KT
 	for rows.Next() {
-		err = rows.Scan(&k.Kid, &k.Word)
+		err = rows.Scan(&k.I, &k.K)
 		if err != nil {
 			Pln("Error occur when scanning value. Info:", err.Error())
 			return nil, err
 		}
-		keywords = append(keywords, k)
+		ks = append(ks, k)
 	}
-
-	return keywords, nil
+	return ks, nil
 }

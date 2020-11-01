@@ -15,12 +15,24 @@ type Config struct {
 	Keywords []*KeywordsReplyType
 }
 
-type KeywordsReplyType struct {
-	Keyword *KeywordType
-	Replies []string
+type KeywordsReplyType map[string][]string
+
+type DBSecret struct {
+	User     string
+	Pwd      string
+	Host     string
+	Database string
+	Port     string
 }
 
-type KeywordType struct {
-	Kid  int
-	Word string
+// BotData store map of kw and replies and auth groups
+type BotData struct {
+	KAR    KeywordsReplyType
+	Groups []int64
+}
+
+// BDInit Init all the data in BotData type
+func (b *BotData) BDInit() {
+	b.KAR = make(KeywordsReplyType)
+	b.Groups = make([]int64, 5)
 }

@@ -2,13 +2,17 @@ package bot
 
 import (
 	"database/sql"
+	"github.com/Avimitin/go-bot/internal/bot/internal/KaR"
+	"log"
+
 	"github.com/Avimitin/go-bot/internal/conf"
 	"github.com/Avimitin/go-bot/internal/database"
-	"github.com/go-telegram-bot-api/telegram-bot-api"
-	"log"
+	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api"
 )
 
-func NewBot(token string) *tgbotapi.BotAPI {
+//
+func NewBot() *tgbotapi.BotAPI {
+	token := conf.LoadBotToken()
 	bot, err := tgbotapi.NewBotAPI(token)
 	if err != nil {
 		log.Panic(err)
@@ -16,19 +20,22 @@ func NewBot(token string) *tgbotapi.BotAPI {
 	return bot
 }
 
-func NewCFG() *conf.Config {
-	config, err := conf.LoadCFG()
+func NewData() *conf.BotData {
+	var botData *conf.BotData = &conf.BotData{
+		KAR:    make(conf.KeywordsReplyType),
+		Groups: make([]int64, 5),
+	}
+	err := KaR.LoadKeywordReply(DB, botData)
 	if err != nil {
 		log.Panic(err)
 	}
-	if config.LOADED != true {
-		log.Panic("Fail to load config")
-	}
-	return config
+	return botData
 }
 
+// NewSB
 func NewDB() *sql.DB {
-	DB, err := database.NewDB(cfg)
+	s := conf.LoadDBSecret()
+	DB, err := database.NewDB(s)
 	if err != nil {
 		log.Panic(err)
 	}
@@ -48,7 +55,7 @@ func NewAuthGroups() []int64 {
 }
 
 func NewKeywordReplies() {
-	err := LoadKeywordReply(DB, cfg)
+	err := KaR.LoadKeywordReply(DB, data)
 	if err != nil {
 		log.Panic(err)
 	}

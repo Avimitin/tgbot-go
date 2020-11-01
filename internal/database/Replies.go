@@ -6,7 +6,7 @@ import (
 )
 
 func SetReply(DB *sql.DB, reply string, kid int) error {
-	stmt, err := DB.Prepare("INSERT INTO replies (reply, kid) VALUES (?, ?)")
+	stmt, err := DB.Prepare("INSERT INTO replies (reply, keyword) VALUES (?, ?)")
 	if err != nil {
 		Pln("Error occur when preparing replies. Info:", err.Error())
 		return err
@@ -28,7 +28,7 @@ func SetReply(DB *sql.DB, reply string, kid int) error {
 }
 
 func GetReplyWithKey(DB *sql.DB, kid int) ([]string, error) {
-	rows, err := DB.Query("SELECT reply FROM replies WHERE kid = ?", kid)
+	rows, err := DB.Query("SELECT reply FROM replies WHERE keyword = ?", kid)
 	if err != nil {
 		Pln("Error occur when searching reply. Info", err.Error())
 		return nil, err
@@ -85,4 +85,25 @@ func FetchReplies(DB *sql.DB) ([]string, error) {
 	}
 
 	return replies, nil
+}
+
+func DelReply(DB *sql.DB, rid int) error {
+	stmt, err := DB.Prepare("DELETE FROM replies WHERE rid = ?")
+	if err != nil {
+		Pln("Error occur when preparing delete reply")
+		return err
+	}
+	defer stmt.Close()
+	result, err := stmt.Exec(rid)
+	if err != nil {
+		Pln("Error occur when preparing exec delete reply")
+		return err
+	}
+	row, err := result.RowsAffected()
+	if row == 0 || err != nil {
+		Pln("Fail to delete reply")
+		return err
+	}
+	Pln(fmt.Sprintf("Successfully delete reply, affected %d row", row))
+	return nil
 }

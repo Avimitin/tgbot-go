@@ -33,20 +33,20 @@ func DBIsAuthGroups(DB *sql.DB, gid int64) bool {
 	return false
 }
 
-func CFGIsAuthGroups(cfg *conf.Config, gid int64) bool {
-	if SearchGroupsAlg(cfg, gid) != -1 {
+func CFGIsAuthGroups(data *conf.BotData, gid int64) bool {
+	if SearchGroupsAlg(data, gid) != -1 {
 		return true
 	}
 	return false
 }
 
-func SearchGroupsAlg(cfg *conf.Config, gid int64) int {
-	lo, hi := 0, len(cfg.Groups)-1
+func SearchGroupsAlg(data *conf.BotData, gid int64) int {
+	lo, hi := 0, len(data.Groups)-1
 	for lo <= hi {
 		mid := lo + (hi-lo)/2
-		if gid < cfg.Groups[mid] {
+		if gid < data.Groups[mid] {
 			hi = mid - 1
-		} else if gid > cfg.Groups[mid] {
+		} else if gid > data.Groups[mid] {
 			lo = mid + 1
 		} else {
 			return mid

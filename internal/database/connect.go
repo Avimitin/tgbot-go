@@ -10,9 +10,9 @@ import (
 
 var db *sql.DB
 
-func register(cfg *conf.Config) (err error) {
+func register(user string, password string, host string, database string, port string) (err error) {
 	db, err = sql.Open("mysql",
-		fmt.Sprintf("%v:%v@tcp(%v)/%v?charset=utf8", cfg.DBCfg.User, cfg.DBCfg.Password, cfg.DBCfg.Host, cfg.DBCfg.Database))
+		fmt.Sprintf("%v:%v@tcp(%v:%v)/%v?charset=utf8", user, password, host, port, database))
 
 	if err != nil {
 		return err
@@ -30,9 +30,9 @@ func register(cfg *conf.Config) (err error) {
 
 // This is the function that return database connection for other modules.
 // Require database's config to fetch .
-func NewDB(dbCFG *conf.Config) (*sql.DB, error) {
+func NewDB(dbs *conf.DBSecret) (*sql.DB, error) {
 	if db == nil {
-		err := register(dbCFG)
+		err := register(dbs.User, dbs.Pwd, dbs.Host, dbs.Database, dbs.Port)
 		if err != nil {
 			return nil, err
 		}

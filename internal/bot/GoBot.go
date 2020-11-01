@@ -4,7 +4,7 @@ import (
 	"database/sql"
 	"fmt"
 	"github.com/Avimitin/go-bot/internal/auth"
-	"github.com/Avimitin/go-bot/internal/bot/internal"
+	"github.com/Avimitin/go-bot/internal/bot/internal/KaR"
 	"github.com/Avimitin/go-bot/internal/conf"
 	"github.com/go-telegram-bot-api/telegram-bot-api"
 	"log"
@@ -17,34 +17,31 @@ const (
 )
 
 var (
-	DB  *sql.DB
-	cfg *conf.Config
-	bot *tgbotapi.BotAPI
+	DB   *sql.DB
+	bot  *tgbotapi.BotAPI
+	data *conf.BotData
 )
 
 func Run(CleanMode bool) {
-	log.Print("Fetching config...")
-	cfg = NewCFG()
-	log.Println("Done.")
-
+	// Bot init
 	log.Printf("Bot initializing... Version: %v", VERSION)
-	bot = NewBot(cfg.BotToken)
-	log.Println("Done.")
+	bot = NewBot()
 	bot.Debug = true
 	log.Printf("Authorized on accout %s", bot.Self.UserName)
 
+	// DB init
 	log.Print("Fetching database connection...")
 	DB = NewDB()
 	defer DB.Close()
-	log.Println("Done.")
+
+	log.Print("Initializing data")
+	data = NewData()
 
 	log.Print("Fetching authorized groups...")
-	cfg.Groups = NewAuthGroups()
-	log.Println("Done.")
+	data.Groups = NewAuthGroups()
 
 	log.Print("Fetching keywords and replies...")
 	NewKeywordReplies()
-	log.Println("Done.")
 
 	updateMsg := tgbotapi.NewUpdate(0)
 	updateMsg.Timeout = 20
@@ -70,7 +67,7 @@ func Run(CleanMode bool) {
 
 		log.Printf("[%s] %s", update.Message.From.UserName, update.Message.Text)
 
-		if update.Message.Chat.Type == "supergroup" && !auth.CFGIsAuthGroups(cfg, update.Message.Chat.ID) {
+		if update.Message.Chat.Type == "supergroup" && !auth.CFGIsAuthGroups(data, update.Message.Chat.ID) {
 			msg := tgbotapi.NewMessage(update.Message.Chat.ID, "你们这啥群啊，别乱拉人，爬爬爬！")
 			_, err := bot.Send(msg)
 			if err != nil {
@@ -88,10 +85,7 @@ func Run(CleanMode bool) {
 			continue
 		}
 
-		_, err := Reply(update.Message)
-		if err != nil {
-			log.Printf("[TGBOT]Error occur when sending message. Info: %v", err.Error())
-		}
+		go keywordHandler(update.Message)
 	}
 }
 
@@ -101,9 +95,16 @@ func commandHandler(message *tgbotapi.Message) {
 		_, err := cmd(bot, message)
 
 		if err != nil {
-			_, _ = internal.SendParseTextMsg(bot, message.Chat.ID,
+			_, _ = SendParseTextMsg(bot, message.Chat.ID,
 				fmt.Sprintf("<b>Some error happen when sending message.</b> \n\nDescriptions: \n\n<code>%v</code>", err),
 				"html")
 		}
+	}
+}
+
+func keywordHandler(message *tgbotapi.Message) {
+	reply, e := KaR.RegexKAR(message.Text, data)
+	if e {
+		_, _ = SendTextMsg(bot, message.Chat.ID, reply)
 	}
 }

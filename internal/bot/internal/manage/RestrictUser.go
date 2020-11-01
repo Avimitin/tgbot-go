@@ -2,9 +2,9 @@ package manage
 
 import (
 	"fmt"
-	"github.com/Avimitin/go-bot/internal/bot/internal"
 	"github.com/Avimitin/go-bot/internal/utils/timer"
 	tgbot "github.com/go-telegram-bot-api/telegram-bot-api"
+	"log"
 	"time"
 )
 
@@ -36,14 +36,15 @@ func ShutTheMouseUp(bot *tgbot.BotAPI, cid int64, uid int, until int64, canSendM
 		} else {
 			text = fmt.Sprintf("发生错误啦: %v", err)
 		}
-		return internal.SendTextMsg(bot, cid, text)
+		msg := tgbot.NewMessage(cid, text)
+		_, _ = bot.Send(msg)
 	}
 
 	// if no error
 	if until-time.Now().Unix() < 31 || until-time.Now().Unix() > 885427200 {
-		return internal.SendTextMsg(bot, cid, fmt.Sprintf("用户: %v 被永久禁言", cid))
+		return sendTextMsg(bot, cid, fmt.Sprintf("用户: %v 被永久禁言", cid))
 	}
-	return internal.SendTextMsg(bot, cid, fmt.Sprintf("用户: %v 直到 %v 都不准说话", uid, timer.UnixToString(until)))
+	return sendTextMsg(bot, cid, fmt.Sprintf("用户: %v 直到 %v 都不准说话", uid, timer.UnixToString(until)))
 }
 
 func OpenMouse(bot *tgbot.BotAPI, cid int64, uid int, canSendMessages bool) (tgbot.Message, error) {
@@ -71,7 +72,17 @@ func OpenMouse(bot *tgbot.BotAPI, cid int64, uid int, canSendMessages bool) (tgb
 		} else {
 			text = fmt.Sprintf("发生错误啦: %v", err)
 		}
-		return internal.SendTextMsg(bot, cid, text)
+		return sendTextMsg(bot, cid, text)
 	}
-	return internal.SendTextMsg(bot, cid, fmt.Sprintf("%v 已经被解封啦", uid))
+	return sendTextMsg(bot, cid, fmt.Sprintf("%v 已经被解封啦", uid))
+}
+
+func sendTextMsg(bot *tgbot.BotAPI, cid int64, text string) (tgbot.Message, error) {
+	msg := tgbot.NewMessage(cid, text)
+	nmsg, err := bot.Send(msg)
+	if err != nil {
+		log.Println("[bot]Send msg error:", err.Error())
+		return nmsg, err
+	}
+	return nmsg, nil
 }

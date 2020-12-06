@@ -2,13 +2,13 @@ package bot
 
 import (
 	"database/sql"
-	"fmt"
+	"log"
+	"os"
+
 	"github.com/Avimitin/go-bot/internal/auth"
 	"github.com/Avimitin/go-bot/internal/bot/internal/KaR"
 	"github.com/Avimitin/go-bot/internal/conf"
-	"github.com/go-telegram-bot-api/telegram-bot-api"
-	"log"
-	"os"
+	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api"
 )
 
 const (
@@ -55,7 +55,7 @@ func Run(CleanMode bool) {
 	// 清理模式
 	for CleanMode {
 		log.Printf("Cleaning MSG...")
-		<-updates
+		updates.Clear()
 		os.Exit(0)
 	}
 
@@ -79,32 +79,47 @@ func Run(CleanMode bool) {
 				log.Printf("[ERROR] Error happen when leave chat %s", err)
 			}
 		}
-
-		if update.Message.IsCommand() {
-			go commandHandler(update.Message)
-			continue
-		}
-
-		go keywordHandler(update.Message)
+		msgHandler(update.Message)
 	}
 }
 
-func commandHandler(message *tgbotapi.Message) {
+func commandHandler(message *tgbotapi.Message, ctx *conf.Context) {
 	cmd, hasElem := COMMAND[message.Command()]
 	if hasElem {
 		_, err := cmd(bot, message)
-
 		if err != nil {
-			_, _ = SendParseTextMsg(bot, message.Chat.ID,
-				fmt.Sprintf("<b>Some error happen when sending message.</b> \n\nDescriptions: \n\n<code>%v</code>", err),
-				"html")
+			ctx.AppendError(err.Error())
+			ctx.Done <- false
+			return
+		}
+		ctx.Done <- true
+	}
+}
+
+func msgHandler(message *tgbotapi.Message, cfg *conf.Config) {
+	if message.IsCommand() {
+		go commandHandler(message, cfg.Context())
+	} else {
+		go keywordHandler(message, cfg.Context())
+	}
+
+	select {
+	case done := <-cfg.Context().Done:
+		cfg.SetOcpyThread(0)
+		if !done {
+			SendTextMsg(bot, message.Chat.ID, cfg.Context().LatestError())
 		}
 	}
 }
 
-func keywordHandler(message *tgbotapi.Message) {
+func keywordHandler(message *tgbotapi.Message, ctx *conf.Context) {
 	reply, e := KaR.RegexKAR(message.Text, data)
 	if e {
-		_, _ = SendTextMsg(bot, message.Chat.ID, reply)
+		_, err := SendTextMsg(bot, message.Chat.ID, reply)
+		if err != nil {
+			ctx.AppendError(err.Error())
+			ctx.Done <- false
+		}
+		ctx.Done <- true
 	}
 }

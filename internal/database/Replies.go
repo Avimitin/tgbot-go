@@ -5,6 +5,7 @@ import (
 	"fmt"
 )
 
+// SetReply insert given reply with the associated keyword id
 func SetReply(DB *sql.DB, reply string, kid int) error {
 	stmt, err := DB.Prepare("INSERT INTO replies (reply, keyword) VALUES (?, ?)")
 	if err != nil {
@@ -27,7 +28,8 @@ func SetReply(DB *sql.DB, reply string, kid int) error {
 	return nil
 }
 
-func GetReplyWithKey(DB *sql.DB, kid int) ([]string, error) {
+// GetReplyWithKey return a list of reply by the given key
+func GetReplyWithKey(DB *sql.DB, kid int) (*[]string, error) {
 	rows, err := DB.Query("SELECT reply FROM replies WHERE keyword = ?", kid)
 	if err != nil {
 		Pln("Error occur when searching reply. Info", err.Error())
@@ -45,9 +47,10 @@ func GetReplyWithKey(DB *sql.DB, kid int) ([]string, error) {
 		}
 		replies = append(replies, reply)
 	}
-	return replies, nil
+	return &replies, nil
 }
 
+// PeekReply return given reply's id
 func PeekReply(DB *sql.DB, reply string) (int, error) {
 	rows, err := DB.Query("SELECT rid FROM replies WHERE reply = ?", reply)
 	if err != nil {
@@ -65,6 +68,7 @@ func PeekReply(DB *sql.DB, reply string) (int, error) {
 	return rid, nil
 }
 
+/*
 func FetchReplies(DB *sql.DB) ([]string, error) {
 	rows, err := DB.Query("SELECT reply FROM replies")
 	if err != nil {
@@ -86,6 +90,7 @@ func FetchReplies(DB *sql.DB) ([]string, error) {
 
 	return replies, nil
 }
+*/
 
 func DelReply(DB *sql.DB, rid int) error {
 	stmt, err := DB.Prepare("DELETE FROM replies WHERE rid = ?")
@@ -105,5 +110,24 @@ func DelReply(DB *sql.DB, rid int) error {
 		return err
 	}
 	Pln(fmt.Sprintf("Successfully delete reply, affected %d row", row))
+	return nil
+}
+
+// DelReplyByKeyword delete replies filtered by keywords
+func DelReplyByKeyword(db *sql.DB, kid int) error {
+	stmt, err := db.Prepare("DELETE FROM replies WHERE keyword = ?")
+	if err != nil {
+		Pln("Error occur when preparing delete keyword. Info:", err.Error())
+		return err
+	}
+	defer stmt.Close()
+	result, err := stmt.Exec(kid)
+	if err != nil {
+		Pln("Error occur when executive value. Info:", err.Error())
+		return err
+	}
+
+	row, _ := result.RowsAffected()
+	Pln(fmt.Sprintf("Delete replies successfully. Affected %v rows", row))
 	return nil
 }

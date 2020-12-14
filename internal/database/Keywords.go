@@ -28,18 +28,6 @@ func PeekKeywords(DB *sql.DB, keyword string) (int, error) {
 }
 
 func AddKeywords(DB *sql.DB, keyword string, reply string) (int, error) {
-	// peek if keyword has existed or not.
-	kid, err := PeekKeywords(DB, keyword)
-	if err != nil {
-		return -1, err
-	}
-
-	// if keyword has existed, add new reply.
-	if kid != -1 {
-		return kid, SetReply(DB, reply, kid)
-	}
-
-	// If keyword isn't exist, insert keyword first.
 	stmt, err := DB.Prepare("INSERT INTO keywords (keyword) VALUES (?)")
 	if err != nil {
 		Pln("Error occur when preparing insert. Info:", err.Error())
@@ -75,13 +63,16 @@ func RenameKeywords(DB *sql.DB, kid int, newKeyword string) error {
 	return nil
 }
 
+// DelKeyword delete keyword
 func DelKeyword(DB *sql.DB, k int) error {
-	// Delete reply relate with keyword first.
-	stmt, err := DB.Prepare("DELETE FROM replies WHERE keyword = ?")
+	// Delete keyword
+	stmt, err := DB.Prepare("DELETE FROM keywords WHERE kid = ?")
 	if err != nil {
 		Pln("Error occur when preparing delete keyword. Info:", err.Error())
 		return err
 	}
+	defer stmt.Close()
+
 	result, err := stmt.Exec(k)
 	if err != nil {
 		Pln("Error occur when executive value. Info:", err.Error())
@@ -89,23 +80,6 @@ func DelKeyword(DB *sql.DB, k int) error {
 	}
 
 	row, _ := result.RowsAffected()
-	Pln(fmt.Sprintf("Delete replies successfully. Affected %v rows", row))
-
-	// Delete keyword
-	stmt, err = DB.Prepare("DELETE FROM keywords WHERE kid = ?")
-	if err != nil {
-		Pln("Error occur when preparing delete keyword. Info:", err.Error())
-		return err
-	}
-	defer stmt.Close()
-
-	result, err = stmt.Exec(k)
-	if err != nil {
-		Pln("Error occur when executive value. Info:", err.Error())
-		return err
-	}
-
-	row, _ = result.RowsAffected()
 	Pln(fmt.Sprintf("Delete keyword successfully. Affected %v rows", row))
 	return nil
 }
@@ -115,7 +89,8 @@ type KT struct {
 	I int
 }
 
-func FetchKeyword(DB *sql.DB) ([]KT, error) {
+// FetchKeyword return list of keyword and it's id
+func FetchKeyword(DB *sql.DB) (*[]KT, error) {
 	rows, err := DB.Query("SELECT kid, keyword FROM keywords")
 	if err != nil {
 		Pln("Error occur when preparing query. Info:", err.Error())
@@ -132,5 +107,5 @@ func FetchKeyword(DB *sql.DB) ([]KT, error) {
 		}
 		ks = append(ks, k)
 	}
-	return ks, nil
+	return &ks, nil
 }

@@ -10,7 +10,7 @@ import (
 func AddGroups(db *sql.DB, groupID int64, username string) error {
 	stmt, err := db.Prepare("INSERT INTO authgroups (GroupID, GroupUsername) VALUES (?, ?)")
 	if err != nil {
-		log.Printf("[DATABASE]Error occur when prepare SQL query. Descriptions: %v", err)
+		log.Printf("[ERR]Error occur when prepare SQL query. Descriptions: %v", err)
 		return err
 	}
 	// 将连接丢回连接池
@@ -18,7 +18,7 @@ func AddGroups(db *sql.DB, groupID int64, username string) error {
 
 	result, err := stmt.Exec(groupID, username)
 	if err != nil {
-		log.Printf("[DATABASE]Error occur execute value. Descriptions: %v", err)
+		log.Printf("[ERR]Error occur execute value. Descriptions: %v", err)
 		return err
 	}
 
@@ -33,14 +33,14 @@ func AddGroups(db *sql.DB, groupID int64, username string) error {
 func DeleteGroups(db *sql.DB, groupID int64) error {
 	stmt, err := db.Prepare("DELETE FROM authgroups WHERE GroupID=?")
 	if err != nil {
-		log.Printf("[DATABASE]Error occur when prepare SQL query. Descriptions: %v", err)
+		log.Printf("[ERR]Error occur when prepare SQL query. Descriptions: %v", err)
 		return err
 	}
 	defer stmt.Close()
 
 	result, err := stmt.Exec(groupID)
 	if err != nil {
-		log.Printf("[DATABASE]Error occur execute value. Descriptions: %v", err)
+		log.Printf("[ERR]Error occur execute value. Descriptions: %v", err)
 		return err
 	}
 
@@ -60,10 +60,10 @@ type Group struct {
 }
 
 // SearchGroups return a list with all the record in authGroups table.
-func SearchGroups(db *sql.DB) ([]Group, error) {
+func SearchGroups(db *sql.DB) (*[]Group, error) {
 	rows, err := db.Query("SELECT GroupID,GroupUsername FROM authgroups ORDER BY GroupID")
 	if err != nil {
-		log.Println("[DATABASE]Error occur when fetching result")
+		log.Println("[ERR]Error occur when fetching result")
 		return nil, err
 	}
 	defer rows.Close()
@@ -73,35 +73,35 @@ func SearchGroups(db *sql.DB) ([]Group, error) {
 		var g Group
 		err := rows.Scan(&g.GroupID, &g.GroupUsername)
 		if err != nil {
-			log.Printf("[DATABASE]Error occur when parsing data. Descriptions: %v\n", err)
+			log.Printf("[ERR]Error occur when parsing data. Descriptions: %v\n", err)
 			return nil, err
 		}
 		Groups = append(Groups, g)
 	}
-	return Groups, nil
+	return &Groups, nil
 }
 
 // ChangeGroupsName require original group's ID and new group name to change group name.
 func ChangeGroupsName(db *sql.DB, originGroupID int64, groupNameAfter string) error {
 	stmt, err := db.Prepare("UPDATE authgroups SET GroupUsername=? WHERE GroupID=?")
 	if err != nil {
-		log.Printf("[DATABASE]Error occur when prepare SQL query. Descriptions: %v", err)
+		log.Printf("[ERR]Error occur when prepare SQL query. Descriptions: %v", err)
 		return nil
 	}
 	defer stmt.Close()
 
 	result, err := stmt.Exec(groupNameAfter, originGroupID)
 	if err != nil {
-		log.Printf("[DATABASE]Error occur when execute value. Descriptions: %v", err)
+		log.Printf("[ERR]Error occur when execute value. Descriptions: %v", err)
 		return err
 	}
 	counts, err := result.RowsAffected()
 	if err != nil {
-		log.Printf("[DATABASE]Error occur when fetching affected rows. Descriptions: %v", err)
+		log.Printf("[ERR]Error occur when fetching affected rows. Descriptions: %v", err)
 		return err
 	}
 	if counts == 0 {
-		log.Println("[DATABASE]Group's ID not found when change group's name.")
+		log.Println("[DATABASE]Group's ID not found or name is already satisfy.")
 		return nil
 	}
 	log.Printf("[DATABASE]Successfully change group's name. Affected %v rows", counts)

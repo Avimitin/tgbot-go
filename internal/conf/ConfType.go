@@ -1,18 +1,12 @@
 package conf
 
-type dbCfg struct {
-	User     string `yaml:"user"`
-	Password string `yaml:"password"`
-	Host     string `yaml:"host"`
-	Database string `yaml:"database"`
-}
+import "fmt"
 
 type Config struct {
-	LOADED     bool `yaml:"LOADED"`
-	Groups     []int64
-	BotToken   string `yaml:"bot_token"`
-	DBCfg      dbCfg  `yaml:"db_cfg"`
-	Keywords   []*KeywordsReplyType
+	groups     []int64
+	botToken   string
+	db         DBSecret
+	keywords   []*KeywordsReplyType
 	maxThread  int
 	ocpyThread int
 	ctx        *Context
@@ -43,13 +37,13 @@ func (c *Config) SetThread(amounts int) {
 }
 
 func (c *Config) InGroups(id int64) bool {
-	var lo, hi int = 0, len(c.Groups)
+	var lo, hi int = 0, len(c.groups)
 	for mid := lo; mid >= lo && mid <= hi; mid = hi - (hi-lo)/2 {
-		if id > c.Groups[mid] {
+		if id > c.groups[mid] {
 			lo = mid + 1
 			continue
 		}
-		if id < c.Groups[mid] {
+		if id < c.groups[mid] {
 			hi = mid - 1
 			continue
 		}
@@ -59,28 +53,24 @@ func (c *Config) InGroups(id int64) bool {
 }
 
 type Context struct {
-	Done     chan bool
-	ErrorMSG []string
-}
-
-func (c *Context) AppendError(err string) {
-	c.ErrorMSG = append(c.ErrorMSG, err)
-}
-
-func (c *Context) LatestError() string {
-	errorMsg := c.ErrorMSG[len(c.ErrorMSG)-1]
-	c.ErrorMSG = c.ErrorMSG[:len(c.ErrorMSG)-1]
-	return errorMsg
+	done     chan bool
+	errorMSG []string
 }
 
 type KeywordsReplyType map[string][]string
 
+// DBSecret store database DSN information
 type DBSecret struct {
-	User     string
-	Pwd      string
-	Host     string
-	Database string
-	Port     string
+	user     string
+	pwd      string
+	host     string
+	database string
+	port     string
+}
+
+// MySqlURL return formatted mysql tcp link
+func (db *DBSecret) MySqlURL() string {
+	return fmt.Sprintf("%s:%s@tcp(%s:%s)/%s", db.user, db.pwd, db.host, db.port, db.database)
 }
 
 // BotData store map of kw and replies and auth groups

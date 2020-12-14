@@ -29,7 +29,7 @@ func SetReply(DB *sql.DB, reply string, kid int) error {
 }
 
 // GetReplyWithKey return a list of reply by the given key
-func GetReplyWithKey(DB *sql.DB, kid int) (*[]string, error) {
+func GetReplyWithKey(DB *sql.DB, kid int) ([]string, error) {
 	rows, err := DB.Query("SELECT reply FROM replies WHERE keyword = ?", kid)
 	if err != nil {
 		Pln("Error occur when searching reply. Info", err.Error())
@@ -47,7 +47,7 @@ func GetReplyWithKey(DB *sql.DB, kid int) (*[]string, error) {
 		}
 		replies = append(replies, reply)
 	}
-	return &replies, nil
+	return replies, nil
 }
 
 // PeekReply return given reply's id

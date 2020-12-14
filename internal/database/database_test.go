@@ -134,7 +134,7 @@ func TestGetReplyWithKey(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	for _, reply := range *replies {
+	for _, reply := range replies {
 		if reply == "testReply" {
 			return
 		}

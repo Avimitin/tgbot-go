@@ -4,11 +4,10 @@ import (
 	"fmt"
 	"github.com/Avimitin/go-bot/internal/utils/timer"
 	tgbot "github.com/go-telegram-bot-api/telegram-bot-api"
-	"log"
 	"time"
 )
 
-func ShutTheMouseUp(bot *tgbot.BotAPI, cid int64, uid int, until int64, canSendMessages bool) (tgbot.Message, error) {
+func ShutTheMouseUp(bot *tgbot.BotAPI, cid int64, uid int, until int64, canSendMessages bool) *tgbot.MessageConfig {
 	user := tgbot.RestrictChatMemberConfig{
 		ChatMemberConfig: tgbot.ChatMemberConfig{
 			ChatID: cid,
@@ -22,6 +21,7 @@ func ShutTheMouseUp(bot *tgbot.BotAPI, cid int64, uid int, until int64, canSendM
 	}
 	_, err := bot.RestrictChatMember(user)
 	// handle error
+	var text string
 	if err != nil {
 		// remake response
 		response := map[string]string{
@@ -30,24 +30,29 @@ func ShutTheMouseUp(bot *tgbot.BotAPI, cid int64, uid int, until int64, canSendM
 			"Bad Request: not enough rights to restrict/unrestrict chat member": "拜托诶你不给我权限我怎么帮你禁言啦!",
 		}
 
-		var text string
 		if responseMsg, ok := response[err.Error()]; ok {
 			text = responseMsg
 		} else {
 			text = fmt.Sprintf("发生错误啦: %v", err)
 		}
 		msg := tgbot.NewMessage(cid, text)
-		_, _ = bot.Send(msg)
+		return &msg
 	}
 
-	// if no error
 	if until-time.Now().Unix() < 31 || until-time.Now().Unix() > 885427200 {
-		return sendTextMsg(bot, cid, fmt.Sprintf("用户: %v 被永久禁言", cid))
+		text = fmt.Sprintf("用户: %v 被永久禁言", cid)
+	} else {
+		text = fmt.Sprintf("用户: %v 直到 %v 都不准说话", uid, timer.UnixToString(until))
 	}
-	return sendTextMsg(bot, cid, fmt.Sprintf("用户: %v 直到 %v 都不准说话", uid, timer.UnixToString(until)))
+
+	return &tgbot.MessageConfig{
+		BaseChat:              tgbot.BaseChat{ChatID: cid, ReplyToMessageID: 0},
+		Text:                  text,
+		DisableWebPagePreview: false,
+	}
 }
 
-func OpenMouse(bot *tgbot.BotAPI, cid int64, uid int, canSendMessages bool) (tgbot.Message, error) {
+func OpenMouse(bot *tgbot.BotAPI, cid int64, uid int, canSendMessages bool) *tgbot.MessageConfig {
 	user := tgbot.RestrictChatMemberConfig{
 		ChatMemberConfig: tgbot.ChatMemberConfig{
 			ChatID: cid,
@@ -72,17 +77,14 @@ func OpenMouse(bot *tgbot.BotAPI, cid int64, uid int, canSendMessages bool) (tgb
 		} else {
 			text = fmt.Sprintf("发生错误啦: %v", err)
 		}
-		return sendTextMsg(bot, cid, text)
-	}
-	return sendTextMsg(bot, cid, fmt.Sprintf("%v 已经被解封啦", uid))
-}
+		return &tgbot.MessageConfig{
+			BaseChat: tgbot.BaseChat{ChatID: cid, ReplyToMessageID: 0},
+			Text:     text,
+		}
 
-func sendTextMsg(bot *tgbot.BotAPI, cid int64, text string) (tgbot.Message, error) {
-	msg := tgbot.NewMessage(cid, text)
-	nmsg, err := bot.Send(msg)
-	if err != nil {
-		log.Println("[bot]Send msg error:", err.Error())
-		return nmsg, err
 	}
-	return nmsg, nil
+	return &tgbot.MessageConfig{
+		BaseChat: tgbot.BaseChat{ChatID: cid, ReplyToMessageID: 0},
+		Text:     fmt.Sprintf("%v 已经被解封啦", uid),
+	}
 }

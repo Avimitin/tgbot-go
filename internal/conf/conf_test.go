@@ -1,31 +1,12 @@
 package conf
 
 import (
+	"database/sql"
+	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api"
 	"os"
 	"os/user"
 	"testing"
 )
-
-func TestInGroup(t *testing.T) {
-	c := Config{
-		groups: []int64{
-			123456,
-			789101,
-			649191333,
-			784143491,
-			4839417104,
-		},
-	}
-
-	if !c.InGroups(649191333) {
-		t.Errorf("Expect given id %d in groups but got false", 649191333)
-		return
-	}
-
-	if c.InGroups(293194189) {
-		t.Errorf("Unexpected given id in groups")
-	}
-}
 
 func TestWhereCFG(t *testing.T) {
 	const PATH string = "PATH/TO/CFG"
@@ -82,5 +63,45 @@ func TestLoadDBSecret(t *testing.T) {
 	db := LoadDBSecret(WhereCFG(""))
 	if db.MySqlURL() != "tgbot:tgbot@tcp(127.0.0.1:3306)/tgbotDB" {
 		t.Fatalf("Unwanted db secret, got %s", db.MySqlURL())
+	}
+}
+
+func newCFG() *Config {
+	return &Config{
+		dbs: &DBSecret{
+			user:     "bot",
+			pwd:      "bot",
+			host:     "LocalHost",
+			port:     "3306",
+			database: "bot_db",
+		},
+		bts: "123:qwe",
+		ctx: &Context{
+			kr:     &KeywordsReplyType{"foo": []string{"bar"}},
+			db:     &sql.DB{},
+			groups: &map[int64]interface{}{123456: struct{}{}},
+			bot:    &tgbotapi.BotAPI{},
+		},
+	}
+}
+
+func TestConfig_SetBotToken(t *testing.T) {
+	cfg := newCFG()
+	cfg.SetBotToken("12313231")
+	if cfg.Token() != "12313231" {
+		t.Fatalf("Want != Got")
+	}
+}
+
+func TestContext_IsCertGroup(t *testing.T) {
+	ctx := Context{
+		groups: &map[int64]interface{}{
+			12314515: struct{}{},
+			18231379: struct{}{},
+			114514:   struct{}{},
+		},
+	}
+	if !ctx.IsCertGroup(114514) {
+		t.Fatal("Can't get expected group")
 	}
 }

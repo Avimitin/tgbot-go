@@ -5,7 +5,7 @@ import (
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api"
 )
 
-func KickUser(bot *tgbotapi.BotAPI, uid int, cid int64, restrictTime int64) (tgbotapi.Message, error) {
+func KickUser(bot *tgbotapi.BotAPI, uid int, cid int64, restrictTime int64) *tgbotapi.MessageConfig {
 	kickUser := tgbotapi.KickChatMemberConfig{
 		ChatMemberConfig: tgbotapi.ChatMemberConfig{
 			ChatID:             cid,
@@ -32,5 +32,5 @@ func KickUser(bot *tgbotapi.BotAPI, uid int, cid int64, restrictTime int64) (tgb
 		msg = tgbotapi.NewMessage(cid, fmt.Sprintf("成功踢出 %v", uid))
 	}
 
-	return bot.Send(msg)
+	return &msg
 }

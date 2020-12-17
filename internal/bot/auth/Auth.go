@@ -1,9 +1,6 @@
 package auth
 
 import (
-	"database/sql"
-	"github.com/Avimitin/go-bot/internal/conf"
-	"github.com/Avimitin/go-bot/internal/database"
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api"
 	"log"
 )
@@ -16,49 +13,14 @@ func (e *MyError) Error() string {
 	return e.info
 }
 
-func IsCreator(creator int, uid int) bool {
-	return uid == creator
-}
-
-func DBIsAuthGroups(DB *sql.DB, gid int64) bool {
-	groups, err := database.SearchGroups(DB)
-	if err != nil {
-		return false
-	}
-
-	id := binarySearch(gid, groups)
-	if id != -1 {
-		return true
-	}
-	return false
-}
-
-func CFGIsAuthGroups(data *conf.BotData, gid int64) bool {
-	if SearchGroupsAlg(data, gid) != -1 {
-		return true
-	}
-	return false
-}
-
-func SearchGroupsAlg(data *conf.BotData, gid int64) int {
-	lo, hi := 0, len(data.Groups)-1
-	for lo <= hi {
-		mid := lo + (hi-lo)/2
-		if gid < data.Groups[mid] {
-			hi = mid - 1
-		} else if gid > data.Groups[mid] {
-			lo = mid + 1
-		} else {
-			return mid
-		}
-	}
-	return -1
+func IsMe(me int, uid int) bool {
+	return uid == me
 }
 
 func getAdmin(bot *tgbotapi.BotAPI, chat *tgbotapi.Chat, c chan []int) {
 	members, err := bot.GetChatAdministrators(chat.ChatConfig())
 	if err != nil {
-		log.Print("[GET_ADMIN_ERROR]", err)
+		log.Print("[ERR]", err)
 		c <- nil
 		close(c)
 	}
@@ -83,19 +45,4 @@ func IsAdmin(bot *tgbotapi.BotAPI, uid int, chat *tgbotapi.Chat) (bool, error) {
 		}
 	}
 	return false, nil
-}
-
-func binarySearch(target int64, groups []database.Group) int {
-	var lo, hi = 0, len(groups) - 1
-	for lo <= hi {
-		mid := lo + (hi-lo)/2
-		if target < groups[mid].GroupID {
-			hi = mid - 1
-		} else if target > groups[mid].GroupID {
-			lo = mid + 1
-		} else {
-			return mid
-		}
-	}
-	return -1
 }

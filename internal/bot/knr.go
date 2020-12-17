@@ -1,9 +1,8 @@
-package KaR
+package bot
 
 import (
 	"database/sql"
 	"fmt"
-	"github.com/Avimitin/go-bot/internal/conf"
 	"github.com/Avimitin/go-bot/internal/database"
 	"log"
 	"math/rand"
@@ -11,7 +10,7 @@ import (
 	"time"
 )
 
-func RegexKAR(msg string, k *conf.KeywordsReplyType) (string, bool) {
+func RegexKAR(msg string, k *KnRType) (string, bool) {
 	for key, rps := range *k {
 		if strings.Contains(msg, key) {
 			if length := len(rps); length > 1 {
@@ -40,7 +39,7 @@ func setKeywordIntoDB(keyword string, reply string, DB *sql.DB) (int, error) {
 	return database.AddKeywords(DB, keyword, reply)
 }
 
-func setKeywordIntoCFG(keyword string, reply string, k *conf.KeywordsReplyType) {
+func setKeywordIntoCFG(keyword string, reply string, k *KnRType) {
 	if rps, exist := (*k)[keyword]; exist {
 		rps = append(rps)
 	} else {
@@ -49,7 +48,7 @@ func setKeywordIntoCFG(keyword string, reply string, k *conf.KeywordsReplyType) 
 }
 
 // Set can set given keyword and reply into memory and database
-func Set(keyword string, reply string, c *conf.Context) error {
+func Set(keyword string, reply string, c *Context) error {
 	setKeywordIntoCFG(keyword, reply, c.KeywordReplies())
 	id, err := setKeywordIntoDB(keyword, reply, c.DB())
 	if id == -1 && err != nil {
@@ -83,7 +82,7 @@ func delKeywordAtDB(keyword string, db *sql.DB) error {
 	return database.DelKeyword(db, ID)
 }
 
-func delKeywordAtCFG(keyword string, k *conf.KeywordsReplyType) error {
+func delKeywordAtCFG(keyword string, k *KnRType) error {
 	_, e := (*k)[keyword]
 	if e {
 		delete(*k, keyword)
@@ -91,8 +90,8 @@ func delKeywordAtCFG(keyword string, k *conf.KeywordsReplyType) error {
 	return &KeyWordNotFoundError{}
 }
 
-// DelKeyword will delete given keyword and it's associated replies
-func DelKeyword(keyword string, c *conf.Context) error {
+// Del will delete given keyword and it's associated replies
+func Del(keyword string, c *Context) error {
 	err := delKeywordAtCFG(keyword, c.KeywordReplies())
 	if err != nil {
 		log.Println("[ERR]Keyword not found")
@@ -107,24 +106,25 @@ func DelKeyword(keyword string, c *conf.Context) error {
 }
 
 // Load will load keyword and reply from database
-func Load(db *sql.DB, k *conf.KeywordsReplyType) error {
+func Load(db *sql.DB) (*KnRType, error) {
 	kts, err := database.FetchKeyword(db)
 	if err != nil {
 		log.Println("[ERR]Error happen when Loading keyword", err)
-		return err
+		return nil, err
 	}
+	k := make(KnRType)
 	for _, kt := range *kts {
 		replies, err := database.GetReplyWithKey(db, kt.I)
 		if err != nil {
 			log.Println("[ERR]Failed to get reply when loading keyword", err)
-			return err
+			return nil, err
 		}
-		(*k)[kt.K] = replies
+		k[kt.K] = replies
 	}
-	return nil
+	return &k, nil
 }
 
-func ListKeywordAndReply(k *conf.KeywordsReplyType) string {
+func ListKeywordAndReply(k *KnRType) string {
 	text := "KEYS AND REPLIES:\n"
 	for key, word := range *k {
 		text += fmt.Sprintf("%s. K: %s\n", key, word)
@@ -133,7 +133,7 @@ func ListKeywordAndReply(k *conf.KeywordsReplyType) string {
 	return text
 }
 
-func DelReply(keyword string, reply string, c *conf.Context) error {
+func DelReply(keyword string, reply string, c *Context) error {
 	err := DelRepliesAtData(keyword, reply, c.KeywordReplies())
 	if err != nil {
 		return err
@@ -145,7 +145,7 @@ func DelReply(keyword string, reply string, c *conf.Context) error {
 	return nil
 }
 
-func DelRepliesAtData(keyword string, reply string, k *conf.KeywordsReplyType) error {
+func DelRepliesAtData(keyword string, reply string, k *KnRType) error {
 	replies, ok := (*k)[keyword]
 	if !ok {
 		return &KeyWordNotFoundError{}

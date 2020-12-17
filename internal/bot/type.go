@@ -2,16 +2,17 @@ package bot
 
 import (
 	"database/sql"
-	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api"
 	"math"
 	"sync"
 	"sync/atomic"
 	"time"
+
+	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api"
 )
 
 // masterHandler is a goroutine pool to have multiplexing handler
 type masterHandler struct {
-	cap         int32         //cap is max number of applied
+	cap         int32         //cap is limit of applied
 	applied     int32         //applied is how many handler is applied
 	expiredTime time.Duration //expiredTime is a duration of killing handler
 	idling      []*msgHandler //idling is a slice of idling worker
@@ -61,31 +62,26 @@ func (m *masterHandler) isRunOut() bool {
 
 // getHandler use LIFO queue to get free handler
 func (m *masterHandler) getHandler() *msgHandler {
+	test := func() bool {
+		m.lock.Lock()
+		allWorking := len(m.idling) == 0
+		m.lock.Unlock()
+		return allWorking
+	}
+	for test() {
+		if m.applied < m.cap {
+			h := m.apply()
+			h.Run()
+			return h
+		}
+	}
 	m.lock.Lock()
-	amount := len(m.idling)
-	var wait bool
-	if amount == 0 {
-		if m.applied >= m.cap {
-			wait = true
-		}
-	} else {
-		last := amount - 1
-		h := m.idling[last]
-		m.idling[last] = nil
-		m.idling = m.idling[:last]
-		h.Run()
-	}
-	m.lock.Unlock()
-	if wait {
-		for {
-			m.lock.Lock()
-
-		}
-	}
-}
-
-func (m *masterHandler) stopHandler(h *msgHandler) {
-	h.task <- nil
+	last := len(m.idling) - 1
+	h := m.idling[last]
+	m.idling[last] = nil
+	m.idling = m.idling[:last]
+	h.Run()
+	return h
 }
 
 func (m *masterHandler) listenAndKill() {
@@ -99,13 +95,13 @@ func (m *masterHandler) listenAndKill() {
 			continue
 		}
 		var needExp int
-		for i, hdler := range m.idling {
-			// Queue is arrange by LIFO, so those handler is arrange from old to new.
-			if now.Sub(hdler.lastIdleTime) <= m.expiredTime {
+		for i, mh := range m.idling {
+			// Queue is arrange by LIFO, so those handler is arranged from old to new.
+			if now.Sub(mh.lastIdleTime) <= m.expiredTime {
 				break
 			}
 			needExp = i
-			m.stopHandler(hdler)
+			mh.task <- nil
 			m.idling[i] = nil
 		}
 		if needExp == len(m.idling) {
@@ -113,7 +109,6 @@ func (m *masterHandler) listenAndKill() {
 		} else {
 			m.idling = m.idling[needExp+1:]
 		}
-		m.applied -= int32(needExp)
 		m.lock.Unlock()
 	}
 }
@@ -130,6 +125,7 @@ func (mh *msgHandler) Run() {
 		for msg := range mh.task {
 			// Stop signal
 			if msg == nil {
+				atomic.AddInt32(&mh.main.applied, -1)
 				return
 			}
 			// Do jobs

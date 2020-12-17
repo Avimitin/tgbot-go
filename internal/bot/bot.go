@@ -1,12 +1,12 @@
 package bot
 
 import (
-	"github.com/Avimitin/go-bot/internal/database"
 	"log"
 	"os"
 	"time"
 
 	"github.com/Avimitin/go-bot/internal/conf"
+	"github.com/Avimitin/go-bot/internal/database"
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api"
 )
 
@@ -72,7 +72,7 @@ func doCMD(ctx *Context, msg *tgbotapi.Message) {
 
 // doRegex do a regexp job
 func doRegex(ctx *Context, msg *tgbotapi.Message) {
-	if rpy, ok := RegexKAR(msg.Text, ctx.KeywordReplies()); ok {
+	if rpy, ok := RegexKAR(&msg.Text, ctx.KeywordReplies()); ok {
 		sendText(ctx, msg.Chat.ID, rpy)
 	}
 }

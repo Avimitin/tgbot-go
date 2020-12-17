@@ -1,12 +1,13 @@
 package bot
 
 import (
-	MyTimer "github.com/Avimitin/go-bot/internal/utils/timer"
-	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api"
 	"log"
 	"sync"
 	"testing"
 	"time"
+
+	MyTimer "github.com/Avimitin/go-bot/internal/utils/timer"
+	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api"
 )
 
 func TestGoPool(t *testing.T) {
@@ -18,11 +19,11 @@ func TestGoPool(t *testing.T) {
 	ctx := NewContext(&k, nil, nil, nil, 30*time.Second)
 
 	var Wg sync.WaitGroup
-	handler := newHandler(time.Second, ctx)
 
+	handler := newHandler(time.Second, ctx)
 	testFunc := func(t int) {
 		timer := MyTimer.NewTimer()
-		pureGoTest(&Wg, t, msg.Text, &k)
+		pureGoTest(&Wg, t, &msg.Text, &k)
 		Wg.Wait()
 		log.Printf("Ding! pure goroutine use %.5f second", timer.StopCounting()/1000000000)
 		// ---------
@@ -64,7 +65,7 @@ func poolGoTest(wg *sync.WaitGroup, max int, h *masterHandler, msg *tgbotapi.Mes
 	}
 }
 
-func pureGoTest(wg *sync.WaitGroup, max int, s string, k *KnRType) {
+func pureGoTest(wg *sync.WaitGroup, max int, s *string, k *KnRType) {
 	for t := 0; t < max; t++ {
 		go func() {
 			wg.Add(1)

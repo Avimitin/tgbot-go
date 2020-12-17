@@ -3,16 +3,17 @@ package bot
 import (
 	"database/sql"
 	"fmt"
-	"github.com/Avimitin/go-bot/internal/database"
 	"log"
 	"math/rand"
 	"strings"
 	"time"
+
+	"github.com/Avimitin/go-bot/internal/database"
 )
 
-func RegexKAR(msg string, k *KnRType) (string, bool) {
+func RegexKAR(msg *string, k *KnRType) (string, bool) {
 	for key, rps := range *k {
-		if strings.Contains(msg, key) {
+		if strings.Contains(*msg, key) {
 			if length := len(rps); length > 1 {
 				rand.Seed(time.Now().Unix())
 				return rps[rand.Intn(length)], true

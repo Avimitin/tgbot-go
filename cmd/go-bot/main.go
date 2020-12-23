@@ -1,7 +1,11 @@
 package main
 
-import "github.com/Avimitin/go-bot/internal/bot"
+import (
+	"github.com/Avimitin/go-bot/internal/bot"
+	"github.com/Avimitin/go-bot/internal/conf"
+)
 
 func main() {
-	bot.Run(false)
+	path := conf.WhereCFG("F:/code/golang/go-bot/cfg")
+	bot.Run(path, false)
 }

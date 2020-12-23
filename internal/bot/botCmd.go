@@ -5,6 +5,7 @@ import (
 	"github.com/Avimitin/go-bot/internal/bot/auth"
 	"github.com/Avimitin/go-bot/internal/bot/manage"
 	"github.com/Avimitin/go-bot/internal/database"
+	"github.com/Avimitin/go-bot/internal/utils/ehAPI"
 	"github.com/Avimitin/go-bot/internal/utils/hardwareInfo"
 	"github.com/Avimitin/go-bot/internal/utils/timer"
 	"github.com/go-telegram-bot-api/telegram-bot-api"
@@ -19,21 +20,29 @@ const (
 	neReply = false // neReply means need reply
 )
 
-var COMMAND = map[string]SendMethod{
-	"start":      start,
-	"help":       help,
-	"ping":       ping,
-	"sysinfo":    sysInfo,
-	"authgroups": authGroups,
-	"ver":        ver,
-	"dump":       dump,
-	"kick":       kick,
-	"shutup":     shutUp,
-	"unshutup":   unShutUp,
-	"keyadd":     keyAdd,
-	"keylist":    KeyList,
-	"keydel":     KeyDel,
-}
+var (
+	// have group -> have cmd limit -> enable cmd -> do cmd
+	// else just do it
+	cmdDoAble = map[int64]map[string]bool{}
+	COMMAND   = cmdFunc{
+		"start":      start,
+		"help":       help,
+		"ping":       ping,
+		"sysinfo":    sysInfo,
+		"authgroups": authGroups,
+		"ver":        ver,
+		"dump":       dump,
+		"kick":       kick,
+		"shutup":     shutUp,
+		"unshutup":   unShutUp,
+		"keyadd":     keyAdd,
+		"keylist":    KeyList,
+		"keydel":     KeyDel,
+		"ex":         cmdEx,
+		"disable":    cmdDisable,
+		"enable":     cmdEnable,
+	}
+)
 
 // Use for no reply case
 func sendText(c *C, cid int64, text string) {
@@ -97,7 +106,7 @@ func sysInfo(message *M, ctx *C) {
 	var err error
 	switch args[1] {
 	case "cpu":
-		if len(args) > 3 {
+		if len(args) >= 3 {
 			switch args[2] {
 			case "model":
 				text, err = hardwareInfo.GetCpuModel()
@@ -114,7 +123,7 @@ func sysInfo(message *M, ctx *C) {
 			text = "Nothing specific.\nTry out /sysinfo cpu help"
 		}
 	case "disk":
-		if len(args) > 3 {
+		if len(args) >= 3 {
 			switch args[2] {
 			case "stats":
 				text, err = hardwareInfo.GetDiskUsage("/")
@@ -128,7 +137,7 @@ func sysInfo(message *M, ctx *C) {
 		}
 
 	case "mem":
-		if len(args) == 3 {
+		if len(args) >= 3 {
 			switch args[2] {
 			case "stats":
 				text, _ = hardwareInfo.GetMemUsage()
@@ -203,7 +212,7 @@ func authGroups(message *M, ctx *C) {
 			if err != nil {
 				sendText(ctx, message.Chat.ID, fmt.Sprintf("获取群组信息时发生了一些错误。"))
 			}
-			for i, group := range *groups {
+			for i, group := range groups {
 				text += fmt.Sprintf("%d. GID: %v GNAME: %v\n", i, group.GroupID, group.GroupUsername)
 			}
 		} else if args[2] == "mem" {
@@ -227,21 +236,19 @@ func ver(message *M, ctx *C) {
 }
 
 func dump(message *M, ctx *C) {
-	var text = "<b>Reply To Message Info</b>\n" +
+	var text = "<b>Message Information</b>\n" +
 		"<b>DATE</b>\n" +
 		"%v\n" +
-		"=== === ===" +
-		"<b>CHAT</b>\n" +
+		"=== <b>CHAT</b> ===\n" +
 		"<b>ID:</b> <code>%v</code>\n" +
 		"<b>TYPE:</b> <code>%v</code>\n" +
 		"<b>USERNAME:</b> <code>%v</code>\n" +
-		"<b>USER</b>\n" +
+		"=== <b>USER</b> ===\n" +
 		"<b>ID:</b> <code>%v</code>\n" +
 		"<b>USERNAME:</b> <code>%v</code>\n" +
 		"<b>NICKNAME:</b> <code>%v %v</code>\n" +
 		"<b>LANGUAGE:</b> <code>%v</code>\n" +
-		"=== === ===" +
-		"<b>MSG</b>\n" +
+		"=== <b>MSG</b> ===\n" +
 		"<b>ID:</b> <code>%v</code>\n" +
 		"<b>TEXT:</b> %v"
 	if reply := message.ReplyToMessage; reply != nil {
@@ -286,8 +293,8 @@ func kick(message *M, ctx *C) {
 			ctx.Send(pkg)
 			return
 		case 2:
-			if time, err := strconv.ParseInt(args[1], 10, 64); err == nil {
-				pkg := NewSendPKG(manage.KickUser(ctx.Bot(), reply.From.ID, reply.Chat.ID, time), noReply)
+			if date, err := strconv.ParseInt(args[1], 10, 64); err == nil {
+				pkg := NewSendPKG(manage.KickUser(ctx.Bot(), reply.From.ID, reply.Chat.ID, date), noReply)
 				ctx.Send(pkg)
 				return
 			}
@@ -453,4 +460,119 @@ func KeyDel(message *M, ctx *C) {
 		return
 	}
 	sendText(ctx, message.Chat.ID, fmt.Sprintf("有 %d 个关键词删除失败。", failure))
+}
+
+func cmdEx(m *M, ctx *C) {
+	var urls []string
+	if reply := m.ReplyToMessage; reply != nil {
+		urls = strings.Fields(reply.Text)
+		// Can be delete after tg bot api support multi photo
+	} else {
+		args := strings.Fields(m.Text)
+		if len(args) == 1 {
+			sendParse(ctx, m.Chat.ID, "Usage: `/ex https://e-hentai.org/g/id/token/`", "markdownv2")
+			return
+		}
+		urls = args[1:]
+	}
+	if len(urls) > 1 {
+		sendText(ctx, m.Chat.ID, "现在 TG BotAPI 每次只给发送一张图片，为了不刷屏，只选第一条链接进行漫画信息获取。")
+		urls = urls[:1]
+	}
+	gmd, err := ehAPI.GetComic(urls, 0)
+	if err != nil {
+		sendText(ctx, m.Chat.ID, "Oops, error occur: "+err.Error())
+		return
+	}
+	for _, data := range gmd.GMD {
+		if data.Error != "" {
+			sendText(ctx, m.Chat.ID, "Given e-hentai link is wrong.")
+			return
+		}
+		//Without error
+		photoToUpload := tgbotapi.NewPhotoUpload(m.Chat.ID, data.Thumb)
+		//Let tags became hashtag
+		var tags string
+		for _, tag := range data.Tags {
+			tags += "#" + tag
+		}
+		//
+		unixDate, err := strconv.Atoi(data.Posted)
+		if err != nil {
+			log.Println("[cmdEx]Error parsing data's date")
+			sendText(ctx, m.Chat.ID, "Error parsing data's date")
+			return
+		}
+		photoToUpload.Caption = fmt.Sprintf(
+			"📕 标题： `%s`\n"+
+				"🗓 时间：%v"+
+				"🗂 分类: #%s\n"+
+				"📌 标签: %s\n", data.TitleJpn, timer.UnixToString(int64(unixDate)), data.Category, tags,
+		)
+		collectURL := fmt.Sprintf("https://e-hentai.org/gallerypopups.php?gid=%d&t=%s&act=addfav", data.Gid, data.Token)
+		inURL := fmt.Sprintf("https://exhentai.org/g/%d/%s/", data.Gid, data.Token)
+		outURL := fmt.Sprintf("https://e-hentai.org/g/%d/%s/", data.Gid, data.Token)
+		btnRate := tgbotapi.InlineKeyboardButton{
+			Text: "👍 " + data.Rating,
+		}
+		btnCollect := tgbotapi.InlineKeyboardButton{
+			Text: "⭐ 点击收藏",
+			URL:  &collectURL,
+		}
+		btnOriUrl := tgbotapi.InlineKeyboardButton{
+			Text: "🐼 里站Link",
+			URL:  &inURL,
+		}
+		btnInUrl := tgbotapi.InlineKeyboardButton{
+			Text: "🔗 表站Link",
+			URL:  &outURL,
+		}
+		ikm := tgbotapi.InlineKeyboardMarkup{InlineKeyboard: [][]tgbotapi.InlineKeyboardButton{
+			{btnRate, btnCollect},
+			{btnOriUrl, btnInUrl},
+		}}
+		photoToUpload.ReplyMarkup = ikm
+		pkg := &sendPKG{msg: photoToUpload, noReply: true}
+		ctx.Send(pkg)
+	}
+}
+
+func cmdDisable(m *M, ctx *C) {
+	args := strings.Fields(m.Text)
+	if len(args) < 2 {
+		sendParse(ctx, m.Chat.ID, "Desc: disable is used for closing command in your group\nUsage: `/disable <cmd>` (Without slash)", "MarkdownV2")
+		return
+	}
+	cmdToDisable := args[1]
+	if !COMMAND.hasCommand(cmdToDisable) {
+		sendText(ctx, m.Chat.ID, "Command not found")
+		return
+	}
+	cmdCtl := map[string]bool{cmdToDisable: true}
+	cmdDoAble[m.Chat.ID] = cmdCtl
+	sendText(ctx, m.Chat.ID, "Command "+cmdToDisable+" has closed")
+}
+
+func cmdEnable(m *M, ctx *C) {
+	args := strings.Fields(m.Text)
+	if len(args) < 2 {
+		sendParse(ctx, m.Chat.ID, "Desc: enable is used for enabling command in your group\nUsage: `/enable <cmd>` (Without slash)", "MarkdownV2")
+		return
+	}
+	cmdToEnable := args[1]
+	if !COMMAND.hasCommand(cmdToEnable) {
+		sendText(ctx, m.Chat.ID, "Command not found")
+		return
+	}
+	cmdCtl, ok := cmdDoAble[m.Chat.ID]
+	if ok {
+		if hasDisabled, ok := cmdCtl[cmdToEnable]; ok {
+			if hasDisabled {
+				cmdCtl[cmdToEnable] = false
+				sendText(ctx, m.Chat.ID, "Command "+cmdToEnable+" has enabled.")
+				return
+			}
+		}
+	}
+	sendText(ctx, m.Chat.ID, "Command is listening, no need to enable.")
 }

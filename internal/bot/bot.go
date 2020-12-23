@@ -34,8 +34,7 @@ func Run(cfgPath string, CleanMode bool) {
 		updates.Clear()
 		os.Exit(0)
 	}
-
-	masterHandler := newHandler(time.Second, ctx)
+	sendHandler(bot, ctx)
 
 	for update := range updates {
 
@@ -59,8 +58,33 @@ func Run(cfgPath string, CleanMode bool) {
 			continue
 		}
 
-		masterHandler.submit(update.Message)
+		msgHandler(ctx, update.Message)
 	}
+}
+
+func msgHandler(ctx *Context, msg *tgbotapi.Message) {
+	if msg.IsCommand() {
+		if hasCmdLimit(msg) {
+			return
+		}
+		doCMD(ctx, msg)
+	} else {
+		doRegex(ctx, msg)
+	}
+}
+
+func hasCmdLimit(msg *M) bool {
+	// have group ↓
+	if canDoCmd, ok := cmdDoAble[msg.Chat.ID]; ok {
+		// have cmd limit ↓
+		if can, ok := canDoCmd[msg.Command()]; ok {
+			// cmd disable ↓
+			if !can {
+				return true
+			}
+		}
+	}
+	return false
 }
 
 // doCMD do a command
@@ -98,7 +122,7 @@ func newCTX(path string) *Context {
 		log.Fatal(err)
 	}
 	groupsSet := make(map[int64]interface{})
-	for _, group := range *groups {
+	for _, group := range groups {
 		groupsSet[group.GroupID] = struct{}{}
 	}
 	log.Printf("[INFO]Successfully load all certed groups")

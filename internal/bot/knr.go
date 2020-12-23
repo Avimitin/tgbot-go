@@ -87,6 +87,7 @@ func delKeywordAtCFG(keyword string, k *KnRType) error {
 	_, e := (*k)[keyword]
 	if e {
 		delete(*k, keyword)
+		return nil
 	}
 	return &KeyWordNotFoundError{}
 }

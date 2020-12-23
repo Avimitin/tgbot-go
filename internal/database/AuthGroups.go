@@ -60,7 +60,7 @@ type Group struct {
 }
 
 // SearchGroups return a list with all the record in authGroups table.
-func SearchGroups(db *sql.DB) (*[]Group, error) {
+func SearchGroups(db *sql.DB) ([]*Group, error) {
 	rows, err := db.Query("SELECT GroupID,GroupUsername FROM authgroups ORDER BY GroupID")
 	if err != nil {
 		log.Println("[ERR]Error occur when fetching result")
@@ -68,7 +68,7 @@ func SearchGroups(db *sql.DB) (*[]Group, error) {
 	}
 	defer rows.Close()
 
-	var Groups []Group
+	var Groups []*Group
 	for rows.Next() {
 		var g Group
 		err := rows.Scan(&g.GroupID, &g.GroupUsername)
@@ -76,9 +76,9 @@ func SearchGroups(db *sql.DB) (*[]Group, error) {
 			log.Printf("[ERR]Error occur when parsing data. Descriptions: %v\n", err)
 			return nil, err
 		}
-		Groups = append(Groups, g)
+		Groups = append(Groups, &g)
 	}
-	return &Groups, nil
+	return Groups, nil
 }
 
 // ChangeGroupsName require original group's ID and new group name to change group name.

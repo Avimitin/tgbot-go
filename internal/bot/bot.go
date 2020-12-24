@@ -34,7 +34,7 @@ func Run(cfgPath string, CleanMode bool) {
 		updates.Clear()
 		os.Exit(0)
 	}
-	sendHandler(bot, ctx)
+	go sendHandler(bot, ctx)
 
 	for update := range updates {
 
@@ -89,7 +89,9 @@ func hasCmdLimit(msg *M) bool {
 
 // doCMD do a command
 func doCMD(ctx *Context, msg *tgbotapi.Message) {
-	if fn, ok := COMMAND[msg.Command()]; ok {
+	if fn, ok := BaseCommand[msg.Command()]; ok {
+		fn(msg, ctx)
+	} else if fn, ok = PubCommand[msg.Command()]; ok {
 		fn(msg, ctx)
 	}
 }

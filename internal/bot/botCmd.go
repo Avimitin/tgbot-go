@@ -23,24 +23,26 @@ const (
 var (
 	// have group -> have cmd limit -> enable cmd -> do cmd
 	// else just do it
-	cmdDoAble = map[int64]map[string]bool{}
-	COMMAND   = cmdFunc{
+	cmdDoAble   = map[int64]map[string]bool{}
+	BaseCommand = cmdFunc{
 		"start":      start,
 		"help":       help,
 		"ping":       ping,
 		"sysinfo":    sysInfo,
 		"authgroups": authGroups,
-		"ver":        ver,
-		"dump":       dump,
-		"kick":       kick,
-		"shutup":     shutUp,
-		"unshutup":   unShutUp,
-		"keyadd":     keyAdd,
-		"keylist":    KeyList,
-		"keydel":     KeyDel,
-		"ex":         cmdEx,
 		"disable":    cmdDisable,
 		"enable":     cmdEnable,
+	}
+	PubCommand = cmdFunc{
+		"ver":      ver,
+		"dump":     dump,
+		"kick":     kick,
+		"shutup":   shutUp,
+		"unshutup": unShutUp,
+		"keyadd":   keyAdd,
+		"keylist":  KeyList,
+		"keydel":   KeyDel,
+		"ex":       cmdEx,
 	}
 )
 
@@ -490,13 +492,15 @@ func cmdEx(m *M, ctx *C) {
 			return
 		}
 		//Without error
-		photoToUpload := tgbotapi.NewPhotoUpload(m.Chat.ID, data.Thumb)
+		photoToUpload := tgbotapi.NewPhotoShare(m.Chat.ID, data.Thumb)
 		//Let tags became hashtag
 		var tags string
 		for _, tag := range data.Tags {
-			tags += "#" + tag
+			tag = strings.ReplaceAll(tag, " ", "_")
+			tag = strings.ReplaceAll(tag, "-", "_")
+			tags += "#" + tag + " "
 		}
-		//
+		//make caption
 		unixDate, err := strconv.Atoi(data.Posted)
 		if err != nil {
 			log.Println("[cmdEx]Error parsing data's date")
@@ -504,16 +508,19 @@ func cmdEx(m *M, ctx *C) {
 			return
 		}
 		photoToUpload.Caption = fmt.Sprintf(
-			"📕 标题： `%s`\n"+
-				"🗓 时间：%v"+
+			"📕 标题： <code>%s</code>\n"+
+				"🗓 时间：%v\n"+
 				"🗂 分类: #%s\n"+
 				"📌 标签: %s\n", data.TitleJpn, timer.UnixToString(int64(unixDate)), data.Category, tags,
 		)
+		// make button
 		collectURL := fmt.Sprintf("https://e-hentai.org/gallerypopups.php?gid=%d&t=%s&act=addfav", data.Gid, data.Token)
 		inURL := fmt.Sprintf("https://exhentai.org/g/%d/%s/", data.Gid, data.Token)
 		outURL := fmt.Sprintf("https://e-hentai.org/g/%d/%s/", data.Gid, data.Token)
+		rateCB := "exRatingCallBack"
 		btnRate := tgbotapi.InlineKeyboardButton{
-			Text: "👍 " + data.Rating,
+			Text:         "👍 " + data.Rating,
+			CallbackData: &rateCB,
 		}
 		btnCollect := tgbotapi.InlineKeyboardButton{
 			Text: "⭐ 点击收藏",
@@ -531,7 +538,9 @@ func cmdEx(m *M, ctx *C) {
 			{btnRate, btnCollect},
 			{btnOriUrl, btnInUrl},
 		}}
+		// final setup
 		photoToUpload.ReplyMarkup = ikm
+		photoToUpload.ParseMode = "HTML"
 		pkg := &sendPKG{msg: photoToUpload, noReply: true}
 		ctx.Send(pkg)
 	}
@@ -540,15 +549,15 @@ func cmdEx(m *M, ctx *C) {
 func cmdDisable(m *M, ctx *C) {
 	args := strings.Fields(m.Text)
 	if len(args) < 2 {
-		sendParse(ctx, m.Chat.ID, "Desc: disable is used for closing command in your group\nUsage: `/disable <cmd>` (Without slash)", "MarkdownV2")
+		sendParse(ctx, m.Chat.ID, "Desc: disable is used for closing command in your group\nUsage: `/disable <cmd>` \\(Without slash\\)", "MarkdownV2")
 		return
 	}
 	cmdToDisable := args[1]
-	if !COMMAND.hasCommand(cmdToDisable) {
+	if !PubCommand.hasCommand(cmdToDisable) {
 		sendText(ctx, m.Chat.ID, "Command not found")
 		return
 	}
-	cmdCtl := map[string]bool{cmdToDisable: true}
+	cmdCtl := map[string]bool{cmdToDisable: false}
 	cmdDoAble[m.Chat.ID] = cmdCtl
 	sendText(ctx, m.Chat.ID, "Command "+cmdToDisable+" has closed")
 }
@@ -556,11 +565,11 @@ func cmdDisable(m *M, ctx *C) {
 func cmdEnable(m *M, ctx *C) {
 	args := strings.Fields(m.Text)
 	if len(args) < 2 {
-		sendParse(ctx, m.Chat.ID, "Desc: enable is used for enabling command in your group\nUsage: `/enable <cmd>` (Without slash)", "MarkdownV2")
+		sendParse(ctx, m.Chat.ID, "Desc: enable is used for enabling command in your group\nUsage: `/enable <cmd>` \\(Without slash\\)", "MarkdownV2")
 		return
 	}
 	cmdToEnable := args[1]
-	if !COMMAND.hasCommand(cmdToEnable) {
+	if !PubCommand.hasCommand(cmdToEnable) {
 		sendText(ctx, m.Chat.ID, "Command not found")
 		return
 	}
@@ -568,7 +577,7 @@ func cmdEnable(m *M, ctx *C) {
 	if ok {
 		if hasDisabled, ok := cmdCtl[cmdToEnable]; ok {
 			if hasDisabled {
-				cmdCtl[cmdToEnable] = false
+				cmdCtl[cmdToEnable] = true
 				sendText(ctx, m.Chat.ID, "Command "+cmdToEnable+" has enabled.")
 				return
 			}

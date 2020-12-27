@@ -1,11 +1,10 @@
 package ehAPI
 
 import (
-	"github.com/Avimitin/go-bot/internal/pkg/net/browser"
+	"github.com/Avimitin/go-bot/internal/pkg/browser"
 	jsoniter "github.com/json-iterator/go"
 	"log"
 	"regexp"
-	"strings"
 )
 
 const (
@@ -13,14 +12,12 @@ const (
 )
 
 func getGid(url string) []string {
-	urlB := []byte(url)
 	pattern := regexp.MustCompile(`https://e.hentai\.org/g/(?P<gid1>\d*)/(?P<gid2>\w*).$`)
-	temp := []byte(`$gid1 $gid2`)
-	var result []byte
-	for _, matches := range pattern.FindAllSubmatchIndex(urlB, -1) {
-		result = pattern.Expand(result, temp, urlB, matches)
+	if !pattern.MatchString(url) {
+		return nil
 	}
-	return strings.Fields(string(result))
+	matches := pattern.FindStringSubmatch(url)
+	return matches[1:]
 }
 
 // gRequest make a request to api server without namespace field.

@@ -8,25 +8,25 @@ import (
 )
 
 // Browse use given url to fetch data
-func Browse(url string) (string, error) {
+func Browse(url string) ([]byte, error) {
 	client := NewClient()
 	req, err := http.NewRequest("GET", url, nil)
 	if err != nil {
 		log.Println("[Browse]Error occur when making request.")
-		return "", err
+		return nil, err
 	}
 	req.Header.Add("User-Agent", UA)
 	resp, err := client.Do(req)
 	if err != nil {
 		log.Println("[Browse]Error occur when posting request.")
-		return "", err
+		return nil, err
 	}
 	body, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
 		log.Println("[Browse]Error occur when reading response data.")
-		return "", err
+		return nil, err
 	}
-	return string(body), nil
+	return body, nil
 }
 
 // JsonRequest POST a request to the given url.

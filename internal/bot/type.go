@@ -36,6 +36,7 @@ type Context struct {
 	groups  *map[int64]interface{}
 	bot     *tgbotapi.BotAPI
 	send    chan *sendPKG
+	osuKey  string
 	timeOut time.Duration
 }
 
@@ -44,6 +45,7 @@ func NewContext(
 	db *sql.DB,
 	groups *map[int64]interface{},
 	bot *B,
+	osuKey string,
 	timeout time.Duration,
 ) *Context {
 	return &Context{
@@ -52,6 +54,7 @@ func NewContext(
 		groups:  groups,
 		bot:     bot,
 		send:    make(chan *sendPKG),
+		osuKey:  osuKey,
 		timeOut: timeout,
 	}
 }

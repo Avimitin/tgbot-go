@@ -65,3 +65,9 @@ func LoadDBSecret(path string) *DBSecret {
 		port:     dbSec.Key("port").String(),
 	}
 }
+
+// LoadOSUAPI return api key
+func LoadOSUAPI(path string) string {
+	cfg := LoadINI(path)
+	return cfg.Section("osu").Key("token").String()
+}

@@ -3,7 +3,7 @@ package weather
 import (
 	"fmt"
 
-	"github.com/Avimitin/go-bot/internal/pkg/net/browser"
+	"github.com/Avimitin/go-bot/internal/pkg/browser"
 )
 
 // GetWeatherSingleLine will return weather in one line
@@ -13,7 +13,7 @@ func GetWeatherSingleLine(city string) string {
 	if err != nil {
 		return "Error fetching weather"
 	}
-	return resp
+	return string(resp)
 }
 
 // GetWeatherPic will return picture about given city's weather

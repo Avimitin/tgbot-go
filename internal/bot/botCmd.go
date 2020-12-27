@@ -8,6 +8,7 @@ import (
 	"github.com/Avimitin/go-bot/internal/pkg/utils/ehAPI"
 	"github.com/Avimitin/go-bot/internal/pkg/utils/hardwareInfo"
 	"github.com/Avimitin/go-bot/internal/pkg/utils/timer"
+	"github.com/Avimitin/go-bot/internal/pkg/utils/weather"
 	"github.com/go-telegram-bot-api/telegram-bot-api"
 	"log"
 	"strconv"
@@ -43,6 +44,7 @@ var (
 		"keylist":  KeyList,
 		"keydel":   KeyDel,
 		"ex":       cmdEx,
+		"weather":  cmdWeather,
 	}
 )
 
@@ -584,4 +586,18 @@ func cmdEnable(m *M, ctx *C) {
 		}
 	}
 	sendText(ctx, m.Chat.ID, "Command is listening, no need to enable.")
+}
+
+func cmdWeather(m *M, ctx *C) {
+	args := strings.Fields(m.Text)
+	if len(args) < 2 {
+		sendText(ctx, m.Chat.ID, "Attach a city you want to query behind the command.\nUsage: /weather tokyo")
+		return
+	}
+	city := args[1]
+	caption := city + "'s weather:\n" + weather.GetWeatherSingleLine(city)
+	photoURL := weather.GetWeatherPic(city)
+	photo := tgbotapi.NewPhotoShare(m.Chat.ID, photoURL)
+	photo.Caption = caption
+	ctx.Send(NewSendPKG(photo, noReply))
 }

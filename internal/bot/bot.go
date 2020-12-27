@@ -31,7 +31,7 @@ func Run(cfgPath string, CleanMode bool) {
 	// 清理模式
 	for CleanMode {
 		log.Printf("Cleaning MSG...")
-		updates.Clear()
+		<-updates
 		os.Exit(0)
 	}
 	go sendHandler(bot, ctx)
@@ -134,7 +134,7 @@ func newCTX(path string) *Context {
 		log.Fatal(err)
 	}
 	log.Printf("[INFO]Successfully load all keyword and replies")
-
-	ctx := NewContext(k, db, &groupsSet, bot, 30*time.Second)
+	key := conf.LoadOSUAPI(path)
+	ctx := NewContext(k, db, &groupsSet, bot, key, 30*time.Second)
 	return ctx
 }

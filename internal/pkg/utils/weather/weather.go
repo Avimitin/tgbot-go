@@ -8,7 +8,7 @@ import (
 
 // GetWeatherSingleLine will return weather in one line
 func GetWeatherSingleLine(city string) string {
-	url := fmt.Sprintf("https://wttr.in/%s?format=4", city)
+	url := "https://wttr.in/" + city + "?format=%l的天气:+%c+温度:%t+湿度:%h+降雨量:%p"
 	resp, err := browser.Browse(url)
 	if err != nil {
 		return "Error fetching weather"
@@ -18,5 +18,5 @@ func GetWeatherSingleLine(city string) string {
 
 // GetWeatherPic will return picture about given city's weather
 func GetWeatherPic(city string) string {
-	return fmt.Sprintf("https://wttr.in/%s_0.png", city)
+	return fmt.Sprintf("https://wttr.in/%s.png", city)
 }

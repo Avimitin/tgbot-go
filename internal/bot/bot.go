@@ -5,8 +5,8 @@ import (
 	"os"
 	"time"
 
-	"github.com/Avimitin/go-bot/internal/conf"
-	"github.com/Avimitin/go-bot/internal/database"
+	"github.com/Avimitin/go-bot/internal/pkg/conf"
+	"github.com/Avimitin/go-bot/internal/pkg/database"
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api"
 )
 

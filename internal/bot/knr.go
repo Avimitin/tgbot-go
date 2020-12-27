@@ -8,7 +8,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/Avimitin/go-bot/internal/database"
+	"github.com/Avimitin/go-bot/internal/pkg/database"
 )
 
 func RegexKAR(msg *string, k *KnRType) (string, bool) {

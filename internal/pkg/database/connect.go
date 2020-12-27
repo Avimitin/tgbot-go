@@ -2,7 +2,7 @@ package database
 
 import (
 	"database/sql"
-	"github.com/Avimitin/go-bot/internal/conf"
+	"github.com/Avimitin/go-bot/internal/pkg/conf"
 	_ "github.com/go-sql-driver/mysql"
 	"log"
 	"time"

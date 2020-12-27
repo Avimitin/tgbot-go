@@ -3,7 +3,7 @@ package database
 import (
 	"database/sql"
 	"fmt"
-	"github.com/Avimitin/go-bot/internal/conf"
+	"github.com/Avimitin/go-bot/internal/pkg/conf"
 	"testing"
 )
 
@@ -68,7 +68,7 @@ func TestDeleteGroups(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	for _, group := range *groups {
+	for _, group := range groups {
 		if group.GroupID == 123456789 {
 			t.Fatal("Unwanted group still exist")
 		}
@@ -92,7 +92,7 @@ func TestChangeGroupsName(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	for _, group := range *groups {
+	for _, group := range groups {
 		if group.GroupID == 123456789 && group.GroupUsername != "testGroups2" {
 			t.Fatal("GroupName change fail")
 		}

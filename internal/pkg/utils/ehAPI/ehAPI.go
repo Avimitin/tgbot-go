@@ -1,7 +1,7 @@
 package ehAPI
 
 import (
-	"github.com/Avimitin/go-bot/internal/net/browser"
+	"github.com/Avimitin/go-bot/internal/pkg/net/browser"
 	jsoniter "github.com/json-iterator/go"
 	"log"
 	"regexp"

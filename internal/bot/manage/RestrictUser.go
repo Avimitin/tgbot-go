@@ -2,7 +2,7 @@ package manage
 
 import (
 	"fmt"
-	"github.com/Avimitin/go-bot/internal/utils/timer"
+	"github.com/Avimitin/go-bot/internal/pkg/utils/timer"
 	tgbot "github.com/go-telegram-bot-api/telegram-bot-api"
 	"time"
 )

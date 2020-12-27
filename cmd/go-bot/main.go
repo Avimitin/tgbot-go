@@ -2,7 +2,7 @@ package main
 
 import (
 	"github.com/Avimitin/go-bot/internal/bot"
-	"github.com/Avimitin/go-bot/internal/conf"
+	"github.com/Avimitin/go-bot/internal/pkg/conf"
 )
 
 func main() {

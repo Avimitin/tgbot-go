@@ -3,7 +3,7 @@ package weather
 import (
 	"fmt"
 
-	"github.com/Avimitin/go-bot/internal/net/browser"
+	"github.com/Avimitin/go-bot/internal/pkg/net/browser"
 )
 
 // GetWeatherSingleLine will return weather in one line

@@ -7,6 +7,7 @@ import (
 	"github.com/Avimitin/go-bot/internal/pkg/database"
 	"github.com/Avimitin/go-bot/internal/pkg/utils/ehAPI"
 	"github.com/Avimitin/go-bot/internal/pkg/utils/hardwareInfo"
+	"github.com/Avimitin/go-bot/internal/pkg/utils/osuAPI"
 	"github.com/Avimitin/go-bot/internal/pkg/utils/timer"
 	"github.com/Avimitin/go-bot/internal/pkg/utils/weather"
 	"github.com/go-telegram-bot-api/telegram-bot-api"
@@ -45,6 +46,7 @@ var (
 		"keydel":   KeyDel,
 		"ex":       cmdEx,
 		"weather":  cmdWeather,
+		"osumap":   cmdOsuMap,
 	}
 )
 
@@ -600,4 +602,75 @@ func cmdWeather(m *M, ctx *C) {
 	photo := tgbotapi.NewPhotoShare(m.Chat.ID, photoURL)
 	photo.Caption = caption
 	ctx.Send(NewSendPKG(photo, noReply))
+}
+
+func cmdOsuMap(m *M, ctx *C) {
+	args := strings.Fields(m.Text)
+	if len(args) == 1 {
+		sendText(ctx, m.Chat.ID, "Give me a map set id.\nUsage: /osumap <set_id>")
+		return
+	}
+	bms := osuAPI.GetBeatMapByBeatMapSet(ctx.osuKey, args[1])
+	if bms == nil {
+		sendText(ctx, m.Chat.ID, "Error osu map set.")
+		return
+	}
+	mode := map[string]string{
+		"0": "osu",
+		"1": "taiko",
+		"2": "fruits",
+		"3": "mania",
+	}
+	bm := bms[0]
+	playCount := strToInt(bm.Playcount)
+	passCount := strToInt(bm.Passcount)
+	var tags string
+	for i, tag := range strings.Fields(bm.Tags) {
+		if i == 5 {
+			break
+		}
+		tags += "#" + tag + " "
+	}
+	photo := tgbotapi.NewPhotoShare(m.Chat.ID, fmt.Sprintf("https://assets.ppy.sh/beatmaps/%s/covers/cover.jpg", bm.BeatmapsetID))
+	photo.Caption = fmt.Sprintf(`
+<a href="%s"><b>%s</b></a>
+Artist: <a href="%s">%s</a>
+Creator: <a href="%s">%s</a>
+Stars: %s
+Difficulty: %s
+Length: %s s
+BPM: %s
+MAX Combo: %s
+CS: %s AR: %s OD: %s HP: %s
+tags: %s ...
+<i>Favourite %s, Pass %s, Pass rate is %.2f %%</i>
+<code>%s</code>
+`,
+		fmt.Sprintf("https://osu.ppy.sh/beatmapsets/%s#%s/%s", bm.BeatmapsetID, mode[bm.Mode], bm.BeatmapID), // title link
+		bm.TitleUnicode, // title
+		"https://osu.ppy.sh/beatmapsets?q="+bm.ArtistUnicode,
+		bm.ArtistUnicode, // artist
+		"https://osu.ppy.sh/users/"+bm.CreatorID, // creator link
+		bm.Creator,                                                 // creator
+		bm.Difficultyrating[:3],                                    // star
+		bm.Version,                                                 // difficulty
+		bm.TotalLength,                                             // length
+		bm.Bpm,                                                     // bpm
+		bm.MaxCombo,                                                // max combo
+		bm.DiffSize, bm.DiffApproach, bm.DiffOverall, bm.DiffDrain, // cs ar od hp
+		tags,
+		bm.FavouriteCount, bm.Passcount, (passCount/playCount)*100, // loved by, xx player, rate is xx
+		bm.BeatmapsetID, // <code/>
+	)
+	photo.ParseMode = "HTML"
+	ctx.Send(NewSendPKG(photo, noReply))
+}
+
+func strToInt(s string) float64 {
+	result, err := strconv.ParseFloat(s, 64)
+	if err != nil {
+		log.Println("[strToInt]Error parsing string to int:", err)
+		return -1
+	}
+	return result
 }

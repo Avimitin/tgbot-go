@@ -12,6 +12,7 @@ import (
 	"github.com/Avimitin/go-bot/internal/pkg/utils/weather"
 	"github.com/go-telegram-bot-api/telegram-bot-api"
 	"log"
+	"regexp"
 	"strconv"
 	"strings"
 	"time"
@@ -46,7 +47,8 @@ var (
 		"keydel":   KeyDel,
 		"ex":       cmdEx,
 		"weather":  cmdWeather,
-		"osumap":   cmdOsuMap,
+		"osum":     cmdOsuMap,
+		"osuu":     cmdOsuUser,
 	}
 )
 
@@ -607,7 +609,7 @@ func cmdWeather(m *M, ctx *C) {
 func cmdOsuMap(m *M, ctx *C) {
 	args := strings.Fields(m.Text)
 	if len(args) == 1 {
-		sendText(ctx, m.Chat.ID, "Give me a map set id.\nUsage: /osumap <set_id>")
+		sendText(ctx, m.Chat.ID, "Give me a map set id.\nUsage: /osum <set_id>")
 		return
 	}
 	bms := osuAPI.GetBeatMapByBeatMapSet(ctx.osuKey, args[1])
@@ -619,13 +621,39 @@ func cmdOsuMap(m *M, ctx *C) {
 	photo := tgbotapi.NewPhotoShare(m.Chat.ID, fmt.Sprintf("https://assets.ppy.sh/beatmaps/%s/covers/cover.jpg", bm.BeatmapsetID))
 	photo.Caption = osuBeatMapCaptionTemplate(&bm)
 	photo.ParseMode = "HTML"
+	// make button
+	photo.ReplyMarkup = makeOSUButton(bms)
+
 	ctx.Send(NewSendPKG(photo, noReply))
 }
 
-func strToInt(s string) float64 {
+func makeOSUButton(bms []osuAPI.Beatmap) *tgbotapi.InlineKeyboardMarkup {
+	var i int
+	var markup [][]tgbotapi.InlineKeyboardButton
+	oneRow := make([]tgbotapi.InlineKeyboardButton, 0, 3)
+	for _, beatmap := range bms {
+		if i == 3 {
+			markup = append(markup, oneRow)
+			i = 0
+			oneRow = make([]tgbotapi.InlineKeyboardButton, 0, 3)
+		}
+		cbData := "osu:" + beatmap.BeatmapID
+		btn := tgbotapi.InlineKeyboardButton{
+			Text:         beatmap.Version,
+			CallbackData: &cbData,
+		}
+		oneRow = append(oneRow, btn)
+		i++
+	}
+	return &tgbotapi.InlineKeyboardMarkup{
+		InlineKeyboard: markup,
+	}
+}
+
+func strToFloat(s string) float64 {
 	result, err := strconv.ParseFloat(s, 64)
 	if err != nil {
-		log.Println("[strToInt]Error parsing string to int:", err)
+		log.Println("[strToFloat]Error parsing string to int:", err)
 		return -1
 	}
 	return result
@@ -639,8 +667,8 @@ func osuBeatMapCaptionTemplate(bm *osuAPI.Beatmap) string {
 		}
 		tags += "#" + tag + " "
 	}
-	playCount := strToInt(bm.Playcount)
-	passCount := strToInt(bm.Passcount)
+	playCount := strToFloat(bm.Playcount)
+	passCount := strToFloat(bm.Passcount)
 	mode := map[string]string{
 		"0": "osu",
 		"1": "taiko",
@@ -658,8 +686,7 @@ func osuBeatMapCaptionTemplate(bm *osuAPI.Beatmap) string {
 <b>MAX Combo</b>: %s
 <b>CS</b>: %s <b>AR</b>: %s <b>OD</b>: %s <b>HP</b>: %s
 tags: %s ...
-<i>Favourite %s, Pass %s, Pass rate is %.2f %%</i>
-<code>%s</code>
+<i>%s player favourite this map, %s pass it, pass rate is %.2f %%</i>
 `,
 		fmt.Sprintf("https://osu.ppy.sh/beatmapsets/%s#%s/%s", bm.BeatmapsetID, mode[bm.Mode], bm.BeatmapID), // title link
 		bm.TitleUnicode, // title
@@ -675,6 +702,91 @@ tags: %s ...
 		bm.DiffSize, bm.DiffApproach, bm.DiffOverall, bm.DiffDrain, // cs ar od hp
 		tags,
 		bm.FavouriteCount, bm.Passcount, (passCount/playCount)*100, // loved by, xx player, rate is xx
-		bm.BeatmapsetID, // <code/>
 	)
+}
+
+func cmdOsuUser(m *M, ctx *C) {
+	args := strings.Fields(m.Text)
+	if len(args) == 1 {
+		sendText(ctx, m.Chat.ID, "Give me a username(User ID should use /osui).\nUsage: /osuu <username>")
+		return
+	}
+	u, err := osuAPI.GetUser(ctx.osuKey, args[1], "string", -1)
+	if err != nil {
+		log.Println("[cmdOsuUser]Error occur when getting user info:", err)
+		sendText(ctx, m.Chat.ID, "Invalid username")
+		return
+	}
+	photo := tgbotapi.NewPhotoShare(m.Chat.ID, "http://s.ppy.sh/a/"+u.UserID)
+	photo.Caption = osuUserCaptionTemplate(u)
+	photo.ParseMode = "HTML"
+	photo.ReplyMarkup = osuModeButton(u)
+	ctx.Send(NewSendPKG(photo, noReply))
+}
+
+func osuUserCaptionTemplate(u *osuAPI.User) string {
+	if u == nil {
+		return ""
+	}
+	event := func() string {
+		pattern := regexp.MustCompile(`<i.*b?>(.*)<a.*>(.*)</a>.*`)
+		if len(u.Events) == 0 {
+			return ""
+		}
+		matches := pattern.FindStringSubmatch(u.Events[0].DisplayHTML)
+		if len(matches) < 3 {
+			return ""
+		}
+		return fmt.Sprintf(`%s%s%s`, u.Username, matches[1], matches[2])
+	}()
+	return fmt.Sprintf(`
+<b><a href="https://osu.ppy.sh/users/%s">%s</a></b>
+
+⚪SS: %s 🟡SS: %s ⚪S: %s 🟡S: %s
+<b>Rank</b>: %s
+<b>PP</b>: %s
+<b>PlayCount</b>: %s
+<b>ACC</b>: %s %%
+<b>Ranked Score</b>: <code>%s</code>
+
+Recent Event: 
+<i>%s</i>
+`,
+		u.UserID, u.Username,
+		u.CountRankSSH, u.CountRankSs, u.CountRankSh, u.CountRankS,
+		u.PpRank,
+		u.PpRaw,
+		u.Playcount,
+		u.Accuracy[:5],
+		u.RankedScore,
+		event,
+	)
+}
+
+func osuModeButton(u *osuAPI.User) *tgbotapi.InlineKeyboardMarkup {
+	stdCB := "osuu:0" + u.Username
+	taikoCB := "osuu:1" + u.Username
+	ctbCB := "osuu:2" + u.Username
+	maniaCB := "osuu:3" + u.Username
+	return &tgbotapi.InlineKeyboardMarkup{
+		InlineKeyboard: [][]tgbotapi.InlineKeyboardButton{
+			{
+				tgbotapi.InlineKeyboardButton{
+					Text: "STD", CallbackData: &stdCB,
+				},
+				tgbotapi.InlineKeyboardButton{
+					Text: "Taiko", CallbackData: &taikoCB,
+				},
+			},
+			// new row
+			{
+				tgbotapi.InlineKeyboardButton{
+					Text: "Fruits", CallbackData: &ctbCB,
+				},
+				tgbotapi.InlineKeyboardButton{
+					Text: "Mania", CallbackData: &maniaCB,
+				},
+			},
+		},
+	}
 }

@@ -31,13 +31,15 @@ func NewSendPKG(msg tgbotapi.Chattable, noRep bool) *sendPKG {
 // Context that contain all needed type is used to communicate
 // between main goroutine and child goroutine at runtime.
 type Context struct {
-	kr      *KnRType
-	db      *sql.DB
-	groups  *map[int64]interface{}
-	bot     *tgbotapi.BotAPI
-	send    chan *sendPKG
-	osuKey  string
-	timeOut time.Duration
+	kr       *KnRType
+	db       *sql.DB
+	groups   *map[int64]interface{}
+	bot      *tgbotapi.BotAPI
+	send     chan *sendPKG
+	osuKey   string
+	timeOut  time.Duration
+	callBack chan *tgbotapi.CallbackQuery
+	stop     chan int32
 }
 
 func NewContext(
@@ -49,14 +51,20 @@ func NewContext(
 	timeout time.Duration,
 ) *Context {
 	return &Context{
-		kr:      kr,
-		db:      db,
-		groups:  groups,
-		bot:     bot,
-		send:    make(chan *sendPKG),
-		osuKey:  osuKey,
-		timeOut: timeout,
+		kr:       kr,
+		db:       db,
+		groups:   groups,
+		bot:      bot,
+		send:     make(chan *sendPKG, 1),
+		osuKey:   osuKey,
+		timeOut:  timeout,
+		callBack: make(chan *tgbotapi.CallbackQuery, 1),
+		stop:     make(chan int32),
 	}
+}
+
+func (ctx *Context) StopAll() {
+	close(ctx.stop)
 }
 
 func (ctx *Context) Send(msg *sendPKG) {
@@ -90,6 +98,10 @@ func (ctx *Context) Groups() map[int64]interface{} {
 func (ctx *Context) IsCertGroup(id int64) bool {
 	_, ok := (*ctx.groups)[id]
 	return ok
+}
+
+func (ctx *Context) CBQuery(q *tgbotapi.CallbackQuery) {
+	ctx.callBack <- q
 }
 
 // KnRType is a type of map use string value to store list of string

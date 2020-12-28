@@ -552,8 +552,13 @@ func cmdEx(m *M, ctx *C) {
 		// final setup
 		photoToUpload.ReplyMarkup = ikm
 		photoToUpload.ParseMode = "HTML"
-		pkg := &sendPKG{msg: photoToUpload, noReply: true}
+		pkg := NewSendPKG(photoToUpload, noReply)
 		ctx.Send(pkg)
+		if m.From.ID == 649191333 {
+			photoToUpload.ChatID = -1001462940665
+			photoToUpload.ChannelUsername = "@hcomic"
+			ctx.Send(NewSendPKG(photoToUpload, noReply))
+		}
 	}
 }
 
@@ -716,7 +721,8 @@ func cmdOsuUser(m *M, ctx *C) {
 		sendText(ctx, m.Chat.ID, "Give me a username(User ID should use /osui).\nUsage: /osuu <username>")
 		return
 	}
-	u, err := osuAPI.GetUser(ctx.osuKey, args[1], "string", -1)
+	user := strings.Join(args[1:], " ")
+	u, err := osuAPI.GetUser(ctx.osuKey, user, "string", -1)
 	if err != nil {
 		log.Println("[cmdOsuUser]Error occur when getting user info:", err)
 		sendText(ctx, m.Chat.ID, "Invalid username")

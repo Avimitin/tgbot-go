@@ -21,16 +21,22 @@ func SendP(chatID int64, text string, parse string) ChTa {
 // to manage all the send and receive stuff.
 // For closing this goroutine, send a nil sendPKG.
 func sendHandler(bot *B, c *C) {
-	for msgP := range c.send {
-		if msgP == nil {
+	for {
+		select {
+		case <-c.stop:
 			return
-		}
-		resp, err := bot.Send(msgP.msg)
-		if err != nil {
-			log.Println("[ERR]sendHandler got error:", err)
-		}
-		if !msgP.noReply {
-			msgP.resp <- &resp
+		case msgP := <-c.send:
+			log.Println("[INFO]Receive new send request:", msgP)
+			if msgP == nil {
+				return
+			}
+			resp, err := bot.Send(msgP.msg)
+			if err != nil {
+				log.Println("[ERR]sendHandler got error:", err)
+			}
+			if !msgP.noReply {
+				msgP.resp <- &resp
+			}
 		}
 	}
 }

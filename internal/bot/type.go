@@ -128,3 +128,8 @@ func (cf cmdFunc) hasCommand(cmd string) bool {
 	_, ok := cf[cmd]
 	return ok
 }
+
+type mjx struct {
+	Pic    string `json:"pic"`
+	Imgurl string `json:"imgurl"`
+}

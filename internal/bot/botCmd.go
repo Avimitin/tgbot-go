@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/Avimitin/go-bot/internal/bot/auth"
 	"github.com/Avimitin/go-bot/internal/bot/manage"
+	"github.com/Avimitin/go-bot/internal/pkg/browser"
 	"github.com/Avimitin/go-bot/internal/pkg/database"
 	"github.com/Avimitin/go-bot/internal/pkg/utils/ehAPI"
 	"github.com/Avimitin/go-bot/internal/pkg/utils/hardwareInfo"
@@ -11,7 +12,9 @@ import (
 	"github.com/Avimitin/go-bot/internal/pkg/utils/timer"
 	"github.com/Avimitin/go-bot/internal/pkg/utils/weather"
 	"github.com/go-telegram-bot-api/telegram-bot-api"
+	jsoniter "github.com/json-iterator/go"
 	"log"
+	"math/rand"
 	"regexp"
 	"strconv"
 	"strings"
@@ -49,6 +52,8 @@ var (
 		"weather":  cmdWeather,
 		"osum":     cmdOsuMap,
 		"osuu":     cmdOsuUser,
+		"mjx":      cmdMJX,
+		"nsfwmjx":  cmdMJX,
 	}
 )
 
@@ -789,4 +794,40 @@ func osuModeButton(u *osuAPI.User) *tgbotapi.InlineKeyboardMarkup {
 			},
 		},
 	}
+}
+
+func cmdMJX(m *M, ctx *C) {
+	rand.Seed(time.Now().UnixNano())
+	var err error
+	var data []byte
+	if rand.Intn(100) < 50 {
+		data, err = browser.Browse("http://api.vvhan.com/api/tao?type=json")
+	} else {
+		data, err = browser.Browse("http://api.uomg.com/api/rand.img3?format=json")
+	}
+	if err != nil {
+		log.Println("[cmdMJX]Error occur when making request:", err)
+		sendText(ctx, m.Chat.ID, err.Error())
+		return
+	}
+	var mjx mjx
+	err = jsoniter.Unmarshal(data, &mjx)
+	if err != nil {
+		log.Println("[cmdMJX]Error occur when unmarshalling data:", err)
+		sendText(ctx, m.Chat.ID, err.Error())
+		return
+	}
+	var url string
+	if mjx.Imgurl != "" {
+		url = mjx.Imgurl
+	} else if mjx.Pic != "" {
+		url = mjx.Pic
+	} else {
+		sendText(ctx, m.Chat.ID, "Some error occur when requesting to the API server.")
+		return
+	}
+	photo := tgbotapi.NewPhotoShare(m.Chat.ID, url)
+	photo.Caption = fmt.Sprintf(`<a href="tg://user?id=%d">%s</a>, 你的色图来了。`, m.From.ID, m.From.FirstName)
+	photo.ParseMode = "HTML"
+	ctx.Send(NewSendPKG(photo, noReply))
 }

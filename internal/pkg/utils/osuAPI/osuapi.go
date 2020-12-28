@@ -5,6 +5,7 @@ import (
 	"github.com/Avimitin/go-bot/internal/pkg/browser"
 	jsoniter "github.com/json-iterator/go"
 	"log"
+	urlPak "net/url"
 	"regexp"
 )
 
@@ -29,10 +30,11 @@ func buildURL(method string, params map[string]string) string {
 		return ""
 	}
 	url := apiAddr + method + "?"
+	v := urlPak.Values{}
 	for param, value := range params {
-		url += param + "=" + value + "&"
+		v.Set(param, value)
 	}
-	return url[:len(url)-1]
+	return url + v.Encode()
 }
 
 func apiRequest(method string, params map[string]string) ([]byte, error) {

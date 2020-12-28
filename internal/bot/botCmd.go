@@ -615,15 +615,23 @@ func cmdOsuMap(m *M, ctx *C) {
 		sendText(ctx, m.Chat.ID, "Error osu map set.")
 		return
 	}
-	mode := map[string]string{
-		"0": "osu",
-		"1": "taiko",
-		"2": "fruits",
-		"3": "mania",
-	}
 	bm := bms[0]
-	playCount := strToInt(bm.Playcount)
-	passCount := strToInt(bm.Passcount)
+	photo := tgbotapi.NewPhotoShare(m.Chat.ID, fmt.Sprintf("https://assets.ppy.sh/beatmaps/%s/covers/cover.jpg", bm.BeatmapsetID))
+	photo.Caption = osuBeatMapCaptionTemplate(&bm)
+	photo.ParseMode = "HTML"
+	ctx.Send(NewSendPKG(photo, noReply))
+}
+
+func strToInt(s string) float64 {
+	result, err := strconv.ParseFloat(s, 64)
+	if err != nil {
+		log.Println("[strToInt]Error parsing string to int:", err)
+		return -1
+	}
+	return result
+}
+
+func osuBeatMapCaptionTemplate(bm *osuAPI.Beatmap) string {
 	var tags string
 	for i, tag := range strings.Fields(bm.Tags) {
 		if i == 5 {
@@ -631,17 +639,24 @@ func cmdOsuMap(m *M, ctx *C) {
 		}
 		tags += "#" + tag + " "
 	}
-	photo := tgbotapi.NewPhotoShare(m.Chat.ID, fmt.Sprintf("https://assets.ppy.sh/beatmaps/%s/covers/cover.jpg", bm.BeatmapsetID))
-	photo.Caption = fmt.Sprintf(`
+	playCount := strToInt(bm.Playcount)
+	passCount := strToInt(bm.Passcount)
+	mode := map[string]string{
+		"0": "osu",
+		"1": "taiko",
+		"2": "fruits",
+		"3": "mania",
+	}
+	return fmt.Sprintf(`
 <a href="%s"><b>%s</b></a>
-Artist: <a href="%s">%s</a>
-Creator: <a href="%s">%s</a>
-Stars: %s
-Difficulty: %s
-Length: %s s
-BPM: %s
-MAX Combo: %s
-CS: %s AR: %s OD: %s HP: %s
+<b>Artist</b>: <a href="%s">%s</a>
+<b>Creator</b>: <a href="%s">%s</a>
+<b>Stars</b>: %s
+<b>Difficulty</b>: %s
+<b>Length</b>: %s s
+<b>BPM</b>: %s
+<b>MAX Combo</b>: %s
+<b>CS</b>: %s <b>AR</b>: %s <b>OD</b>: %s <b>HP</b>: %s
 tags: %s ...
 <i>Favourite %s, Pass %s, Pass rate is %.2f %%</i>
 <code>%s</code>
@@ -662,15 +677,4 @@ tags: %s ...
 		bm.FavouriteCount, bm.Passcount, (passCount/playCount)*100, // loved by, xx player, rate is xx
 		bm.BeatmapsetID, // <code/>
 	)
-	photo.ParseMode = "HTML"
-	ctx.Send(NewSendPKG(photo, noReply))
-}
-
-func strToInt(s string) float64 {
-	result, err := strconv.ParseFloat(s, 64)
-	if err != nil {
-		log.Println("[strToInt]Error parsing string to int:", err)
-		return -1
-	}
-	return result
 }

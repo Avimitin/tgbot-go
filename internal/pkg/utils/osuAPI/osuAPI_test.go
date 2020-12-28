@@ -7,8 +7,8 @@ import (
 )
 
 func TestBuildURL(t *testing.T) {
-	url := buildURL("get_beatmaps", map[string]string{"k": "api", "u": "Doormat", "type": "string"})
-	if url != "https://osu.ppy.sh/api/get_beatmaps?k=api&u=Doormat&type=string" {
+	url := buildURL("get_beatmaps", map[string]string{"k": "api", "u": "Door  mat", "type": "string"})
+	if url != "https://osu.ppy.sh/api/get_beatmaps?k=api&type=string&u=Door++mat" {
 		t.Fatal("Get != Want")
 	}
 }

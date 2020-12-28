@@ -12,7 +12,7 @@ const (
 )
 
 func getGid(url string) []string {
-	pattern := regexp.MustCompile(`https://e.hentai\.org/g/(?P<gid1>\d*)/(?P<gid2>\w*).$`)
+	pattern := regexp.MustCompile(`e.hentai\.org/g/(\d+)/(\w+).$`)
 	if !pattern.MatchString(url) {
 		return nil
 	}

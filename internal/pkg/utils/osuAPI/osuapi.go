@@ -9,18 +9,19 @@ import (
 )
 
 const (
-	apiAddr     = "https://osu.ppy.sh/api/"
-	defaultMode = -1
-	std         = iota
+	std = iota
 	taiko
 	ctb
 	mania
+	apiAddr     = "https://osu.ppy.sh/api/"
+	defaultMode = -1
 )
 
 var (
 	InvalidParamsErr  = errors.New("invalid params input")
 	InvalidUsrTypeErr = errors.New("invalid user's type")
 	InvalidModeErr    = errors.New("invalid mode")
+	InvalidUsrNameErr = errors.New("invalid user name")
 )
 
 func buildURL(method string, params map[string]string) string {
@@ -85,7 +86,7 @@ func GetBeatMap(key string, mapID string) *Beatmap {
 
 // GetBeatMapByURL return a map with given url
 func GetBeatMapByURL(key string, url string) *Beatmap {
-	pattern := regexp.MustCompile(`https://osu\.ppy\.sh/beatmapsets/[0-9]+#[a-z]+/([0-9]+).*`)
+	pattern := regexp.MustCompile(`osu\.ppy\.sh/beatmapsets/[0-9]+#[a-z]+/([0-9]+).*`)
 	if !pattern.MatchString(url) {
 		return nil
 	}
@@ -141,5 +142,8 @@ func GetUser(key string, user string, userType string, mode int) (*User, error) 
 		return nil, InvalidModeErr
 	}
 	users := getUserWithMode(key, user, userType, m)
+	if len(users) == 0 {
+		return nil, InvalidUsrNameErr
+	}
 	return &(users[0]), nil
 }

@@ -37,3 +37,13 @@ func TestGetUser(t *testing.T) {
 	}
 	fmt.Printf("%+v\n", user)
 }
+
+func TestGetBeatMapByURL(t *testing.T) {
+	bm := GetBeatMapByURL(conf.LoadOSUAPI(conf.WhereCFG("")), "https://osu.ppy.sh/beatmapsets/34348#osu/111680")
+	if bm == nil {
+		t.Fatal("Can't recognize url")
+	}
+	if bm.BeatmapsetID != "34348" {
+		t.Fatal("Can't get beatmap")
+	}
+}

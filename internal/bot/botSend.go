@@ -30,13 +30,15 @@ func sendHandler(bot *B, c *C) {
 			if msgP == nil {
 				return
 			}
-			resp, err := bot.Send(msgP.msg)
-			if err != nil {
-				log.Println("[ERR]sendHandler got error:", err)
-			}
-			if !msgP.noReply {
-				msgP.resp <- &resp
-			}
+			go func() {
+				resp, err := bot.Send(msgP.msg)
+				if err != nil {
+					log.Println("[ERR]sendHandler got error:", err)
+				}
+				if !msgP.noReply {
+					msgP.resp <- &resp
+				}
+			}()
 		}
 	}
 }

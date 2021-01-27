@@ -3,6 +3,7 @@ package conf
 import (
 	"os"
 	"os/user"
+	"strings"
 	"testing"
 )
 
@@ -61,5 +62,37 @@ func TestLoadDBSecret(t *testing.T) {
 	db := LoadDBSecret(WhereCFG(""))
 	if db.MySqlURL() != "tgbot:tgbot@tcp(127.0.0.1:3306)/tgbotDB" {
 		t.Fatalf("Unwanted db secret, got %s", db.MySqlURL())
+	}
+}
+
+func TestReadConfigurationFromBytes(t *testing.T) {
+	testFile := `
+{
+"cert_group": [
+	123,
+	456,
+	789
+],
+"users": {
+	"1": "admin",
+	"2": "banned",
+	"3": "exmanager"
+}
+}
+	`
+	reader := strings.NewReader(testFile)
+	cfg, err := readConfigurationFromBytes(reader)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if _, ok := cfg.CertGroup[123]; !ok {
+		t.Fatal("fail to read certed group")
+	}
+	if _, ok := cfg.Users[1]; !ok {
+		t.Fatal("fail to read users")
+	}
+	permission := cfg.Users[1]
+	if permission != "admin" {
+		t.Fatal("expect != get")
 	}
 }

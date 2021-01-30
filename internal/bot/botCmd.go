@@ -85,3 +85,40 @@ func dump(m *bapi.Message) error {
 	}
 	return nil
 }
+
+func kick(m *bapi.Message) error {
+	is, err := isAdmin(m.From.ID, m.Chat)
+	if err != nil {
+		errMsg := "fail to get user permission"
+		sendT(errMsg, m.Chat.ID)
+		return errF("kick", err, errMsg)
+	}
+	// if command caller are not admin
+	if !is {
+		_, err = sendT("YOU ARE NOT ADMIN! DONT TOUCH THIS COMMAND!", m.Chat.ID)
+		if err != nil {
+			return errF("kick", err, "fail to send kick alert")
+		}
+		return nil
+	}
+
+	if m.ReplyToMessage == nil {
+		_, err = sendT("You should reply to a user to kick him.", m.Chat.ID)
+		if err != nil {
+			return errF("kick", err, "fail to send usage")
+		}
+		return nil
+	}
+
+	userToKick := m.ReplyToMessage.From.ID
+	err = kickUser(userToKick, m.Chat.ID, time.Now().Unix()+1)
+	if err != nil {
+		return errF("kick", err, "fail to kick user")
+	}
+
+	_, err = sendT("user has been kick forever", m.Chat.ID)
+	if err != nil {
+		return errF("kick", err, "fail to send usage")
+	}
+	return nil
+}

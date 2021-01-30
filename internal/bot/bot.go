@@ -15,7 +15,8 @@ func Run(config *Configuration) error {
 	if config.BotToken == "" {
 		return fmt.Errorf("bot token is null")
 	}
-	bot, err := bapi.NewBotAPI(config.BotToken)
+	var err error
+	bot, err = bapi.NewBotAPI(config.BotToken)
 	if err != nil {
 		log.Fatal("fail to initialize bot:\n", err)
 	}

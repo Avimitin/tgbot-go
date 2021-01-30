@@ -2,6 +2,7 @@ package bot
 
 import (
 	"fmt"
+	"math/rand"
 	"strings"
 	"time"
 
@@ -9,10 +10,11 @@ import (
 )
 
 var botCMD = command{
-	"start": start,
-	"ping":  ping,
-	"dump":  dump,
-	"kick":  kick,
+	"start":  start,
+	"ping":   ping,
+	"dump":   dump,
+	"kick":   kick,
+	"shutup": shutUp,
 }
 
 func cmdArgv(msg *bapi.Message) []string {
@@ -122,6 +124,59 @@ func kick(m *bapi.Message) error {
 	_, err = sendT("user has been kick forever", m.Chat.ID)
 	if err != nil {
 		return errF("kick", err, "fail to send usage")
+	}
+	return nil
+}
+
+func shutUp(m *bapi.Message) error {
+	is, err := isAdmin(m.From.ID, m.Chat)
+	if err != nil {
+		if _, err := sendT("fail to fetch admins, please try again later",
+			m.Chat.ID); err != nil {
+			return errF("shutUp", err, "fail to send error notify")
+		}
+		return errF("shutUp", err, "fail to fetch admins")
+	}
+	// if user is not admin
+	if !is {
+		respMsg, err := sendT("generating....", m.Chat.ID)
+		if err != nil {
+			return errF("shutUp", err, "fail to send generating msg")
+		}
+
+		var minLimit, maxLimit int64 = 60, 300
+		rand.Seed(time.Now().Unix())
+		randTime := rand.Int63n(maxLimit-minLimit) + minLimit
+		err = limitUser(m.From.ID, m.Chat.ID, time.Now().Unix()+randTime)
+		if err != nil {
+			if _, err := sendT("fail to limit user:"+err.Error(), m.Chat.ID); err != nil {
+				return errF("shutUp", err, "fail to send error message")
+			}
+			return errF("shutUp", err, "fail to limit user")
+		}
+
+		respMsg, err = editT(
+			fmt.Sprintf("Boom, you get a %d mins ban", randTime), m.Chat.ID, respMsg.MessageID)
+		if err != nil {
+			return errF("shutUp", err, "fail to edit message")
+		}
+	}
+
+	if m.ReplyToMessage == nil {
+		if _, err := sendT("reply to a user to use this command", m.Chat.ID); err != nil {
+			return errF("shutUp", err, "fail to send notify")
+		}
+	}
+
+	err = limitUser(m.From.ID, m.Chat.ID, time.Now().Unix()+1)
+	if err != nil {
+		if _, err := sendT("fail to limit user: "+err.Error(), m.Chat.ID); err != nil {
+			return errF("shutUp", err, "fail to send error message")
+		}
+		return errF("shutUp", err, "fail to limit user")
+	}
+	if _, err := sendT("user has been forever muted", m.Chat.ID); err != nil {
+		return errF("shutUp", err, "fail to send successful ban message")
 	}
 	return nil
 }

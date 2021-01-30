@@ -91,8 +91,7 @@ func kick(m *bapi.Message) error {
 	is, err := isAdmin(m.From.ID, m.Chat)
 	if err != nil {
 		errMsg := "fail to get user permission"
-		_, err = sendT(errMsg, m.Chat.ID)
-		if err != nil {
+		if _, err := sendT(errMsg, m.Chat.ID); err != nil {
 			return errF("kick", err, "fail to send error notify")
 		}
 		return errF("kick", err, errMsg)

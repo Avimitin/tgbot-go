@@ -12,6 +12,7 @@ var botCMD = command{
 	"start": start,
 	"ping":  ping,
 	"dump":  dump,
+	"kick":  kick,
 }
 
 func cmdArgv(msg *bapi.Message) []string {

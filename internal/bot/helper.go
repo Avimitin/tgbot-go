@@ -27,3 +27,16 @@ func errF(where string, err error, more string) error {
 	log.Printf("[%s]%v", where, err)
 	return fmt.Errorf("%s", more)
 }
+
+func isAdmin(userID int, chat *bapi.Chat) (bool, error) {
+	admins, err := bot.GetChatAdministrators(chat.ChatConfig())
+	if err != nil {
+		return false, errF("isAdmin", err, "fail to fetch chat admins")
+	}
+	for _, admin := range admins {
+		if admin.User.ID == userID {
+			return true, nil
+		}
+	}
+	return false, nil
+}

@@ -40,3 +40,18 @@ func isAdmin(userID int, chat *bapi.Chat) (bool, error) {
 	}
 	return false, nil
 }
+
+func kickUser(userID int, chatID int64, untilDate int64) error {
+	userToKick := bapi.KickChatMemberConfig{
+		UntilDate: untilDate,
+		ChatMemberConfig: bapi.ChatMemberConfig{
+			ChatID: chatID,
+			UserID: userID,
+		},
+	}
+	resp, err := bot.KickChatMember(userToKick)
+	if err != nil {
+		return errF("kickUser", err, "fail to send kick request: "+resp.Description)
+	}
+	return nil
+}

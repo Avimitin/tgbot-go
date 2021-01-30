@@ -10,6 +10,8 @@ import (
 
 var botCMD = command{
 	"start": start,
+	"ping":  ping,
+	"dump":  dump,
 }
 
 func cmdArgv(msg *bapi.Message) []string {

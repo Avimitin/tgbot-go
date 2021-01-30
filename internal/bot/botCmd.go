@@ -93,7 +93,7 @@ func kick(m *bapi.Message) error {
 	is, err := isAdmin(m.From.ID, m.Chat)
 	if err != nil {
 		errMsg := "fail to get user permission"
-		if _, err := sendT(errMsg, m.Chat.ID); err != nil {
+		if _, err = sendT(errMsg, m.Chat.ID); err != nil {
 			return errF("kick", err, "fail to send error notify")
 		}
 		return errF("kick", err, errMsg)
@@ -131,7 +131,7 @@ func kick(m *bapi.Message) error {
 func shutUp(m *bapi.Message) error {
 	is, err := isAdmin(m.From.ID, m.Chat)
 	if err != nil {
-		if _, err := sendT("fail to fetch admins, please try again later",
+		if _, err = sendT("fail to fetch admins, please try again later",
 			m.Chat.ID); err != nil {
 			return errF("shutUp", err, "fail to send error notify")
 		}
@@ -139,8 +139,8 @@ func shutUp(m *bapi.Message) error {
 	}
 	// if user is not admin
 	if !is {
-		respMsg, err := sendT("generating....", m.Chat.ID)
-		if err != nil {
+		respMsg, serr := sendT("generating....", m.Chat.ID)
+		if serr != nil {
 			return errF("shutUp", err, "fail to send generating msg")
 		}
 
@@ -149,7 +149,7 @@ func shutUp(m *bapi.Message) error {
 		randTime := rand.Int63n(maxLimit-minLimit) + minLimit
 		err = limitUser(m.From.ID, m.Chat.ID, time.Now().Unix()+randTime)
 		if err != nil {
-			if _, err := sendT("fail to limit user:"+err.Error(), m.Chat.ID); err != nil {
+			if _, err = sendT("fail to limit user:"+err.Error(), m.Chat.ID); err != nil {
 				return errF("shutUp", err, "fail to send error message")
 			}
 			return errF("shutUp", err, "fail to limit user")
@@ -163,14 +163,14 @@ func shutUp(m *bapi.Message) error {
 	}
 
 	if m.ReplyToMessage == nil {
-		if _, err := sendT("reply to a user to use this command", m.Chat.ID); err != nil {
+		if _, err = sendT("reply to a user to use this command", m.Chat.ID); err != nil {
 			return errF("shutUp", err, "fail to send notify")
 		}
 	}
 
 	err = limitUser(m.From.ID, m.Chat.ID, time.Now().Unix()+1)
 	if err != nil {
-		if _, err := sendT("fail to limit user: "+err.Error(), m.Chat.ID); err != nil {
+		if _, err = sendT("fail to limit user: "+err.Error(), m.Chat.ID); err != nil {
 			return errF("shutUp", err, "fail to send error message")
 		}
 		return errF("shutUp", err, "fail to limit user")

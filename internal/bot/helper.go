@@ -55,3 +55,23 @@ func kickUser(userID int, chatID int64, untilDate int64) error {
 	}
 	return nil
 }
+
+func limitUser(user int, chat int64, untilDate int64) error {
+	b := false
+	resp, err := bot.RestrictChatMember(bapi.RestrictChatMemberConfig{
+		ChatMemberConfig: bapi.ChatMemberConfig{
+			ChatID: chat,
+			UserID: user,
+		},
+		CanSendMessages:       &b,
+		CanSendMediaMessages:  &b,
+		CanSendOtherMessages:  &b,
+		CanAddWebPagePreviews: &b,
+		UntilDate:             untilDate,
+	})
+
+	if err != nil {
+		return errF("limitUser", err, "fail to RestrictChatMember: "+resp.Description)
+	}
+	return nil
+}

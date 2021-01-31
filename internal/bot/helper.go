@@ -1,8 +1,7 @@
 package bot
 
 import (
-	"errors"
-	"log"
+	"fmt"
 
 	bapi "github.com/go-telegram-bot-api/telegram-bot-api"
 )
@@ -24,8 +23,7 @@ func editT(newText string, chatID int64, msgID int) (bapi.Message, error) {
 }
 
 func errF(where string, err error, more string) error {
-	log.Printf("[%s]%v", where, err)
-	return errors.New(more)
+	return fmt.Errorf("%s: %s: %w", where, more, err)
 }
 
 func isAdmin(userID int, chat *bapi.Chat) (bool, error) {

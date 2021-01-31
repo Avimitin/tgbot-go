@@ -35,7 +35,7 @@ func start(m *bapi.Message) error {
 	userLink := fmt.Sprintf(`<a href="tg://user?id=%d">%s</a>`, userID, username)
 	_, err := sendT("Hi, "+userLink, m.Chat.ID)
 	if err != nil {
-		return errF("start", err, "fail to send message")
+		return errF("start", err, "send fail")
 	}
 	return nil
 }
@@ -44,13 +44,13 @@ func ping(m *bapi.Message) error {
 	now := time.Now()
 	msg, err := sendT("pong!", m.Chat.ID)
 	if err != nil {
-		return errF("ping", err, "fail to send msg")
+		return errF("ping", err, "send fail")
 	}
 	delay := now.Sub(now).Milliseconds()
 	text := fmt.Sprintf("bot 与 Telegram 服务器的延迟大约为 %d 毫秒", delay)
 	_, err = editT(text, m.Chat.ID, msg.MessageID)
 	if err != nil {
-		return errF("ping", err, "fail to edit msg")
+		return errF("ping", err, "edit fail")
 	}
 	return nil
 }
@@ -84,7 +84,7 @@ func dump(m *bapi.Message) error {
 
 	_, err := sendP(text, m.Chat.ID, "HTML")
 	if err != nil {
-		return errF("dump", err, "fail to send dump message")
+		return errF("dump", err, "send fail")
 	}
 	return nil
 }

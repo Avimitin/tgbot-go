@@ -17,6 +17,7 @@ var botCMD = command{
 	"kick":      kick,
 	"shutup":    shutUp,
 	"disshutup": disShutUp,
+	"weather":   weather,
 }
 
 func cmdArgv(msg *bapi.Message) []string {

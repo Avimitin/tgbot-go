@@ -8,16 +8,19 @@ import (
 )
 
 var (
-	bot  *bapi.BotAPI
-	data *Data
+	bot *bapi.BotAPI
+	cfg *Configuration
 )
 
 func Run(config *Configuration) error {
-	if config.BotToken == "" {
+	cfg = config
+	config = nil
+
+	if cfg.BotToken == "" {
 		return fmt.Errorf("bot token is null")
 	}
 	var err error
-	bot, err = bapi.NewBotAPI(config.BotToken)
+	bot, err = bapi.NewBotAPI(cfg.BotToken)
 	if err != nil {
 		log.Fatal("fail to initialize bot:\n", err)
 	}
@@ -28,8 +31,6 @@ func Run(config *Configuration) error {
 	updateChanConfiguration.Timeout = 15
 
 	updates, err := bot.GetUpdatesChan(updateChanConfiguration)
-
-	data = NewData(config)
 
 	for update := range updates {
 		if update.Message != nil {
@@ -44,13 +45,13 @@ func messageHandler(msg *bapi.Message) error {
 	// identify
 	switch msg.Chat.Type {
 	case "supergroup", "group":
-		if !data.isCerted(msg.Chat.ID) {
+		if !cfg.isCerted(msg.Chat.ID) {
 			sendT("unauthorized groups, contact @avimibot", msg.Chat.ID)
 			leaveGroup(msg.Chat)
 			return nil
 		}
 	case "private":
-		if data.isBanned(msg.From.ID) {
+		if cfg.isBanned(msg.From.ID) {
 			return nil
 		}
 	}

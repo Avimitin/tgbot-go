@@ -20,6 +20,8 @@ var botCMD = command{
 	"disshutup": disShutUp,
 	"weather":   weather,
 	"mjx":       mjx,
+	"osuu":      maintainNotify,
+	"osum":      maintainNotify,
 }
 
 func cmdArgv(msg *bapi.Message) []string {
@@ -264,5 +266,10 @@ func mjx(m *bapi.Message) error {
 	} else {
 		return edit("fail to fetch pic")
 	}
+	return nil
+}
+
+func maintainNotify(m *bapi.Message) error {
+	sendT("osu functions are under maintenance", m.Chat.ID)
 	return nil
 }

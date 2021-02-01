@@ -26,6 +26,7 @@ func Run(config *Configuration) error {
 	}
 	bot.Debug = true
 	log.Printf("Successfully establish connection to bot: %s", bot.Self.UserName)
+	safeExit()
 
 	updateChanConfiguration := bapi.NewUpdate(0)
 	updateChanConfiguration.Timeout = 15

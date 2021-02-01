@@ -35,3 +35,16 @@ func PostJSON(url string, data io.Reader) ([]byte, error) {
 	}
 	return body, nil
 }
+
+// Get make request to the given url, return response body.
+func Get(url string) ([]byte, error) {
+	resp, err := http.Get(url)
+	if err != nil {
+		return nil, fmt.Errorf("get %s: %v", url, err)
+	}
+	body, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return nil, fmt.Errorf("read %q:%v", resp.Body, err)
+	}
+	return body, nil
+}

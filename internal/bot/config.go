@@ -51,16 +51,16 @@ func (cfg *Configuration) save() {
 	err := cfg.DumpConfig()
 	if err != nil {
 		log.Printf("fail to dump config:%v", err)
-	}
-	log.Println("making tmp file")
-	byt, err := json.Marshal(cfg)
-	if err != nil {
-		log.Printf("marshal %+v failed:%v", cfg, err)
-		return
-	}
-	err = ioutil.WriteFile("/home/config.json.tmp", byt, os.ModePerm)
-	if err != nil {
-		log.Println("saving tmp file failed, program exit:", err)
+		log.Println("making tmp file")
+		byt, err := json.Marshal(cfg)
+		if err != nil {
+			log.Printf("marshal %+v failed:%v", cfg, err)
+			return
+		}
+		err = ioutil.WriteFile("/home/config.json.tmp", byt, os.ModePerm)
+		if err != nil {
+			log.Println("saving tmp file failed, program exit:", err)
+		}
 	}
 }
 
@@ -73,22 +73,19 @@ func newConfigFromGivenPath(path string) *Configuration {
 	if err != nil {
 		log.Fatal("read config failed:" + err.Error())
 	}
-	var cfg *Configuration
-	err = json.Unmarshal(data, &cfg)
+	var config *Configuration
+	err = json.Unmarshal(data, &config)
 	if err != nil {
 		log.Fatal("parsed config failed:" + err.Error())
 	}
-	if cfg.CertedGroups == nil {
-		log.Fatal("got nil groups")
+	config.certedGroups = make(map[int64]interface{})
+	if config.CertedGroups != nil && len(config.CertedGroups) > 0 {
+		for _, g := range config.CertedGroups {
+			config.certedGroups[g] = struct{}{}
+		}
 	}
-	if cfg.Users == nil {
-		log.Fatal("got nil user data")
-	}
-	for _, g := range cfg.CertedGroups {
-		cfg.certedGroups[g] = struct{}{}
-	}
-	cfg.CertedGroups = cfg.CertedGroups[0:]
-	return cfg
+	config.CertedGroups = config.CertedGroups[0:]
+	return config
 }
 
 func NewConfig() *Configuration {

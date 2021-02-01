@@ -2,6 +2,7 @@ package bot
 
 import (
 	"encoding/json"
+	"fmt"
 	"io/ioutil"
 	"log"
 	"os"
@@ -9,7 +10,11 @@ import (
 )
 
 type Configuration struct {
-	BotToken string `json:"bot_token"`
+	BotToken     string         `json:"bot_token"`
+	CertedGroups []int64        `json:"certed_groups"`
+	Users        map[int]string `json:"users"`
+}
+
 func (cfg *Configuration) DumpConfig() error {
 	data, err := json.Marshal(cfg)
 	if err != nil {
@@ -21,6 +26,32 @@ func (cfg *Configuration) DumpConfig() error {
 		return fmt.Errorf("write %s failed:%v", path, err)
 	}
 	return nil
+}
+
+type Data struct {
+	CertedGroups map[int64]interface{}
+	Users        map[int]string
+}
+
+func NewData(cfg *Configuration) *Data {
+	if cfg == nil {
+		log.Fatal("got nil config")
+	}
+	if cfg.CertedGroups == nil {
+		log.Fatal("got nil groups")
+	}
+	if cfg.Users == nil {
+		log.Fatal("got nil user data")
+	}
+	d := &Data{
+		CertedGroups: make(map[int64]interface{}),
+		Users:        make(map[int]string),
+	}
+	for _, g := range cfg.CertedGroups {
+		d.CertedGroups[g] = struct{}{}
+	}
+	d.Users = cfg.Users
+	return d
 }
 
 func newConfigFromGivenPath(path string) *Configuration {

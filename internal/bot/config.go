@@ -31,6 +31,10 @@ func (cfg *Configuration) DumpConfig() error {
 	return nil
 }
 
+func (cfg *Configuration) cert(target int64) {
+	cfg.certedGroups[target] = struct{}{}
+}
+
 func (cfg *Configuration) isCerted(target int64) bool {
 	_, ok := cfg.certedGroups[target]
 	return ok
@@ -42,6 +46,10 @@ func (cfg *Configuration) userPermission(target int) string {
 
 func (cfg *Configuration) isBanned(target int) bool {
 	return cfg.userPermission(target) == "banned"
+}
+
+func (cfg *Configuration) isAdmins(target int) bool {
+	return cfg.userPermission(target) == "admin"
 }
 
 func (cfg *Configuration) save() {

@@ -72,3 +72,25 @@ func TestDumpCFG(t *testing.T) {
 		t.Errorf("got %+v", tCfg)
 	}
 }
+
+func TestData(t *testing.T) {
+	cfg := &Configuration{
+		BotToken:     "aaa",
+		CertedGroups: []int64{123, 456},
+		Users: map[int]string{
+			123: "admin",
+			456: "banned",
+		},
+	}
+	d := NewData(cfg)
+	if _, ok := d.CertedGroups[123]; !ok {
+		t.Fatalf("can't get wanted group: %+v", d)
+	}
+	per, ok := d.Users[123]
+	if !ok {
+		t.Fatalf("can't get wanted group: %+v", d)
+	}
+	if per != "admin" {
+		t.Fatalf("Want %s got %s", cfg.Users[123], per)
+	}
+}

@@ -54,6 +54,19 @@ func NewData(cfg *Configuration) *Data {
 	return d
 }
 
+func (d *Data) isCerted(target int64) bool {
+	_, ok := d.CertedGroups[target]
+	return ok
+}
+
+func (d *Data) userPermission(target int) string {
+	return d.Users[target]
+}
+
+func (d *Data) isBanned(target int) bool {
+	return d.userPermission(target) == "banned"
+}
+
 func newConfigFromGivenPath(path string) *Configuration {
 	cfgPath := WhereCFG(path) + "/config.json"
 	if cfgPath == "" {

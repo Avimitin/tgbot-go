@@ -87,3 +87,10 @@ func editUserPermissions(user int, chat int64, untilDate int64, notBan bool) err
 	}
 	return nil
 }
+
+func leaveGroup(chat *bapi.Chat) {
+	_, err := bot.LeaveChat(chat.ChatConfig())
+	if err != nil {
+		log.Printf("leave group [%s](%d) failed: %v", chat.FirstName, chat.ID, err)
+	}
+}

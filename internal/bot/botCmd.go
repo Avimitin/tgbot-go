@@ -206,7 +206,7 @@ func weather(m *bapi.Message) error {
 }
 
 func getWeatherContext(city string) (string, error) {
-	url := fmt.Sprintf("https://wttr.in/%s?format=%l的天气:+%c+温度:%t+湿度:%h+降雨量:%p", city)
+	url := "https://wttr.in/" + city + "?format=%l的天气:+%c+温度:%t+湿度:%h+降雨量:%p"
 	resp, err := net.Get(url)
 	if err != nil {
 		return "", errF("getWeatherContext", err, "get city "+city)

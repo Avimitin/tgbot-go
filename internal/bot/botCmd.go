@@ -1,6 +1,7 @@
 package bot
 
 import (
+	"encoding/json"
 	"fmt"
 	"math/rand"
 	"strings"
@@ -18,6 +19,7 @@ var botCMD = command{
 	"shutup":    shutUp,
 	"disshutup": disShutUp,
 	"weather":   weather,
+	"mjx":       mjx,
 }
 
 func cmdArgv(msg *bapi.Message) []string {
@@ -212,4 +214,55 @@ func getWeatherContext(city string) (string, error) {
 		return "", errF("getWeatherContext", err, "get city "+city)
 	}
 	return fmt.Sprintf(`<a href="%s">%s</a>`, fmt.Sprintf("https://wttr.in/%s.png", city), resp), nil
+}
+
+func mjx(m *bapi.Message) error {
+	msg := sendT("requesting API server...", m.Chat.ID)
+
+	rand.Seed(time.Now().UnixNano())
+	var data []byte
+	var err error
+	edit := func(whatToEdit string) error {
+		_, editErr := editT(whatToEdit, m.Chat.ID, msg.MessageID)
+		if editErr != nil {
+			sendT("edit msg failed:"+editErr.Error(), m.Chat.ID)
+		}
+		return err
+	}
+
+	if rand.Float32() < 0.5 {
+		data, err = net.Get("http://api.vvhan.com/api/tao?type=json")
+	} else {
+		data, err = net.Get("http://api.uomg.com/api/rand.img3?format=json")
+	}
+	if err != nil {
+		return edit("request failed:" + err.Error())
+	}
+
+	var mjx struct {
+		Pic    string `json:"pic"`
+		Imgurl string `json:"imgurl"`
+	}
+	err = json.Unmarshal(data, &mjx)
+	if err != nil {
+		return edit("unmarshal failed:" + err.Error())
+	}
+
+	editURL := func(url string) {
+		_, editErr := editP(
+			fmt.Sprintf(
+				`<a href="tg://user?id=%d">%s</a>, the <a href="%s">pic</a> you request have arrived.`, m.From.ID, m.From.FirstName, url),
+			m.Chat.ID, msg.MessageID, "HTML")
+		if editErr != nil {
+			sendT("edit failed:"+err.Error(), m.Chat.ID)
+		}
+	}
+	if mjx.Imgurl != "" {
+		editURL(mjx.Imgurl)
+	} else if mjx.Pic != "" {
+		editURL(mjx.Pic)
+	} else {
+		return edit("fail to fetch pic")
+	}
+	return nil
 }

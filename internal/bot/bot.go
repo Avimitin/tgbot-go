@@ -80,6 +80,9 @@ func msgTextHandler(msg *bapi.Message) error {
 
 func hasOsuDomain(url string) bool {
 	const OSUDOMAIN = "https://osu.ppy.sh"
+	if len(url) < len(OSUDOMAIN) {
+		return false
+	}
 	for i := 0; i < len(OSUDOMAIN); i++ {
 		if url[i] != OSUDOMAIN[i] {
 			return false

@@ -3,6 +3,9 @@ package bot
 import (
 	"fmt"
 	"log"
+	"os"
+	"os/signal"
+	"syscall"
 
 	bapi "github.com/go-telegram-bot-api/telegram-bot-api"
 )
@@ -93,4 +96,14 @@ func leaveGroup(chat *bapi.Chat) {
 	if err != nil {
 		log.Printf("leave group [%s](%d) failed: %v", chat.FirstName, chat.ID, err)
 	}
+}
+
+func safeExit() {
+	c := make(chan os.Signal)
+	signal.Notify(c, os.Interrupt, syscall.SIGTERM)
+	go func() {
+		<-c
+		cfg.save()
+		return
+	}()
 }

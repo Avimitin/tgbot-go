@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"math/rand"
+	"strconv"
 	"strings"
 	"time"
 
@@ -22,6 +23,7 @@ var botCMD = command{
 	"mjx":       mjx,
 	"osuu":      maintainNotify,
 	"osum":      maintainNotify,
+	"certgroup": certGroup,
 }
 
 func cmdArgv(msg *bapi.Message) []string {
@@ -271,5 +273,29 @@ func mjx(m *bapi.Message) error {
 
 func maintainNotify(m *bapi.Message) error {
 	sendT("osu functions are under maintenance", m.Chat.ID)
+	return nil
+}
+
+func certGroup(m *bapi.Message) error {
+	if !cfg.isAdmins(m.From.ID) {
+		sendT("don't touch anything like a child", m.Chat.ID)
+		return nil
+	}
+
+	argv := cmdArgv(m)
+	if argv == nil {
+		sendT("gib a group id", m.Chat.ID)
+		return nil
+	}
+
+	groupID, err := strconv.ParseInt(argv[0], 10, 64)
+	if err != nil {
+		text := fmt.Sprintf("format id %s failed:%v", argv[0], err)
+		sendT(text, m.Chat.ID)
+		return fmt.Errorf(text)
+	}
+
+	cfg.cert(groupID)
+	sendT(fmt.Sprintf("group %d has certed successfully", groupID), m.Chat.ID)
 	return nil
 }

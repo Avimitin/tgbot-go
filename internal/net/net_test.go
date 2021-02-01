@@ -2,40 +2,29 @@ package net
 
 import (
 	"encoding/json"
-	"io/ioutil"
-	"net/http"
 	"strings"
 	"testing"
 )
 
 type testS struct {
-	A string `json:"a"`
-	B int    `json:"b"`
+	ID     int    `json:"id"`
+	Title  string `json:"title"`
+	Body   string `json:"body"`
+	UserID int    `json:"userId"`
 }
 
 func Test_JsonPost(t *testing.T) {
-	http.HandleFunc("/test", func(rw http.ResponseWriter, req *http.Request) {
-		reqByte, err := ioutil.ReadAll(req.Body)
-		if err != nil {
-			t.Fatalf("read body:%v", err)
-		}
-		var ts testS
-		err = json.Unmarshal(reqByte, &ts)
-		if err != nil {
-			t.Fatalf("Unmarshal:%v", err)
-		}
-		if ts.A != "test" || ts.B != 114514 {
-			t.Errorf("Want A=test and B=114514 Got %+v", ts)
-		}
-		rw.Write([]byte(`{"ok": true}`))
-	})
-	go http.ListenAndServe(":11451", nil)
-
-	resp, err := PostJSON("http://127.0.0.1:11451/test", strings.NewReader(`{"a":"test", "b": 114514}`))
+	artical := `{"title": "foo", "body": "bar", "userId": 10}`
+	resp, err := PostJSON("https://jsonplaceholder.typicode.com/posts", strings.NewReader(artical))
 	if err != nil {
 		t.Fatalf("jsonpost:%v", err)
 	}
-	if string(resp) != "ok" {
-		t.Fatal("get othe message")
+	var ts *testS
+	err = json.Unmarshal(resp, &ts)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if ts.ID != 101 {
+		t.Errorf("Want id = 101 got %+v", ts)
 	}
 }

@@ -5,7 +5,6 @@ import (
 )
 
 func main() {
-	cfg := new(bot.Configuration)
-	cfg.BotToken = "some token"
+	cfg := bot.NewConfig()
 	bot.Run(cfg)
 }

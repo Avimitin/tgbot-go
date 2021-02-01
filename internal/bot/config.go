@@ -7,12 +7,15 @@ import (
 	"log"
 	"os"
 	"os/user"
+	"sync"
 )
 
 type Configuration struct {
-	BotToken     string         `json:"bot_token"`
-	CertedGroups []int64        `json:"certed_groups"`
-	Users        map[int]string `json:"users"`
+	BotToken     string                `json:"bot_token"`
+	CertedGroups []int64               `json:"certed_groups"`
+	Users        map[int]string        `json:"users"`
+	certedGroups map[int64]interface{} `json:"-"`
+	mu           sync.Mutex            `json:"-"`
 }
 
 func (cfg *Configuration) DumpConfig() error {
@@ -28,43 +31,37 @@ func (cfg *Configuration) DumpConfig() error {
 	return nil
 }
 
-type Data struct {
-	CertedGroups map[int64]interface{}
-	Users        map[int]string
-}
-
-func NewData(cfg *Configuration) *Data {
-	if cfg == nil {
-		log.Fatal("got nil config")
-	}
-	if cfg.CertedGroups == nil {
-		log.Fatal("got nil groups")
-	}
-	if cfg.Users == nil {
-		log.Fatal("got nil user data")
-	}
-	d := &Data{
-		CertedGroups: make(map[int64]interface{}),
-		Users:        make(map[int]string),
-	}
-	for _, g := range cfg.CertedGroups {
-		d.CertedGroups[g] = struct{}{}
-	}
-	d.Users = cfg.Users
-	return d
-}
-
-func (d *Data) isCerted(target int64) bool {
-	_, ok := d.CertedGroups[target]
+func (cfg *Configuration) isCerted(target int64) bool {
+	_, ok := cfg.certedGroups[target]
 	return ok
 }
 
-func (d *Data) userPermission(target int) string {
-	return d.Users[target]
+func (cfg *Configuration) userPermission(target int) string {
+	return cfg.Users[target]
 }
 
-func (d *Data) isBanned(target int) bool {
-	return d.userPermission(target) == "banned"
+func (cfg *Configuration) isBanned(target int) bool {
+	return cfg.userPermission(target) == "banned"
+}
+
+func (cfg *Configuration) save() {
+	for k := range cfg.certedGroups {
+		cfg.CertedGroups = append(cfg.CertedGroups, k)
+	}
+	err := cfg.DumpConfig()
+	if err != nil {
+		log.Printf("fail to dump config:%v", err)
+	}
+	log.Println("making tmp file")
+	byt, err := json.Marshal(cfg)
+	if err != nil {
+		log.Printf("marshal %+v failed:%v", cfg, err)
+		return
+	}
+	err = ioutil.WriteFile("/home/config.json.tmp", byt, os.ModePerm)
+	if err != nil {
+		log.Println("saving tmp file failed, program exit:", err)
+	}
 }
 
 func newConfigFromGivenPath(path string) *Configuration {
@@ -81,6 +78,16 @@ func newConfigFromGivenPath(path string) *Configuration {
 	if err != nil {
 		log.Fatal("parsed config failed:" + err.Error())
 	}
+	if cfg.CertedGroups == nil {
+		log.Fatal("got nil groups")
+	}
+	if cfg.Users == nil {
+		log.Fatal("got nil user data")
+	}
+	for _, g := range cfg.CertedGroups {
+		cfg.certedGroups[g] = struct{}{}
+	}
+	cfg.CertedGroups = cfg.CertedGroups[0:]
 	return cfg
 }
 

@@ -2,19 +2,28 @@ package bot
 
 import (
 	"fmt"
+	"log"
 
 	bapi "github.com/go-telegram-bot-api/telegram-bot-api"
 )
 
-func sendT(text string, chatID int64) (bapi.Message, error) {
+func sendT(text string, chatID int64) bapi.Message {
 	msg := bapi.NewMessage(chatID, text)
-	return bot.Send(msg)
+	resp, err := bot.Send(msg)
+	if err != nil {
+		log.Printf("send %s...: \n%v", msg.Text[0:15], err)
+	}
+	return resp
 }
 
-func sendP(text string, chatID int64, parseMode string) (bapi.Message, error) {
+func sendP(text string, chatID int64, parseMode string) bapi.Message {
 	msg := bapi.NewMessage(chatID, text)
 	msg.ParseMode = parseMode
-	return bot.Send(msg)
+	resp, err := bot.Send(msg)
+	if err != nil {
+		log.Printf("send %s...: \n%v", msg.Text[0:15], err)
+	}
+	return resp
 }
 
 func editT(newText string, chatID int64, msgID int) (bapi.Message, error) {

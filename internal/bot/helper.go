@@ -103,7 +103,8 @@ func safeExit() {
 	signal.Notify(c, os.Interrupt, syscall.SIGTERM)
 	go func() {
 		<-c
+		log.Println("Cleaning and saving")
 		cfg.save()
-		return
+		os.Exit(1)
 	}()
 }

@@ -3,6 +3,7 @@ package bot
 import (
 	"os"
 	"os/user"
+	"reflect"
 	"testing"
 )
 
@@ -47,5 +48,27 @@ func TestNewConfig(t *testing.T) {
 	}
 	if config.BotToken == "" {
 		t.Errorf("can't not read config")
+	}
+}
+
+func TestDumpCFG(t *testing.T) {
+	cfg := Configuration{
+		BotToken:     "abc:123",
+		CertedGroups: []int64{123, 456},
+	}
+
+	os.Setenv("BOTCFGPATH", "../../cfg")
+	if os.Getenv("BOTCFGPATH") != "../../cfg" {
+		t.Fatalf("fail to set environment variable")
+	}
+
+	err := cfg.DumpConfig()
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	tCfg := NewConfig()
+	if tCfg.BotToken != cfg.BotToken || !reflect.DeepEqual(tCfg.CertedGroups, cfg.CertedGroups) {
+		t.Errorf("got %+v", tCfg)
 	}
 }

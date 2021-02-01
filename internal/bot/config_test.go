@@ -76,24 +76,26 @@ func TestDumpCFG(t *testing.T) {
 	os.Unsetenv("BOTCFGPATH")
 }
 
-func TestData(t *testing.T) {
-	cfg := &Configuration{
-		BotToken:     "aaa",
-		CertedGroups: []int64{123, 456},
-		Users: map[int]string{
-			123: "admin",
-			456: "banned",
+func TestConfigSave(t *testing.T) {
+	cfg := Configuration{
+		BotToken: "abc:123",
+		certedGroups: map[int64]interface{}{
+			1234: struct{}{},
 		},
 	}
-	d := NewData(cfg)
-	if _, ok := d.CertedGroups[123]; !ok {
-		t.Fatalf("can't get wanted group: %+v", d)
+
+	os.Setenv("BOTCFGPATH", "../../cfg")
+	cfg.save()
+	_, err := ioutil.ReadFile("../../cfg/config.json")
+	if err != nil {
+		t.Fatal(err)
 	}
-	per, ok := d.Users[123]
-	if !ok {
-		t.Fatalf("can't get wanted group: %+v", d)
+
+	nCFG := NewConfig()
+
+	if !reflect.DeepEqual(cfg.certedGroups, nCFG.certedGroups) {
+		t.Fatalf("got %+v", nCFG)
 	}
-	if per != "admin" {
-		t.Fatalf("Want %s got %s", cfg.Users[123], per)
-	}
+
+	os.Unsetenv("BOTCFGPATH")
 }

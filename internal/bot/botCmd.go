@@ -10,11 +10,12 @@ import (
 )
 
 var botCMD = command{
-	"start":  start,
-	"ping":   ping,
-	"dump":   dump,
-	"kick":   kick,
-	"shutup": shutUp,
+	"start":     start,
+	"ping":      ping,
+	"dump":      dump,
+	"kick":      kick,
+	"shutup":    shutUp,
+	"disshutup": disShutUp,
 }
 
 func cmdArgv(msg *bapi.Message) []string {
@@ -128,6 +129,32 @@ func kick(m *bapi.Message) error {
 	return nil
 }
 
+func punishNoPermissionUser(m *bapi.Message) error {
+	var err error
+	respMsg, serr := sendT("generating....", m.Chat.ID)
+	if serr != nil {
+		return errF("shutUp", err, "fail to send generating msg")
+	}
+
+	var minLimit, maxLimit int64 = 60, 300
+	rand.Seed(time.Now().Unix())
+	randTime := rand.Int63n(maxLimit-minLimit) + minLimit
+	err = editUserPermissions(m.From.ID, m.Chat.ID, time.Now().Unix()+randTime, false)
+	if err != nil {
+		if _, err = sendT("fail to limit user:"+err.Error(), m.Chat.ID); err != nil {
+			return errF("shutUp", err, "fail to send error message")
+		}
+		return errF("shutUp", err, "fail to limit user")
+	}
+
+	respMsg, err = editT(
+		fmt.Sprintf("Boom, you get a %d mins ban", randTime), m.Chat.ID, respMsg.MessageID)
+	if err != nil {
+		return errF("shutUp", err, "fail to edit message")
+	}
+	return nil
+}
+
 func shutUp(m *bapi.Message) error {
 	is, err := isAdmin(m.From.ID, m.Chat)
 	if err != nil {
@@ -139,27 +166,7 @@ func shutUp(m *bapi.Message) error {
 	}
 	// if user is not admin
 	if !is {
-		respMsg, serr := sendT("generating....", m.Chat.ID)
-		if serr != nil {
-			return errF("shutUp", err, "fail to send generating msg")
-		}
-
-		var minLimit, maxLimit int64 = 60, 300
-		rand.Seed(time.Now().Unix())
-		randTime := rand.Int63n(maxLimit-minLimit) + minLimit
-		err = limitUser(m.From.ID, m.Chat.ID, time.Now().Unix()+randTime)
-		if err != nil {
-			if _, err = sendT("fail to limit user:"+err.Error(), m.Chat.ID); err != nil {
-				return errF("shutUp", err, "fail to send error message")
-			}
-			return errF("shutUp", err, "fail to limit user")
-		}
-
-		respMsg, err = editT(
-			fmt.Sprintf("Boom, you get a %d mins ban", randTime), m.Chat.ID, respMsg.MessageID)
-		if err != nil {
-			return errF("shutUp", err, "fail to edit message")
-		}
+		return punishNoPermissionUser(m)
 	}
 
 	if m.ReplyToMessage == nil {
@@ -168,7 +175,7 @@ func shutUp(m *bapi.Message) error {
 		}
 	}
 
-	err = limitUser(m.From.ID, m.Chat.ID, time.Now().Unix()+1)
+	err = editUserPermissions(m.From.ID, m.Chat.ID, time.Now().Unix()+1, false)
 	if err != nil {
 		if _, err = sendT("fail to limit user: "+err.Error(), m.Chat.ID); err != nil {
 			return errF("shutUp", err, "fail to send error message")
@@ -177,6 +184,39 @@ func shutUp(m *bapi.Message) error {
 	}
 	if _, err := sendT("user has been forever muted", m.Chat.ID); err != nil {
 		return errF("shutUp", err, "fail to send successful ban message")
+	}
+	return nil
+}
+
+func disShutUp(m *bapi.Message) error {
+	is, err := isAdmin(m.From.ID, m.Chat)
+	if err != nil {
+		_, err = sendT("fail to fetch admin list", m.Chat.ID)
+		if err != nil {
+			return errF("disShutUp", err, "")
+		}
+		return err
+	}
+	if !is {
+		return punishNoPermissionUser(m)
+	}
+
+	if m.ReplyToMessage == nil {
+		_, err = sendT("Reply to a user to recover his permission", m.Chat.ID)
+		if err != nil {
+			return errF("disShutUp", err, "")
+
+		}
+		return nil
+	}
+	err = editUserPermissions(m.From.ID, m.Chat.ID, 0, true)
+	if err != nil {
+		sendT("recover user priviledge: "+err.Error(), m.Chat.ID)
+		return errF("disShutUp", err, "")
+	}
+	_, err = sendT("User has recovered", m.Chat.ID)
+	if err != nil {
+		return errF("disShutUp", err, "")
 	}
 	return nil
 }

@@ -10,6 +10,17 @@ import (
 
 type Configuration struct {
 	BotToken string `json:"bot_token"`
+func (cfg *Configuration) DumpConfig() error {
+	data, err := json.Marshal(cfg)
+	if err != nil {
+		return fmt.Errorf("marshal %+v failed: %v", cfg, err)
+	}
+	path := WhereCFG("") + "/config.json"
+	err = ioutil.WriteFile(path, data, os.ModePerm)
+	if err != nil {
+		return fmt.Errorf("write %s failed:%v", path, err)
+	}
+	return nil
 }
 
 func newConfigFromGivenPath(path string) *Configuration {

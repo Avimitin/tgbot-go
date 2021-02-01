@@ -12,6 +12,8 @@ const (
 	UA = "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/51.0.2704.103 Safari/537.36"
 )
 
+// PostJSON post given data with "Application/json" header,\
+// return []byte if make request successfully.
 func PostJSON(url string, data io.Reader) ([]byte, error) {
 	client := http.Client{Timeout: time.Second * 30}
 

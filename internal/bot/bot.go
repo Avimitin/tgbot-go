@@ -8,7 +8,8 @@ import (
 )
 
 var (
-	bot *bapi.BotAPI
+	bot  *bapi.BotAPI
+	data *Data
 )
 
 func Run(config *Configuration) error {
@@ -28,6 +29,8 @@ func Run(config *Configuration) error {
 
 	updates, err := bot.GetUpdatesChan(updateChanConfiguration)
 
+	data = NewData(config)
+
 	for update := range updates {
 		if update.Message != nil {
 			err = messageHandler(update.Message)
@@ -38,6 +41,20 @@ func Run(config *Configuration) error {
 }
 
 func messageHandler(msg *bapi.Message) error {
+	// identify
+	switch msg.Chat.Type {
+	case "supergroup", "group":
+		if !data.isCerted(msg.Chat.ID) {
+			sendT("unauthorized groups, contact @avimibot", msg.Chat.ID)
+			leaveGroup(msg.Chat)
+			return nil
+		}
+	case "private":
+		if data.isBanned(msg.From.ID) {
+			return nil
+		}
+	}
+
 	if msg.IsCommand() {
 		err := commandsHandler(msg)
 		if err != nil {

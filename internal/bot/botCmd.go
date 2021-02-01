@@ -34,7 +34,7 @@ func start(m *bapi.Message) error {
 	}
 	userID := m.From.ID
 	userLink := fmt.Sprintf(`<a href="tg://user?id=%d">%s</a>`, userID, username)
-	_, err := sendT("Hi, "+userLink, m.Chat.ID)
+	_, err := sendP("Hi, "+userLink, m.Chat.ID, "HTML")
 	if err != nil {
 		return errF("start", err, "send fail")
 	}

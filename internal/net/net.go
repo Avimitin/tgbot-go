@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"io"
 	"io/ioutil"
-	"log"
 	"net/http"
 	"time"
 )
@@ -18,7 +17,6 @@ func PostJSON(url string, data io.Reader) ([]byte, error) {
 
 	req, err := http.NewRequest("POST", url, data)
 	if err != nil {
-		log.Printf("[PostJSON]%v", err)
 		return nil, fmt.Errorf("post json to %s: %v", url, err)
 	}
 	req.Header.Set("Content-Type", "Application/json")
@@ -26,13 +24,11 @@ func PostJSON(url string, data io.Reader) ([]byte, error) {
 
 	resp, err := client.Do(req)
 	if err != nil {
-		log.Printf("[PostJSON]%v", err)
 		return nil, fmt.Errorf("do json request: %v", err)
 	}
 
 	body, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
-		log.Printf("[PostJSON]%v", err)
 		return nil, fmt.Errorf("read %s:%v", body, err)
 	}
 	return body, nil

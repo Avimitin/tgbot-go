@@ -1,6 +1,7 @@
 package bot
 
 import (
+	"io/ioutil"
 	"os"
 	"os/user"
 	"reflect"
@@ -41,7 +42,7 @@ func TestWhereCFG(t *testing.T) {
 }
 
 func TestNewConfig(t *testing.T) {
-	const PATH string = "../../cfg/config.json"
+	const PATH string = "../../cfg"
 	config := newConfigFromGivenPath(PATH)
 	if config == nil {
 		t.Errorf("got nil config")
@@ -68,9 +69,11 @@ func TestDumpCFG(t *testing.T) {
 	}
 
 	tCfg := NewConfig()
-	if tCfg.BotToken != cfg.BotToken || !reflect.DeepEqual(tCfg.CertedGroups, cfg.CertedGroups) {
+	if tCfg.BotToken != cfg.BotToken {
 		t.Errorf("got %+v", tCfg)
 	}
+
+	os.Unsetenv("BOTCFGPATH")
 }
 
 func TestData(t *testing.T) {

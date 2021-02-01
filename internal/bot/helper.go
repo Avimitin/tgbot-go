@@ -68,7 +68,7 @@ func editUserPermissions(user int, chat int64, untilDate int64, notBan bool) err
 	})
 
 	if err != nil {
-		return errF("limitUser", err, "fail to RestrictChatMember: "+resp.Description)
+		return errF("limitUser", err, "fail to restrict chat member: "+resp.Description)
 	}
 	return nil
 }

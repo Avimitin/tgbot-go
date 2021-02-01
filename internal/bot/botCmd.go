@@ -6,6 +6,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/Avimitin/go-bot/internal/net"
 	bapi "github.com/go-telegram-bot-api/telegram-bot-api"
 )
 
@@ -220,4 +221,43 @@ func disShutUp(m *bapi.Message) error {
 		return errF("disShutUp", err, "")
 	}
 	return nil
+}
+
+func weather(m *bapi.Message) error {
+	argv := cmdArgv(m)
+	if argv == nil {
+		_, err := sendT("Gib me a city name", m.Chat.ID)
+		if err != nil {
+			return errF("weather", err, "")
+		}
+		return nil
+	}
+
+	respMsg, err := sendT("requesting API server...", m.Chat.ID)
+	if err != nil {
+		return errF("weather", err, "")
+	}
+
+	city := argv[0]
+	text, err := getWeatherContext(city)
+	if err != nil {
+		_, err = editT("fetch weather failed: "+err.Error(), m.Chat.ID, respMsg.MessageID)
+		if err != nil {
+			return errF("weather", err, "edit failed")
+		}
+	}
+	_, err = editP(text, m.Chat.ID, respMsg.MessageID, "HTML")
+	if err != nil {
+		return errF("weather", err, "edit failed")
+	}
+	return nil
+}
+
+func getWeatherContext(city string) (string, error) {
+	url := fmt.Sprintf("https://wttr.in/%s?format=%l的天气:+%c+温度:%t+湿度:%h+降雨量:%p", city)
+	resp, err := net.Get(url)
+	if err != nil {
+		return "", errF("getWeatherContext", err, "get city "+city)
+	}
+	return fmt.Sprintf(`<a href="%s">%s</a>`, fmt.Sprintf("https://wttr.in/%s.png", city), resp), nil
 }

@@ -47,7 +47,8 @@ func ping(m *bapi.Message) error {
 	if err != nil {
 		return errF("ping", err, "send fail")
 	}
-	delay := now.Sub(now).Milliseconds()
+	current := time.Now()
+	delay := current.Sub(now).Milliseconds()
 	text := fmt.Sprintf("bot 与 Telegram 服务器的延迟大约为 %d 毫秒", delay)
 	_, err = editT(text, m.Chat.ID, msg.MessageID)
 	if err != nil {

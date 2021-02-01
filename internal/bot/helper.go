@@ -22,6 +22,12 @@ func editT(newText string, chatID int64, msgID int) (bapi.Message, error) {
 	return bot.Send(msg)
 }
 
+func editP(newText string, chatID int64, msgID int, parseMode string) (bapi.Message, error) {
+	msg := bapi.NewEditMessageText(chatID, msgID, newText)
+	msg.ParseMode = parseMode
+	return bot.Send(msg)
+}
+
 func errF(where string, err error, more string) error {
 	return fmt.Errorf("%s: %s: %w", where, more, err)
 }

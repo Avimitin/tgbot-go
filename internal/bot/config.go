@@ -2,6 +2,7 @@ package bot
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io/ioutil"
 	"log"
@@ -11,17 +12,29 @@ import (
 
 // Setting contain bot needed information at runtime
 type Setting interface {
-	Users() map[int]string     // Users return a set of user
-	CertedGroups() []int64     // CertedGroups return a list of certed groups
-	Secret() map[string]string // Secret return a set of secret store
+	Prepare() error              // Prepare initialize setting
+	GetUsers() map[int]string    // GetUsers return a set of user
+	GetGroups() map[int64]string // GetGroups return a list of certed groups
+	Secret() map[string]string   // Secret return a set of secret store
 }
 
 type Configuration struct {
-	BotToken     string                `json:"bot_token"`
-	CertedGroups []int64               `json:"certed_groups"`
-	Users        map[int]string        `json:"users"`
-	certedGroups map[int64]interface{} `json:"-"`
-	mu           sync.Mutex            `json:"-"`
+	BotToken string           `json:"bot_token"`
+	Groups   map[int64]string `json:"groups"`
+	Users    map[int]string   `json:"users"`
+	mu       sync.Mutex       `json:"-"`
+}
+
+func (cfg *Configuration) GetUsers() map[int]string {
+	return cfg.Users
+}
+
+func (cfg *Configuration) GetGroups() map[int64]string {
+	return cfg.Groups
+}
+
+func (cfg *Configuration) Secret() map[string]string {
+	return map[string]string{"bot_token": cfg.BotToken}
 }
 
 func (cfg *Configuration) DumpConfig() error {
@@ -37,74 +50,44 @@ func (cfg *Configuration) DumpConfig() error {
 	return nil
 }
 
-func (cfg *Configuration) cert(target int64) {
-	cfg.certedGroups[target] = struct{}{}
-}
-
-func (cfg *Configuration) isCerted(target int64) bool {
-	_, ok := cfg.certedGroups[target]
-	return ok
-}
-
-func (cfg *Configuration) userPermission(target int) string {
-	return cfg.Users[target]
-}
-
-func (cfg *Configuration) isBanned(target int) bool {
-	return cfg.userPermission(target) == "banned"
-}
-
-func (cfg *Configuration) isAdmins(target int) bool {
-	return cfg.userPermission(target) == "admin"
-}
-
 func (cfg *Configuration) save() {
-	for k := range cfg.certedGroups {
-		cfg.CertedGroups = append(cfg.CertedGroups, k)
-	}
 	err := cfg.DumpConfig()
 	if err != nil {
-		log.Printf("fail to dump config:%v", err)
-		log.Println("making tmp file")
+		path := os.Getenv("HOME") + "/config.json.tmp"
+		log.Printf("dump config:%v", err)
+		log.Printf("saving tmp file to: %s", path)
 		byt, err := json.Marshal(cfg)
 		if err != nil {
 			log.Printf("marshal %+v failed:%v", cfg, err)
 			return
 		}
-		err = ioutil.WriteFile("/home/config.json.tmp", byt, os.ModePerm)
+		err = ioutil.WriteFile(path, byt, os.ModePerm)
 		if err != nil {
 			log.Println("saving tmp file failed, program exit:", err)
 		}
 	}
+	log.Println("save successfully")
 }
 
-func newConfigFromGivenPath(path string) *Configuration {
-	cfgPath := WhereCFG(path)
+func (cfg *Configuration) Prepare() error {
+	cfgPath := WhereCFG("")
 	if cfgPath == "" {
-		log.Fatal("get config path failed")
+		return errors.New("no config")
 	}
 	cfgPath = cfgPath + "/config.json"
 	data, err := ioutil.ReadFile(cfgPath)
 	if err != nil {
-		log.Fatal("read config failed:" + err.Error())
+		return fmt.Errorf("read %s:%v", cfgPath, err)
 	}
-	var config *Configuration
-	err = json.Unmarshal(data, &config)
+	err = json.Unmarshal(data, &cfg)
 	if err != nil {
-		log.Fatal("parsed config failed:" + err.Error())
+		return fmt.Errorf("decode %s:%v", data, err)
 	}
-	config.certedGroups = make(map[int64]interface{})
-	if config.CertedGroups != nil && len(config.CertedGroups) > 0 {
-		for _, g := range config.CertedGroups {
-			config.certedGroups[g] = struct{}{}
-		}
-	}
-	config.CertedGroups = config.CertedGroups[0:]
-	return config
+	return nil
 }
 
 func NewConfig() *Configuration {
-	return newConfigFromGivenPath("")
+	return new(Configuration)
 }
 
 // WhereCFG give the config loader specific config path.

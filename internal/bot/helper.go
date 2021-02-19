@@ -105,8 +105,7 @@ func safeExit() {
 	signal.Notify(c, os.Interrupt, syscall.SIGTERM)
 	go func() {
 		<-c
-		log.Println("exit and save config")
-		cfg.save()
+		log.Println("exit and save config", setting.Update())
 		os.Exit(1)
 	}()
 }

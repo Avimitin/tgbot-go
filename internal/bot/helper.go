@@ -73,7 +73,7 @@ func kickUser(userID int, chatID int64, untilDate int64) error {
 }
 
 func editUserPermissions(user int, chat int64, untilDate int64, notBan bool) error {
-	resp, err := bot.RestrictChatMember(bapi.RestrictChatMemberConfig{
+	_, err := bot.RestrictChatMember(bapi.RestrictChatMemberConfig{
 		ChatMemberConfig: bapi.ChatMemberConfig{
 			ChatID: chat,
 			UserID: user,
@@ -86,16 +86,18 @@ func editUserPermissions(user int, chat int64, untilDate int64, notBan bool) err
 	})
 
 	if err != nil {
-		return errF("limitUser", err, "fail to restrict chat member: "+resp.Description)
+		return fmt.Errorf("restrict %d: %v", user, err)
 	}
 	return nil
 }
 
-func leaveGroup(chat *bapi.Chat) {
+func leaveGroup(chat *bapi.Chat) error {
 	_, err := bot.LeaveChat(chat.ChatConfig())
 	if err != nil {
 		log.Printf("leave group [%s](%d) failed: %v", chat.FirstName, chat.ID, err)
+		return fmt.Errorf("leave %d: %v", chat.ID, err)
 	}
+	return nil
 }
 
 func safeExit() {
@@ -103,7 +105,7 @@ func safeExit() {
 	signal.Notify(c, os.Interrupt, syscall.SIGTERM)
 	go func() {
 		<-c
-		log.Println("Cleaning and saving")
+		log.Println("exit and save config")
 		cfg.save()
 		os.Exit(1)
 	}()

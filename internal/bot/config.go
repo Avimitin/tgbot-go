@@ -6,7 +6,6 @@ import (
 	"io/ioutil"
 	"log"
 	"os"
-	"os/user"
 	"sync"
 )
 
@@ -123,22 +122,8 @@ func WhereCFG(p string) (path string) {
 	}
 
 	// if config path exist in user's home directory, use it as path
-	u, err := user.Current()
-	if err != nil {
-		log.Fatalf("read user error: %v", err)
-	}
-	files, err := ioutil.ReadDir(u.HomeDir + "/.config")
-	if err != nil {
-		log.Fatalf("read directory %s error: %v", u.HomeDir+"/.config", err)
-	}
-	for _, file := range files {
-		if path = file.Name(); path == "go-bot" {
-			if file.IsDir() {
-				return u.HomeDir + "/.config/" + path
-			} else {
-				log.Fatal("~/.config/go-bot is a directory")
-			}
-		}
+	if userHomePath := os.Getenv("HOME"); userHomePath != "" {
+		return userHomePath + "/.config/go-bot"
 	}
 	return ""
 }

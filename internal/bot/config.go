@@ -10,6 +10,13 @@ import (
 	"sync"
 )
 
+// Setting contain bot needed information at runtime
+type Setting interface {
+	Users() map[int]string     // Users return a set of user
+	CertedGroups() []int64     // CertedGroups return a list of certed groups
+	Secret() map[string]string // Secret return a set of secret store
+}
+
 type Configuration struct {
 	BotToken     string                `json:"bot_token"`
 	CertedGroups []int64               `json:"certed_groups"`

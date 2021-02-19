@@ -37,15 +37,15 @@ type Configuration struct {
 	mu       sync.Mutex       `json:"-"`
 }
 
-func (cfg *Configuration) GetUsers() map[int]string {
+func (cfg *Configuration) GetUsers() Users {
 	return cfg.Users
 }
 
-func (cfg *Configuration) GetGroups() map[int64]string {
+func (cfg *Configuration) GetGroups() Groups {
 	return cfg.Groups
 }
 
-func (cfg *Configuration) Secret() map[string]string {
+func (cfg *Configuration) Secret() Secret {
 	return map[string]string{"bot_token": cfg.BotToken}
 }
 

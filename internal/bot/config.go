@@ -63,7 +63,7 @@ func (cfg *Configuration) DumpConfig() error {
 	return nil
 }
 
-func (cfg *Configuration) save() {
+func (cfg *Configuration) Update() error {
 	err := cfg.DumpConfig()
 	if err != nil {
 		path := os.Getenv("HOME") + "/config.json.tmp"
@@ -71,15 +71,19 @@ func (cfg *Configuration) save() {
 		log.Printf("saving tmp file to: %s", path)
 		byt, err := json.Marshal(cfg)
 		if err != nil {
-			log.Printf("marshal %+v failed:%v", cfg, err)
-			return
+			err = fmt.Errorf("marshal %+v failed:%v", cfg, err)
+			log.Println(err)
+			return err
 		}
 		err = ioutil.WriteFile(path, byt, os.ModePerm)
 		if err != nil {
-			log.Println("saving tmp file failed, program exit:", err)
+			err = fmt.Errorf("saving tmp file:%v", err)
+			log.Println(err)
+			return err
 		}
 	}
 	log.Println("save successfully")
+	return nil
 }
 
 func (cfg *Configuration) Prepare() error {

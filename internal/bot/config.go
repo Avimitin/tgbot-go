@@ -79,10 +79,11 @@ func (cfg *Configuration) save() {
 }
 
 func newConfigFromGivenPath(path string) *Configuration {
-	cfgPath := WhereCFG(path) + "/config.json"
+	cfgPath := WhereCFG(path)
 	if cfgPath == "" {
 		log.Fatal("get config path failed")
 	}
+	cfgPath = cfgPath + "/config.json"
 	data, err := ioutil.ReadFile(cfgPath)
 	if err != nil {
 		log.Fatal("read config failed:" + err.Error())

@@ -16,6 +16,7 @@ type Setting interface {
 	GetUsers() Users   // GetUsers return a set of user
 	GetGroups() Groups // GetGroups return a list of certed groups
 	Secret() Secret    // Secret return a set of secret store
+	Update() error     // Update update setting data store
 }
 
 type Users map[int]string

@@ -12,10 +12,22 @@ import (
 
 // Setting contain bot needed information at runtime
 type Setting interface {
-	Prepare() error              // Prepare initialize setting
-	GetUsers() map[int]string    // GetUsers return a set of user
-	GetGroups() map[int64]string // GetGroups return a list of certed groups
-	Secret() map[string]string   // Secret return a set of secret store
+	Prepare() error    // Prepare initialize setting
+	GetUsers() Users   // GetUsers return a set of user
+	GetGroups() Groups // GetGroups return a list of certed groups
+	Secret() Secret    // Secret return a set of secret store
+}
+
+type Users map[int]string
+type Groups map[int64]string
+type Secret map[string]string
+
+func (s Secret) Set(key string, val string) {
+	s[key] = val
+}
+
+func (s Secret) Get(key string) (val string) {
+	return s[key]
 }
 
 type Configuration struct {

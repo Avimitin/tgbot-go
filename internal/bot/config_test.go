@@ -55,7 +55,7 @@ func TestNewConfig(t *testing.T) {
 func TestDumpCFG(t *testing.T) {
 	cfg := Configuration{
 		BotToken:     "abc:123",
-		CertedGroups: []int64{123, 456},
+		Groups: []int64{123, 456},
 	}
 
 	os.Setenv("BOTCFGPATH", "../../cfg")

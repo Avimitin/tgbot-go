@@ -65,9 +65,9 @@ func kickUser(userID int, chatID int64, untilDate int64) error {
 			UserID: userID,
 		},
 	}
-	resp, err := bot.KickChatMember(userToKick)
+	_, err := bot.KickChatMember(userToKick)
 	if err != nil {
-		return errF("kickUser", err, "fail to send kick request: "+resp.Description)
+		return fmt.Errorf("kick %d:%v", userID, err)
 	}
 	return nil
 }

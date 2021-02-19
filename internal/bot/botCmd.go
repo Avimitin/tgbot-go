@@ -277,7 +277,7 @@ func maintainNotify(m *bapi.Message) error {
 }
 
 func certGroup(m *bapi.Message) error {
-	if !cfg.isAdmins(m.From.ID) {
+	if setting.GetUsers()[m.From.ID] != "admin" {
 		sendT("don't touch anything like a child", m.Chat.ID)
 		return nil
 	}
@@ -295,7 +295,7 @@ func certGroup(m *bapi.Message) error {
 		return fmt.Errorf(text)
 	}
 
-	cfg.cert(groupID)
+	setting.GetGroups()[groupID] = "certed"
 	sendT(fmt.Sprintf("group %d has certed successfully", groupID), m.Chat.ID)
 	return nil
 }

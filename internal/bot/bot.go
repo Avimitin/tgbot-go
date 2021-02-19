@@ -1,6 +1,7 @@
 package bot
 
 import (
+	"errors"
 	"fmt"
 	"log"
 
@@ -8,35 +9,44 @@ import (
 )
 
 var (
-	bot *bapi.BotAPI
-	cfg *Configuration
+	bot     *bapi.BotAPI
+	setting Setting
 )
 
-func Run(config *Configuration) error {
-	cfg = config
-	config = nil
+func Run(s Setting) error {
+	if s == nil {
+		return errors.New("setting not initialized yet")
+	}
+	setting = s
 
-	if cfg.BotToken == "" {
+	botToken := setting.Secret().Get("bot_token")
+	if botToken == "" {
 		return fmt.Errorf("bot token is null")
 	}
 	var err error
-	bot, err = bapi.NewBotAPI(cfg.BotToken)
+	bot, err = bapi.NewBotAPI(botToken)
 	if err != nil {
-		log.Fatal("fail to initialize bot:\n", err)
+		return fmt.Errorf("connect to api server: %v", err)
 	}
 	bot.Debug = true
 	log.Printf("Successfully establish connection to bot: %s", bot.Self.UserName)
-	safeExit()
 
 	updateChanConfiguration := bapi.NewUpdate(0)
 	updateChanConfiguration.Timeout = 15
 
 	updates, err := bot.GetUpdatesChan(updateChanConfiguration)
+	if err != nil {
+		return fmt.Errorf("get update chan:%v", err)
+	}
 
 	for update := range updates {
 		if update.Message != nil {
-			err = messageHandler(update.Message)
-			continue
+			go func() {
+				e := messageHandler(update.Message)
+				if e != nil {
+					log.Println(e)
+				}
+			}()
 		}
 	}
 	return nil
@@ -46,13 +56,13 @@ func messageHandler(msg *bapi.Message) error {
 	// identify
 	switch msg.Chat.Type {
 	case "supergroup", "group":
-		if !cfg.isCerted(msg.Chat.ID) {
+		if _, ok := setting.GetGroups()[msg.Chat.ID]; !ok {
 			sendT("unauthorized groups, contact @avimibot", msg.Chat.ID)
 			leaveGroup(msg.Chat)
 			return nil
 		}
 	case "private":
-		if cfg.isBanned(msg.From.ID) {
+		if perm := setting.GetUsers()[msg.From.ID]; perm == "ban" {
 			return nil
 		}
 	}
@@ -60,14 +70,16 @@ func messageHandler(msg *bapi.Message) error {
 	if msg.IsCommand() {
 		err := commandsHandler(msg)
 		if err != nil {
-			log.Println("[msgHandler]error occur when handling command:\n", err)
+			err = fmt.Errorf("handle command:[%d]%s:%v", msg.From.ID, msg.Command(), err)
+			log.Println(err)
 			return err
 		}
 		return nil
 	}
 	err := msgTextHandler(msg)
 	if err != nil {
-		log.Println("[msgHandler]error occur when handling msg text:\n", err)
+		err = fmt.Errorf("handle msg:[%s]%s :%s", msg.From.FirstName, msg.Text, err)
+		log.Println(err)
 		return err
 	}
 	return nil

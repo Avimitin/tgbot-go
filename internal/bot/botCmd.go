@@ -279,7 +279,7 @@ func maintainNotify(m *bapi.Message) error {
 }
 
 func certGroup(m *bapi.Message) error {
-	if setting.GetUsers()[m.From.ID] != "admin" {
+	if setting.GetUsers()[m.From.ID] != permAdmin {
 		sendT("don't touch anything like a child", m.Chat.ID)
 		return nil
 	}

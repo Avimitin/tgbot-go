@@ -21,6 +21,11 @@ type Setting interface {
 
 type Users map[int]string
 type Groups map[int64]string
+
+func (g Groups) Get(user int64) (perm string) {
+	return g[user]
+}
+
 type Secret map[string]string
 
 func (s Secret) Set(key string, val string) {

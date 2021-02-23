@@ -359,13 +359,13 @@ func parseEhData(url string, chatID int64, comment string) error {
 	}(tagC)
 	photo := bapi.NewPhotoShare(respMsg.Chat.ID, metadata.Thumb)
 	var caption string
-	caption += fmt.Sprintf("标题: <code>%s</code>\n", metadata.TitleJpn)
-	caption += fmt.Sprintf("类别: %s\n", metadata.Category)
-	caption += fmt.Sprintf("标签: %v\n", <-tagC)
+	caption += fmt.Sprintf("📖标题: <code>%s</code>\n", metadata.TitleJpn)
+	caption += fmt.Sprintf("🗂️类别: %s\n", metadata.Category)
+	caption += fmt.Sprintf("🏷️标签: %v\n", <-tagC)
 	if comment != "" {
 		photo.ChatID = 0
 		photo.ChannelUsername = "@hcomic"
-		caption += fmt.Sprintf("评论: %v", comment)
+		caption += fmt.Sprintf("💬评论: %v", comment)
 	}
 	photo.Caption = caption
 	// make button

@@ -108,7 +108,7 @@ func msgTextHandler(msg *bapi.Message) error {
 	if hasOsuDomain(msg.Text) {
 		err := handleOsuLink(msg.Text)
 		if err != nil {
-			err = fmt.Errorf("[msgTextHandler]error occur when handling osu link, %v", err)
+			err = fmt.Errorf("handle %s: %v", msg.Text, err)
 			log.Println(err)
 			return err
 		}

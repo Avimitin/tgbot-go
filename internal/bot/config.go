@@ -12,11 +12,10 @@ import (
 
 const (
 	// User permission
-	permBanned  = "ban"
-	permNormal  = "norm"
-	permComic   = "comic"
-	permAdmin   = "admin"
-	permCreator = "god"
+	permBanned = "ban"
+	permNormal = "norm"
+	permComic  = "comic"
+	permAdmin  = "admin"
 )
 
 // Setting contain bot needed information at runtime

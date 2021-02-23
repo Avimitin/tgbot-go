@@ -78,7 +78,12 @@ func dump(m *bapi.Message) error {
 		"<b>ID:</b> <code>%v</code>\n" +
 		"<b>TEXT:</b> %v"
 
-	if reply := m.ReplyToMessage; reply != nil {
+	if fwd := m.ReplyToMessage.ForwardFrom; fwd != nil {
+		text = fmt.Sprintf(text,
+			m.Chat.ID, m.Chat.Type, m.Chat.UserName,
+			fwd.ID, fwd.UserName, fwd.FirstName, fwd.LastName, fwd.LanguageCode,
+			m.ReplyToMessage.MessageID, m.ReplyToMessage.Text)
+	} else if reply := m.ReplyToMessage; reply != nil {
 		text = fmt.Sprintf(text,
 			reply.Chat.ID, reply.Chat.Type, reply.Chat.UserName,
 			reply.From.ID, reply.From.UserName, reply.From.FirstName, reply.From.LastName, reply.From.LanguageCode,

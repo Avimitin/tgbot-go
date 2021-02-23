@@ -32,7 +32,7 @@ func Run(s Setting) error {
 	if err != nil {
 		return fmt.Errorf("connect to api server: %v", err)
 	}
-	bot.Debug = true
+	bot.Debug = false
 	log.Printf("Successfully establish connection to bot: %s", bot.Self.UserName)
 
 	updateChanConfiguration := bapi.NewUpdate(0)
@@ -42,6 +42,7 @@ func Run(s Setting) error {
 	if err != nil {
 		return fmt.Errorf("get update chan:%v", err)
 	}
+	safeExit()
 
 	for update := range updates {
 		if update.Message != nil {

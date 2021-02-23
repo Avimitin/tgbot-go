@@ -66,7 +66,7 @@ func messageHandler(msg *bapi.Message) error {
 			return nil
 		}
 	case "private":
-		if perm := setting.GetUsers()[msg.From.ID]; perm == "ban" {
+		if perm := setting.GetUsers()[msg.From.ID]; perm == permBanned {
 			return nil
 		}
 	}

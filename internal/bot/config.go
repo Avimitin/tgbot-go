@@ -53,7 +53,7 @@ type Configuration struct {
 	BotToken string           `json:"bot_token"`
 	Groups   map[int64]string `json:"groups"`
 	Users    map[int]string   `json:"users"`
-	mu       sync.Mutex       `json:"-"`
+	mu       sync.RWMutex     `json:"-"`
 }
 
 func (cfg *Configuration) GetUsers() Users {
@@ -69,6 +69,8 @@ func (cfg *Configuration) Secret() Secret {
 }
 
 func (cfg *Configuration) DumpConfig() error {
+	cfg.mu.RLock()
+	defer cfg.mu.RUnlock()
 	data, err := json.Marshal(cfg)
 	if err != nil {
 		return fmt.Errorf("marshal %+v failed: %v", cfg, err)
@@ -105,6 +107,9 @@ func (cfg *Configuration) Update() error {
 }
 
 func (cfg *Configuration) Prepare() error {
+	cfg.BotToken = ""
+	cfg.Groups = make(map[int64]string)
+	cfg.Users = make(map[int]string)
 	cfgPath := WhereCFG("")
 	if cfgPath == "" {
 		return errors.New("no config")

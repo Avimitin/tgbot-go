@@ -9,8 +9,9 @@ import (
 )
 
 var (
-	bot     *bapi.BotAPI
-	setting Setting
+	bot      *bapi.BotAPI
+	setting  Setting
+	registry = NewRegistration()
 )
 
 func Run(s Setting) error {
@@ -18,6 +19,9 @@ func Run(s Setting) error {
 		return errors.New("setting not initialized yet")
 	}
 	setting = s
+	if err := setting.Prepare(); err != nil {
+		return fmt.Errorf("prepare setting: %v", err)
+	}
 
 	botToken := setting.Secret().Get("bot_token")
 	if botToken == "" {
@@ -65,6 +69,10 @@ func messageHandler(msg *bapi.Message) error {
 		if perm := setting.GetUsers()[msg.From.ID]; perm == "ban" {
 			return nil
 		}
+	}
+
+	if fn := registry.getFn(msg.From.ID); fn != nil {
+		return fn(msg)
 	}
 
 	if msg.IsCommand() {

@@ -8,6 +8,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/Avimitin/go-bot/internal/eh"
 	"github.com/Avimitin/go-bot/internal/net"
 	bapi "github.com/go-telegram-bot-api/telegram-bot-api"
 )
@@ -24,6 +25,7 @@ var botCMD = command{
 	"osuu":      maintainNotify,
 	"osum":      maintainNotify,
 	"certgroup": certGroup,
+	"ex":        cmdEH,
 }
 
 func cmdArgv(msg *bapi.Message) []string {
@@ -297,5 +299,104 @@ func certGroup(m *bapi.Message) error {
 
 	setting.GetGroups()[groupID] = "certed"
 	sendT(fmt.Sprintf("group %d has certed successfully", groupID), m.Chat.ID)
+	return nil
+}
+
+func cmdEH(m *bapi.Message) error {
+	var err error
+	var url string
+	if argv := strings.Fields(m.Text); len(argv) > 1 {
+		url = argv[1]
+	} else {
+		sendT("gib me a ex link to parse", m.Chat.ID)
+		return err
+	}
+	if setting.GetUsers().Get(m.From.ID) != permNormal {
+		sendT("send me a comment or press /cancel to end this process", m.Chat.ID)
+		registry.registerNextFunc(m, ehCaptionHandler, infoMapType{"url": url})
+		return nil
+	}
+	return parseEhData(url, m.Chat.ID, "")
+}
+
+func ehCaptionHandler(m *bapi.Message) error {
+	defer registry.clear(m)
+	if m.Command() == "cancel" {
+		sendT("process canceled", m.Chat.ID)
+		return nil
+	}
+	url := registry.getInfo(m.From.ID)["url"]
+	return parseEhData(url, m.Chat.ID, m.Text)
+}
+
+func parseEhData(url string, chatID int64, comment string) error {
+	var err error
+	respMsg := sendT("handling...", chatID)
+	var data *eh.GMetaData
+	data, err = eh.GetComic(url)
+	if err != nil {
+		editT("error:"+err.Error(), respMsg.Chat.ID, respMsg.MessageID)
+		return fmt.Errorf("cmdEH: %v", err)
+	}
+	if len(data.Medas) == 0 {
+		editT("no comic data found", respMsg.Chat.ID, respMsg.MessageID)
+		return nil
+	}
+	metadata := data.Medas[0]
+	if metadata.Error != "" {
+		editT("error:"+metadata.Error, respMsg.Chat.ID, respMsg.MessageID)
+		return nil
+	}
+	tagC := make(chan string)
+	go func(c chan string) {
+		var tags string
+		for _, tag := range metadata.Tags {
+			tag = strings.ReplaceAll(tag, " ", "_")
+			tag = strings.ReplaceAll(tag, "-", "_")
+			tags += "#" + tag + " "
+		}
+		c <- tags
+	}(tagC)
+	photo := bapi.NewPhotoShare(respMsg.Chat.ID, metadata.Thumb)
+	var caption string
+	caption += fmt.Sprintf("标题: <code>%s</code>\n", metadata.TitleJpn)
+	caption += fmt.Sprintf("类别: %s\n", metadata.Category)
+	caption += fmt.Sprintf("标签: %v\n", <-tagC)
+	if comment != "" {
+		caption += fmt.Sprintf("评论: %v", comment)
+	}
+	photo.Caption = caption
+	// make button
+	collectURL := fmt.Sprintf("https://e-hentai.org/gallerypopups.php?gid=%d&t=%s&act=addfav", metadata.Gid, metadata.Token)
+	inURL := fmt.Sprintf("https://exhentai.org/g/%d/%s/", metadata.Gid, metadata.Token)
+	outURL := fmt.Sprintf("https://e-hentai.org/g/%d/%s/", metadata.Gid, metadata.Token)
+	rateCB := "exRatingCallBack"
+	btnRate := bapi.InlineKeyboardButton{
+		Text:         "👍 " + metadata.Rating,
+		CallbackData: &rateCB,
+	}
+	btnCollect := bapi.InlineKeyboardButton{
+		Text: "⭐ 点击收藏",
+		URL:  &collectURL,
+	}
+	btnOriUrl := bapi.InlineKeyboardButton{
+		Text: "🐼 里站Link",
+		URL:  &inURL,
+	}
+	btnInUrl := bapi.InlineKeyboardButton{
+		Text: "🔗 表站Link",
+		URL:  &outURL,
+	}
+	ikm := bapi.InlineKeyboardMarkup{InlineKeyboard: [][]bapi.InlineKeyboardButton{
+		{btnRate, btnCollect},
+		{btnOriUrl, btnInUrl},
+	}}
+	photo.ReplyMarkup = ikm
+	photo.ParseMode = "HTML"
+	_, err = bot.Send(photo)
+	if err != nil {
+		sendT("error: "+err.Error(), chatID)
+		return fmt.Errorf("send photo %s to %d: %v", photo.FileID, photo.ChatID, err)
+	}
 	return nil
 }

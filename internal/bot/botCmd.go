@@ -400,5 +400,9 @@ func parseEhData(url string, chatID int64, comment string) error {
 		sendT("error: "+err.Error(), chatID)
 		return fmt.Errorf("send photo %s to %d: %v", photo.FileID, photo.ChatID, err)
 	}
+	_, err = editT("done!", respMsg.Chat.ID, respMsg.MessageID)
+	if err != nil {
+		return fmt.Errorf("edit %s:%v", respMsg.Text, err)
+	}
 	return nil
 }

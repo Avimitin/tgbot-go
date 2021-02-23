@@ -33,6 +33,10 @@ func (u Users) Get(user int) (perm string) {
 	return u[user]
 }
 
+func (u Users) Set(user int, perm string) {
+	u[user] = perm
+}
+
 type Groups map[int64]string
 
 func (g Groups) Get(group int64) (perm string) {

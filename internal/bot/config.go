@@ -10,6 +10,15 @@ import (
 	"sync"
 )
 
+const (
+	// User permission
+	banned = -1
+	normal = iota
+	comic
+	admin
+	creator
+)
+
 // Setting contain bot needed information at runtime
 type Setting interface {
 	Prepare() error    // Prepare initialize setting
@@ -20,10 +29,15 @@ type Setting interface {
 }
 
 type Users map[int]string
+
+func (u Users) Get(user int) (perm string) {
+	return u[user]
+}
+
 type Groups map[int64]string
 
-func (g Groups) Get(user int64) (perm string) {
-	return g[user]
+func (g Groups) Get(group int64) (perm string) {
+	return g[group]
 }
 
 type Secret map[string]string

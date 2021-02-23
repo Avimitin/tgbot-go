@@ -30,12 +30,12 @@ func gRequest(gid []string) ([]byte, error) {
 	}
 
 	requestJsonData := struct {
-		Method    string   `json:"method"`
-		GIDList   []string `json:"gidlist"`
-		Namespace int32    `json:"namespace"`
+		Method    string     `json:"method"`
+		GIDList   [][]string `json:"gidlist"`
+		Namespace int32      `json:"namespace"`
 	}{
 		Method:    "gdata",
-		GIDList:   gid,
+		GIDList:   [][]string{gid},
 		Namespace: 0,
 	}
 	request, err := json.Marshal(requestJsonData)

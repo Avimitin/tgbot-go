@@ -25,7 +25,7 @@ var botCMD = command{
 	"osuu":      maintainNotify,
 	"osum":      maintainNotify,
 	"certgroup": certGroup,
-	"ex":        cmdEH,
+	"eh":        cmdEH,
 }
 
 func cmdArgv(msg *bapi.Message) []string {
@@ -308,7 +308,7 @@ func cmdEH(m *bapi.Message) error {
 	if argv := strings.Fields(m.Text); len(argv) > 1 {
 		url = argv[1]
 	} else {
-		sendT("gib me a ex link to parse", m.Chat.ID)
+		sendT("usage: /eh <URL>", m.Chat.ID)
 		return err
 	}
 	if setting.GetUsers().Get(m.From.ID) != permNormal {

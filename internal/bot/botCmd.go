@@ -363,6 +363,8 @@ func parseEhData(url string, chatID int64, comment string) error {
 	caption += fmt.Sprintf("类别: %s\n", metadata.Category)
 	caption += fmt.Sprintf("标签: %v\n", <-tagC)
 	if comment != "" {
+		photo.ChatID = 0
+		photo.ChannelUsername = "@hcomic"
 		caption += fmt.Sprintf("评论: %v", comment)
 	}
 	photo.Caption = caption

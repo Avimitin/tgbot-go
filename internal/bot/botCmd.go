@@ -26,6 +26,7 @@ var botCMD = command{
 	"osum":      maintainNotify,
 	"certgroup": certGroup,
 	"eh":        cmdEH,
+	"setperm":   setPerm,
 }
 
 func cmdArgv(msg *bapi.Message) []string {
@@ -404,5 +405,35 @@ func parseEhData(url string, chatID int64, comment string) error {
 	if err != nil {
 		return fmt.Errorf("edit %s:%v", respMsg.Text, err)
 	}
+	return nil
+}
+
+func setPerm(m *bapi.Message) error {
+	perm := setting.GetUsers().Get(m.From.ID)
+	if perm != permAdmin {
+		sendT("/setperm : permission denied", m.Chat.ID)
+		return fmt.Errorf("%d with %s priviledge want to access /setperm cmd", m.From.ID, perm)
+	}
+	argv := cmdArgv(m)
+	if replyTo := m.ReplyToMessage; replyTo != nil {
+		if args := len(argv); args < 1 {
+			sendT("Usage: reply to user: /setperm <permission>", m.Chat.ID)
+			return nil
+		}
+		setting.GetUsers().Set(replyTo.From.ID, argv[0])
+		sendT("User perm has set to "+argv[0], m.Chat.ID)
+		return nil
+	}
+	if args := len(argv); args < 2 {
+		sendT("Usage: /setperm <user> <permission>", m.Chat.ID)
+		return nil
+	}
+	uid, err := strconv.Atoi(argv[0])
+	if err != nil {
+		sendT(argv[0]+" is not invalid", m.Chat.ID)
+		return nil
+	}
+	setting.GetUsers().Set(uid, argv[1])
+	sendT("User perm has set to "+argv[1], m.Chat.ID)
 	return nil
 }

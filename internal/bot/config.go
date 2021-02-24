@@ -72,14 +72,13 @@ func (cfg *Configuration) Secret() Secret {
 	return map[string]string{"bot_token": cfg.BotToken}
 }
 
-func (cfg *Configuration) DumpConfig() error {
+func (cfg *Configuration) dumpConfig(path string) error {
 	cfg.mu.RLock()
 	defer cfg.mu.RUnlock()
 	data, err := json.Marshal(cfg)
 	if err != nil {
 		return fmt.Errorf("marshal %+v failed: %v", cfg, err)
 	}
-	path := WhereCFG("") + "/config.json"
 	err = ioutil.WriteFile(path, data, os.ModePerm)
 	if err != nil {
 		return fmt.Errorf("write %s failed:%v", path, err)
@@ -88,22 +87,13 @@ func (cfg *Configuration) DumpConfig() error {
 }
 
 func (cfg *Configuration) Update() error {
-	err := cfg.DumpConfig()
+	err := cfg.dumpConfig(WhereCFG("") + "/config.json")
 	if err != nil {
 		path := os.Getenv("HOME") + "/config.json.tmp"
-		log.Printf("dump config:%v", err)
-		log.Printf("saving tmp file to: %s", path)
-		byt, err := json.Marshal(cfg)
+		err = cfg.dumpConfig(path)
 		if err != nil {
-			err = fmt.Errorf("marshal %+v failed:%v", cfg, err)
-			log.Println(err)
-			return err
-		}
-		err = ioutil.WriteFile(path, byt, os.ModePerm)
-		if err != nil {
-			err = fmt.Errorf("saving tmp file:%v", err)
-			log.Println(err)
-			return err
+			log.Println("save failed")
+			return fmt.Errorf("save config %+v to %s failed", cfg, path)
 		}
 	}
 	log.Println("save successfully")

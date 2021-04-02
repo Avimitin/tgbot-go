@@ -94,7 +94,7 @@ func messageHandler(msg *bapi.Message) error {
 		}
 		return nil
 	}
-	err := msgTextHandler(msg)
+	err := handleMsgText(msg)
 	if err != nil {
 		err = fmt.Errorf("handle msg:[%s]%s :%s", msg.From.FirstName, msg.Text, err)
 		log.Println(err)
@@ -115,7 +115,7 @@ func handleCommand(msg *bapi.Message) error {
 	return nil
 }
 
-func msgTextHandler(msg *bapi.Message) error {
+func handleMsgText(msg *bapi.Message) error {
 	if hasOsuDomain(msg.Text) {
 		err := handleOsuLink(msg.Text)
 		if err != nil {

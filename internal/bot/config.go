@@ -172,53 +172,30 @@ func (cfg *JsonConfig) Secret() *Secret {
 func (cfg *JsonConfig) dumpConfig(path string) error {
 	cfg.mu.RLock()
 	defer cfg.mu.RUnlock()
+
+	cfg.Users = cfg.u.Traverse()
+	cfg.Groups = cfg.g.Traverse()
+
 	data, err := json.Marshal(cfg)
 	if err != nil {
 		return fmt.Errorf("marshal %+v failed: %v", cfg, err)
 	}
-	err = ioutil.WriteFile(path, data, os.ModePerm)
+	err = ioutil.WriteFile(path, data, 0640)
 	if err != nil {
 		return fmt.Errorf("write %s failed:%v", path, err)
 	}
+
+	cfg.Users = nil
+	cfg.Groups = nil
 	return nil
 }
 
-func (cfg *JsonConfig) Update() error {
-	err := cfg.dumpConfig(WhereCFG("") + "/config.json")
+func (cfg *JsonConfig) Update(p string) error {
+	err := cfg.dumpConfig(p)
 	if err != nil {
-		path := os.Getenv("HOME") + "/config.json.tmp"
-		err = cfg.dumpConfig(path)
-		if err != nil {
-			log.Println("save failed")
-			return fmt.Errorf("save config %+v to %s failed", cfg, path)
-		}
-	}
-	log.Println("save successfully")
-	return nil
-}
-
-func (cfg *JsonConfig) Prepare() error {
-	cfg.BotToken = ""
-	cfg.Groups = make(map[int64]string)
-	cfg.Users = make(map[int]string)
-	cfgPath := WhereCFG("")
-	if cfgPath == "" {
-		return errors.New("no config")
-	}
-	cfgPath = cfgPath + "/config.json"
-	data, err := ioutil.ReadFile(cfgPath)
-	if err != nil {
-		return fmt.Errorf("read %s:%v", cfgPath, err)
-	}
-	err = json.Unmarshal(data, &cfg)
-	if err != nil {
-		return fmt.Errorf("decode %s:%v", data, err)
+		return fmt.Errorf("save config %+v to %s failed", cfg, p)
 	}
 	return nil
-}
-
-func NewConfig() *JsonConfig {
-	return new(JsonConfig)
 }
 
 // WhereCFG give the config loader specific config path.

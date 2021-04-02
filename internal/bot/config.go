@@ -73,14 +73,28 @@ func (g *Groups) Set(group int64, perm string) {
 	g.groupPermMap[group] = perm
 }
 
-type Secret map[string]string
-
-func (s Secret) Set(key string, val string) {
-	s[key] = val
+// Secret store any secret like token or password
+// bot need to use at runtime
+type Secret struct {
+	ma map[string]string
+	mu sync.Mutex
 }
 
-func (s Secret) Get(key string) (val string) {
-	return s[key]
+// Set set the given key and val into map
+func (s *Secret) Set(key string, val string) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	s.ma[key] = val
+}
+
+// Get return the relative val with given key
+func (s *Secret) Get(key string) string {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	if v, ok := s.ma[key]; ok {
+		return v
+	}
+	return ""
 }
 
 type JsonConfig struct {

@@ -1,4 +1,4 @@
-package bot
+package main
 
 import (
 	"encoding/json"
@@ -8,8 +8,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/Avimitin/go-bot/internal/eh"
-	"github.com/Avimitin/go-bot/internal/net"
+	"github.com/Avimitin/go-bot/modules/eh"
+	"github.com/Avimitin/go-bot/modules/net"
 	bapi "github.com/go-telegram-bot-api/telegram-bot-api"
 )
 

@@ -7,7 +7,7 @@ import (
 	"fmt"
 	"regexp"
 
-	"github.com/Avimitin/go-bot/internal/net"
+	"github.com/Avimitin/go-bot/modules/net"
 )
 
 const (

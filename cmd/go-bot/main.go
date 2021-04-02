@@ -7,7 +7,10 @@ import (
 )
 
 func main() {
-	cfg := bot.NewConfig()
+	cfg, err := bot.NewJsonConfig(bot.WhereCFG(""))
+	if err != nil {
+		log.Fatal(err)
+	}
 	if err := bot.Run(cfg); err != nil {
 		log.Fatal(err)
 	}

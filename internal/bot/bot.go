@@ -86,7 +86,7 @@ func messageHandler(msg *bapi.Message) error {
 	}
 
 	if msg.IsCommand() {
-		err := commandsHandler(msg)
+		err := handleCommand(msg)
 		if err != nil {
 			err = fmt.Errorf("handle command:[%d]%s:%v", msg.From.ID, msg.Command(), err)
 			log.Println(err)
@@ -103,7 +103,7 @@ func messageHandler(msg *bapi.Message) error {
 	return nil
 }
 
-func commandsHandler(msg *bapi.Message) error {
+func handleCommand(msg *bapi.Message) error {
 	cmd := msg.Command()
 	if fn, ok := botCMD.hasCommand(cmd); ok {
 		err := fn(msg)

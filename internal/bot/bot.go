@@ -66,13 +66,17 @@ func messageHandler(msg *bapi.Message) error {
 	// identify
 	switch msg.Chat.Type {
 	case "supergroup", "group":
-		if _, ok := setting.GetGroups()[msg.Chat.ID]; !ok {
-			sendT("unauthorized groups, contact @avimibot", msg.Chat.ID)
+		if perm := setting.GetGroups().Get(msg.Chat.ID); perm == "" {
+			sendT("unauthorized groups", msg.Chat.ID)
+			leaveGroup(msg.Chat)
+			return nil
+		} else if perm == permBanned {
+			log.Printf("banned chat [%s](%d) keep using the bot", msg.Chat.FirstName, msg.Chat.ID)
 			leaveGroup(msg.Chat)
 			return nil
 		}
 	case "private":
-		if perm := setting.GetUsers()[msg.From.ID]; perm == permBanned {
+		if perm := setting.GetUsers().Get(msg.From.ID); perm == permBanned {
 			return nil
 		}
 	}

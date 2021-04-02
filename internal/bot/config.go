@@ -43,6 +43,10 @@ func (u *Users) Get(user int) (perm string) {
 	return ""
 }
 
+func (u *Users) Traverse() map[int]string {
+	return u.userPermMap
+}
+
 // Set set the given user and permission into map
 func (u *Users) Set(user int, perm string) {
 	u.m.Lock()

@@ -189,10 +189,10 @@ func (cfg *JsonConfig) dumpConfig(path string) error {
 	return nil
 }
 
-func (cfg *JsonConfig) Update(p string) error {
-	err := cfg.dumpConfig(p)
+func (cfg *JsonConfig) Update() error {
+	err := cfg.dumpConfig(cfg.p)
 	if err != nil {
-		return fmt.Errorf("save config %+v to %s failed", cfg, p)
+		return fmt.Errorf("save config %+v to %s failed", cfg, cfg.p)
 	}
 	return nil
 }

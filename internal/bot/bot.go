@@ -55,6 +55,14 @@ func Run(s SettingsGetter) error {
 }
 
 func messageHandler(msg *bapi.Message) error {
+	log.Printf(
+		"CHAT:[%q](%d) FROM:[%q](%d) MSG:[%q] ISCMD:[%v]",
+		msg.Chat.FirstName, msg.Chat.ID,
+		msg.From.FirstName, msg.From.ID,
+		msg.Text,
+		msg.IsCommand(),
+	)
+
 	// identify
 	switch msg.Chat.Type {
 	case "supergroup", "group":

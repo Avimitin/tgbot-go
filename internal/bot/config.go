@@ -116,7 +116,11 @@ type JsonConfig struct {
 	BotToken string           `json:"bot_token"`
 	Groups   map[int64]string `json:"groups"`
 	Users    map[int]string   `json:"users"`
-	mu       sync.RWMutex     `json:"-"`
+
+	s  *Secret      `json:"-"`
+	g  *Groups      `json:"-"`
+	u  *Users       `json:"-"`
+	mu sync.RWMutex `json:"-"`
 }
 
 func (cfg *JsonConfig) GetUsers() Users {

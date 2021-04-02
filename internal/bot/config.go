@@ -30,13 +30,13 @@ type SettingsGetter interface {
 // use by mulitiple goroutine
 type Users struct {
 	userPermMap map[int]string
-	m           sync.Mutex
+	m           sync.RWMutex
 }
 
 // Get return the given user's permission
 func (u *Users) Get(user int) (perm string) {
-	u.m.Lock()
-	defer u.m.Unlock()
+	u.m.RLock()
+	defer u.m.RUnlock()
 	if p, ok := u.userPermMap[user]; ok {
 		return p
 	}

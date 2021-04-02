@@ -115,6 +115,7 @@ type JsonConfig struct {
 	Groups   map[int64]string `json:"groups"`
 	Users    map[int]string   `json:"users"`
 
+	p  string       `json:"-"`
 	s  *Secret      `json:"-"`
 	g  *Groups      `json:"-"`
 	u  *Users       `json:"-"`
@@ -149,6 +150,7 @@ func NewJsonConfig(p string) (*JsonConfig, error) {
 
 	cfg.Users = nil
 	cfg.Groups = nil
+	cfg.p = p
 
 	return cfg, nil
 }

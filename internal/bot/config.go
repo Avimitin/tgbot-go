@@ -122,8 +122,36 @@ type JsonConfig struct {
 	mu sync.RWMutex `json:"-"`
 }
 
-func (cfg *JsonConfig) GetUsers() Users {
-	return cfg.Users
+// NewJsonConfig read file at given path value `p` and decode it to
+// JsonConfig. Must ensure `p` is a valid file path and is a json type file.
+func NewJsonConfig(p string) (*JsonConfig, error) {
+	data, err := ioutil.ReadFile(p)
+	if err != nil {
+		return nil, fmt.Errorf("read %s:%v", p, err)
+	}
+	var cfg *JsonConfig
+	err = json.Unmarshal(data, &cfg)
+	if err != nil {
+		return nil, fmt.Errorf("decode %s:%v", data, err)
+	}
+
+	cfg.u = &Users{userPermMap: make(map[int]string)}
+	for k, v := range cfg.Users {
+		cfg.u.Set(k, v)
+	}
+
+	cfg.g = &Groups{groupPermMap: make(map[int64]string)}
+	for k, v := range cfg.Groups {
+		cfg.g.Set(k, v)
+	}
+
+	cfg.s = &Secret{ma: make(map[string]string)}
+	cfg.s.Set("bot_token", cfg.BotToken)
+
+	cfg.Users = nil
+	cfg.Groups = nil
+
+	return cfg, nil
 }
 
 func (cfg *JsonConfig) GetGroups() Groups {

@@ -104,10 +104,11 @@ func messageHandler(msg *bapi.Message) error {
 }
 
 func commandsHandler(msg *bapi.Message) error {
-	if fn, ok := botCMD.hasCommand(msg.Command()); ok {
+	cmd := msg.Command()
+	if fn, ok := botCMD.hasCommand(cmd); ok {
 		err := fn(msg)
 		if err != nil {
-			log.Println("[cmdHandler]", err)
+			log.Printf("do cmd %s: %v", cmd, err)
 			return err
 		}
 	}

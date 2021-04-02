@@ -57,13 +57,13 @@ func (u *Users) Set(user int, perm string) {
 // Groups is a map that store group information
 type Groups struct {
 	groupPermMap map[int64]string
-	m            sync.Mutex
+	m            sync.RWMutex
 }
 
 // Get return the given group's permission
 func (g *Groups) Get(group int64) (perm string) {
-	g.m.Lock()
-	defer g.m.Unlock()
+	g.m.RLock()
+	defer g.m.RUnlock()
 	if p, ok := g.groupPermMap[group]; ok {
 		return p
 	}
@@ -78,6 +78,8 @@ func (g *Groups) Set(group int64, perm string) {
 }
 
 func (g *Groups) Traverse() map[int64]string {
+	g.m.RLock()
+	defer g.m.RUnlock()
 	return g.groupPermMap
 }
 

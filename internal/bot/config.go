@@ -109,6 +109,9 @@ func (s *Secret) Get(key string) string {
 	return ""
 }
 
+// JsonConfig store the local bot configuration at json file type
+// BotToken, Groups, Users type are exposed for parsed into json, but it's
+// not recommended to use them directly. You should use the packaging method.
 type JsonConfig struct {
 	BotToken string           `json:"bot_token"`
 	Groups   map[int64]string `json:"groups"`

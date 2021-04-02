@@ -154,12 +154,19 @@ func NewJsonConfig(p string) (*JsonConfig, error) {
 	return cfg, nil
 }
 
-func (cfg *JsonConfig) GetGroups() Groups {
-	return cfg.Groups
+// GetUsers return the Users type
+func (cfg *JsonConfig) GetUsers() *Users {
+	return cfg.u
 }
 
-func (cfg *JsonConfig) Secret() Secret {
-	return map[string]string{"bot_token": cfg.BotToken}
+// GetGroups return the Groups type
+func (cfg *JsonConfig) GetGroups() *Groups {
+	return cfg.g
+}
+
+// GetSecret return the Secret type
+func (cfg *JsonConfig) Secret() *Secret {
+	return cfg.s
 }
 
 func (cfg *JsonConfig) dumpConfig(path string) error {

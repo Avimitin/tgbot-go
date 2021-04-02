@@ -289,13 +289,6 @@ func certGroup(m *bapi.Message) error {
 		sendT("don't touch anything like a child", m.Chat.ID)
 		return nil
 	}
-	defer func() {
-		err := setting.Update()
-		if err != nil {
-			fmt.Println(err)
-			sendT(err.Error(), m.Chat.ID)
-		}
-	}()
 
 	argv := cmdArgv(m)
 	if argv == nil {
@@ -426,13 +419,6 @@ func setPerm(m *bapi.Message) error {
 		sendT("/setperm : permission denied", m.Chat.ID)
 		return fmt.Errorf("%d with %s priviledge want to access /setperm cmd", m.From.ID, perm)
 	}
-	defer func() {
-		err := setting.Update()
-		if err != nil {
-			fmt.Println(err)
-			sendT(err.Error(), m.Chat.ID)
-		}
-	}()
 	argv := cmdArgv(m)
 	if replyTo := m.ReplyToMessage; replyTo != nil {
 		if args := len(argv); args < 1 {

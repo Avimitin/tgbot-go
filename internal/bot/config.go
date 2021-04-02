@@ -73,6 +73,10 @@ func (g *Groups) Set(group int64, perm string) {
 	g.groupPermMap[group] = perm
 }
 
+func (g *Groups) Traverse() map[int64]string {
+	return g.groupPermMap
+}
+
 // Secret store any secret like token or password
 // bot need to use at runtime
 type Secret struct {

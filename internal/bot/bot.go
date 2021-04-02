@@ -19,9 +19,6 @@ func Run(s SettingsGetter) error {
 		return errors.New("setting not initialized yet")
 	}
 	setting = s
-	if err := setting.Prepare(); err != nil {
-		return fmt.Errorf("prepare setting: %v", err)
-	}
 
 	botToken := setting.Secret().Get("bot_token")
 	if botToken == "" {

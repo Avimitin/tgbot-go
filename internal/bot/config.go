@@ -44,6 +44,8 @@ func (u *Users) Get(user int) (perm string) {
 }
 
 func (u *Users) Traverse() map[int]string {
+	u.m.RLock()
+	defer u.m.RUnlock()
 	return u.userPermMap
 }
 

@@ -53,26 +53,26 @@ func (s Secret) Get(key string) (val string) {
 	return s[key]
 }
 
-type Configuration struct {
+type JsonConfig struct {
 	BotToken string           `json:"bot_token"`
 	Groups   map[int64]string `json:"groups"`
 	Users    map[int]string   `json:"users"`
 	mu       sync.RWMutex     `json:"-"`
 }
 
-func (cfg *Configuration) GetUsers() Users {
+func (cfg *JsonConfig) GetUsers() Users {
 	return cfg.Users
 }
 
-func (cfg *Configuration) GetGroups() Groups {
+func (cfg *JsonConfig) GetGroups() Groups {
 	return cfg.Groups
 }
 
-func (cfg *Configuration) Secret() Secret {
+func (cfg *JsonConfig) Secret() Secret {
 	return map[string]string{"bot_token": cfg.BotToken}
 }
 
-func (cfg *Configuration) dumpConfig(path string) error {
+func (cfg *JsonConfig) dumpConfig(path string) error {
 	cfg.mu.RLock()
 	defer cfg.mu.RUnlock()
 	data, err := json.Marshal(cfg)
@@ -86,7 +86,7 @@ func (cfg *Configuration) dumpConfig(path string) error {
 	return nil
 }
 
-func (cfg *Configuration) Update() error {
+func (cfg *JsonConfig) Update() error {
 	err := cfg.dumpConfig(WhereCFG("") + "/config.json")
 	if err != nil {
 		path := os.Getenv("HOME") + "/config.json.tmp"
@@ -100,7 +100,7 @@ func (cfg *Configuration) Update() error {
 	return nil
 }
 
-func (cfg *Configuration) Prepare() error {
+func (cfg *JsonConfig) Prepare() error {
 	cfg.BotToken = ""
 	cfg.Groups = make(map[int64]string)
 	cfg.Users = make(map[int]string)
@@ -120,8 +120,8 @@ func (cfg *Configuration) Prepare() error {
 	return nil
 }
 
-func NewConfig() *Configuration {
-	return new(Configuration)
+func NewConfig() *JsonConfig {
+	return new(JsonConfig)
 }
 
 // WhereCFG give the config loader specific config path.

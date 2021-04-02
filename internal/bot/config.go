@@ -20,10 +20,10 @@ const (
 
 // SettingsGetter contain bot needed information at runtime
 type SettingsGetter interface {
-	GetUsers() Users   // GetUsers return a set of user
-	GetGroups() Groups // GetGroups return a list of certed groups
-	Secret() Secret    // Secret return a set of secret store
-	Update() error     // Update update setting data store
+	GetUsers() *Users   // GetUsers return a set of user
+	GetGroups() *Groups // GetGroups return a list of certed groups
+	Secret() *Secret    // Secret return a set of secret store
+	Update() error      // Update update setting data store
 }
 
 // Users store user permission, it is safe for simultaneous

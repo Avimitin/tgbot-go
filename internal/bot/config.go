@@ -51,10 +51,27 @@ func (u *Users) Set(user int, perm string) {
 	u.userPermMap[user] = perm
 }
 
-type Groups map[int64]string
+// Groups is a map that store group information
+type Groups struct {
+	groupPermMap map[int64]string
+	m            sync.Mutex
+}
 
-func (g Groups) Get(group int64) (perm string) {
-	return g[group]
+// Get return the given group's permission
+func (g *Groups) Get(group int64) (perm string) {
+	g.m.Lock()
+	defer g.m.Unlock()
+	if p, ok := g.groupPermMap[group]; ok {
+		return p
+	}
+	return ""
+}
+
+// Set set the given group and permission into map
+func (g *Groups) Set(group int64, perm string) {
+	g.m.Lock()
+	defer g.m.Unlock()
+	g.groupPermMap[group] = perm
 }
 
 type Secret map[string]string

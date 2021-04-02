@@ -10,11 +10,11 @@ import (
 
 var (
 	bot      *bapi.BotAPI
-	setting  Setting
+	setting  SettingsGetter
 	registry = NewRegistration()
 )
 
-func Run(s Setting) error {
+func Run(s SettingsGetter) error {
 	if s == nil {
 		return errors.New("setting not initialized yet")
 	}

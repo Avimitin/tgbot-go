@@ -18,8 +18,8 @@ const (
 	permAdmin  = "admin"
 )
 
-// Setting contain bot needed information at runtime
-type Setting interface {
+// SettingsGetter contain bot needed information at runtime
+type SettingsGetter interface {
 	Prepare() error    // Prepare initialize setting
 	GetUsers() Users   // GetUsers return a set of user
 	GetGroups() Groups // GetGroups return a list of certed groups

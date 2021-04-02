@@ -27,14 +27,28 @@ type Setting interface {
 	Update() error     // Update update setting data store
 }
 
-type Users map[int]string
-
-func (u Users) Get(user int) (perm string) {
-	return u[user]
+// Users store user permission, it is safe for simultaneous
+// use by mulitiple goroutine
+type Users struct {
+	userPermMap map[int]string
+	m           sync.Mutex
 }
 
-func (u Users) Set(user int, perm string) {
-	u[user] = perm
+// Get return the given user's permission
+func (u *Users) Get(user int) (perm string) {
+	u.m.Lock()
+	defer u.m.Unlock()
+	if p, ok := u.userPermMap[user]; ok {
+		return p
+	}
+	return ""
+}
+
+// Set set the given user and permission into map
+func (u *Users) Set(user int, perm string) {
+	u.m.Lock()
+	defer u.m.Unlock()
+	u.userPermMap[user] = perm
 }
 
 type Groups map[int64]string

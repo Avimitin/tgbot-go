@@ -16,7 +16,7 @@ var (
 
 func Run(s SettingsGetter) error {
 	if s == nil {
-		return errors.New("setting not initialized yet")
+		return errors.New("no setting")
 	}
 	setting = s
 

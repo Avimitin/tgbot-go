@@ -6,6 +6,7 @@ import (
 	"os"
 	"os/signal"
 	"syscall"
+	"time"
 
 	bapi "github.com/go-telegram-bot-api/telegram-bot-api"
 )
@@ -108,4 +109,29 @@ func safeExit() {
 		log.Println("exit and save config", setting.Update())
 		os.Exit(1)
 	}()
+}
+
+func autoSaveConfig(ec chan error, interval time.Duration) func() {
+	var (
+		cancelC = make(chan int32, 1)
+		cancel  = func() {
+			cancelC <- 0
+		}
+	)
+	go func() {
+		for {
+			select {
+			case <-cancelC:
+				return
+			default:
+				time.Sleep(interval)
+				err := setting.Update()
+				if err != nil {
+					ec <- err
+					return
+				}
+			}
+		}
+	}()
+	return cancel
 }

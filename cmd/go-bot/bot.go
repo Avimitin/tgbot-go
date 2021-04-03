@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"log"
+	"time"
 
 	bapi "github.com/go-telegram-bot-api/telegram-bot-api"
 )
@@ -39,7 +40,16 @@ func Run(s SettingsGetter) error {
 	if err != nil {
 		return fmt.Errorf("get update chan:%v", err)
 	}
+
 	safeExit()
+	errChan := make(chan error)
+	go func() {
+		saveConfigError := <-errChan
+		log.Println(saveConfigError)
+		sendT(saveConfigError.Error(), 649191333)
+	}()
+	cancel := autoSaveConfig(errChan, 30*time.Second)
+	defer cancel()
 
 	for update := range updates {
 		if update.Message != nil {

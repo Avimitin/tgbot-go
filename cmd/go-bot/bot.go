@@ -22,7 +22,7 @@ func Run(s SettingsGetter) error {
 
 	botToken := setting.Secret().Get("bot_token")
 	if botToken == "" {
-		return fmt.Errorf("bot token is null")
+		return errors.New("no bot token")
 	}
 	var err error
 	bot, err = bapi.NewBotAPI(botToken)

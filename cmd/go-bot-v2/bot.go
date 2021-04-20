@@ -13,11 +13,15 @@ var (
 
 func main() {
 	var err error
+	poller := tb.NewMiddlewarePoller(&tb.LongPoller{Timeout: 15 * time.Second}, func(u *tb.Update) bool {
+		log.Printf("From: %d | Chat: %d | content: %s\n",
+			u.Message.Sender.ID, u.Message.Chat.ID, u.Message.Text)
+
+		return true
+	})
 	b, err = tb.NewBot(tb.Settings{
-		Token: "",
-		Poller: &tb.LongPoller{
-			Timeout: 10 * time.Second,
-		},
+		Token:  "",
+		Poller: poller,
 	})
 
 	if err != nil {

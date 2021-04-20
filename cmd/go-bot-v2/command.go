@@ -16,7 +16,10 @@ type botCommands map[string]msgFunc
 
 var (
 	bc = botCommands{
-		"/start": cmdHello,
+		"/start":   cmdHello,
+		"/ping":    cmdPing,
+		"/dump":    cmdDump,
+		"/weather": cmdWeather,
 	}
 )
 
@@ -49,24 +52,18 @@ func cmdPing(m *tb.Message) {
 	now := time.Now()
 	msg := send(m.Chat, "pong!")
 	delay := time.Now().Sub(now).Milliseconds()
-	_, err := b.Edit(msg, fmt.Sprintf("it takes bot %d ms to send pong to your DC", delay))
-	if err != nil {
-		handleErr(err)
-	}
+	edit(msg, fmt.Sprintf("it takes bot %d ms to send pong to your DC", delay))
 }
 
 func cmdDump(m *tb.Message) {
 	if m.Payload != "" && m.Payload == "json" {
-		data, err := json.MarshalIndent(m, "", "    ")
+		data, err := json.MarshalIndent(m, "", "  ")
 		if err == nil {
-			b.Send(m.Chat, string(data))
+			send(m.Chat, string(data))
 			return
 		}
 
-		_, e := b.Send(m.Chat, err.Error())
-		if e != nil {
-			handleErr(fmt.Errorf("sending message %q: %v", err.Error(), e))
-		}
+		send(m.Chat, err.Error())
 
 		return
 	}
@@ -104,7 +101,7 @@ func cmdDump(m *tb.Message) {
 			m.ReplyTo.Sender.LastName, m.ReplyTo.Sender.LanguageCode,
 			m.ReplyTo.ID)
 	}
-	b.Send(m.Chat, text, &tb.SendOptions{ParseMode: "HTML"})
+	send(m.Chat, text, &tb.SendOptions{ParseMode: "HTML"})
 }
 
 func getWeather(city string) (string, error) {

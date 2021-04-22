@@ -19,6 +19,7 @@ func main() {
 
 		return true
 	})
+
 	b, err = tb.NewBot(tb.Settings{
 		Token:  "",
 		Poller: poller,
@@ -27,8 +28,6 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
-
-	var bc botCommands
 
 	for cmd, fn := range bc {
 		b.Handle(cmd, fn)

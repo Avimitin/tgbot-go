@@ -21,6 +21,8 @@ var (
 		"/ping":    cmdPing,
 		"/dump":    cmdDump,
 		"/weather": cmdWeather,
+		"/mjx":     cmdMJX,
+		"/ghs":     cmdGhs,
 	}
 )
 
@@ -171,4 +173,48 @@ func cmdMJX(m *tb.Message) {
 	} else {
 		edit(msg, "fail to fetch pic")
 	}
+}
+
+func cmdGhs(m *tb.Message) {
+	msg := send(m.Chat, "requesting...")
+
+	baseURL := "https://konachan.com/post.json?limit=50"
+	resp, err := net.Get(baseURL)
+	if err != nil {
+		edit(msg, "Error occur, please try again later")
+		return
+	}
+
+	var k []KonachanResponse
+
+	err = json.Unmarshal(resp, &k)
+	if err != nil {
+		edit(msg, "failed to decode msg")
+		return
+	}
+
+	rand.Seed(time.Now().Unix())
+	var i = rand.Intn(50)
+	var picURL string
+	var fileURL string
+
+	if len(k) < i && len(k) > 0 {
+		picURL = k[0].JpegURL
+		fileURL = k[0].FileURL
+	} else if len(k) >= i {
+		picURL = k[i].JpegURL
+		fileURL = k[i].FileURL
+	} else {
+		edit(msg, "api no response")
+		return
+	}
+
+	b.Delete(msg)
+	send(m.Chat, &tb.Photo{
+		File: tb.FromURL(picURL),
+		Caption: fmt.Sprintf(
+			"Source: [Click](%s) \\| Original File: [Click](%s)", picURL, fileURL,
+		)},
+		&tb.SendOptions{ParseMode: "markdownv2"},
+	)
 }

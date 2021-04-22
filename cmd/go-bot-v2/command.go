@@ -29,7 +29,7 @@ func handleErr(e error) {
 }
 
 func send(to tb.Recipient, what interface{}, opt ...interface{}) *tb.Message {
-	m, err := b.Send(to, what, opt)
+	m, err := b.Send(to, what, opt...)
 	if err != nil {
 		handleErr(fmt.Errorf("sending %#v: %v", what, err))
 	}
@@ -37,7 +37,7 @@ func send(to tb.Recipient, what interface{}, opt ...interface{}) *tb.Message {
 }
 
 func edit(msg tb.Editable, what interface{}, opt ...interface{}) *tb.Message {
-	m, err := b.Edit(msg, what, opt)
+	m, err := b.Edit(msg, what, opt...)
 	if err != nil {
 		handleErr(fmt.Errorf("editing msg to %#v: %v", what, err))
 	}

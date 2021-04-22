@@ -11,9 +11,7 @@ import (
 	tb "gopkg.in/tucnak/telebot.v2"
 )
 
-type msgFunc func(*tb.Message)
-
-type botCommands map[string]msgFunc
+type botCommands map[string]func(*tb.Message)
 
 var (
 	bc = botCommands{

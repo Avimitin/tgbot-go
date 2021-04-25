@@ -29,6 +29,8 @@ func main() {
 		log.Fatal(err)
 	}
 
+	log.Println("Establish connection to bot successfully")
+
 	for cmd, fn := range bc {
 		b.Handle(cmd, fn)
 	}

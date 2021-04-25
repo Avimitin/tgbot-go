@@ -2,9 +2,36 @@ package main
 
 import (
 	"fmt"
+	"log"
 
 	tb "gopkg.in/tucnak/telebot.v2"
 )
+
+func send(to tb.Recipient, what interface{}, opt ...interface{}) *tb.Message {
+	m, err := b.Send(to, what, opt...)
+	switch err {
+	case nil:
+		return m
+	case tb.ErrMessageTooLong:
+		b.Send(to, "message too long")
+	default:
+		log.Println("[ERROR]", err)
+	}
+	return m
+}
+
+func edit(msg tb.Editable, what interface{}, opt ...interface{}) *tb.Message {
+	m, err := b.Edit(msg, what, opt...)
+	switch err {
+	case nil:
+		return m
+	case tb.ErrMessageTooLong:
+		b.Edit(msg, "message too long")
+	default:
+		log.Println("[ERROR]", err)
+	}
+	return m
+}
 
 func unwrapMsg(m *tb.Message) string {
 	var text = "<b>Message Information</b>\n" +

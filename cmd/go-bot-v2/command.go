@@ -3,7 +3,6 @@ package main
 import (
 	"encoding/json"
 	"fmt"
-	"log"
 	"math/rand"
 	"time"
 
@@ -23,32 +22,6 @@ var (
 		"/ghs":     cmdGhs,
 	}
 )
-
-func send(to tb.Recipient, what interface{}, opt ...interface{}) *tb.Message {
-	m, err := b.Send(to, what, opt...)
-	switch err {
-	case nil:
-		return m
-	case tb.ErrMessageTooLong:
-		b.Send(to, "message too long")
-	default:
-		log.Println("[ERROR]", err)
-	}
-	return m
-}
-
-func edit(msg tb.Editable, what interface{}, opt ...interface{}) *tb.Message {
-	m, err := b.Edit(msg, what, opt...)
-	switch err {
-	case nil:
-		return m
-	case tb.ErrMessageTooLong:
-		b.Edit(msg, "message too long")
-	default:
-		log.Println("[ERROR]", err)
-	}
-	return m
-}
 
 func cmdHello(m *tb.Message) {
 	send(m.Chat,

@@ -20,6 +20,7 @@ var (
 		"/weather": cmdWeather,
 		"/mjx":     cmdMJX,
 		"/ghs":     cmdGhs,
+		"/eh":      cmdEH,
 	}
 )
 
@@ -169,4 +170,6 @@ func cmdEH(m *tb.Message) {
 	}
 	msg := send(m.Chat, "handling...")
 	defer b.Delete(msg)
+	pht, opt := wrapEHData(m, "")
+	send(m.Chat, pht, opt)
 }

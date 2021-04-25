@@ -30,16 +30,26 @@ func handleErr(e error) {
 
 func send(to tb.Recipient, what interface{}, opt ...interface{}) *tb.Message {
 	m, err := b.Send(to, what, opt...)
-	if err != nil {
-		handleErr(fmt.Errorf("sending %#v: %v", what, err))
+	switch err {
+	case nil:
+		return m
+	case tb.ErrMessageTooLong:
+		b.Send(to, "message too long")
+	default:
+		log.Println("[ERROR]", err)
 	}
 	return m
 }
 
 func edit(msg tb.Editable, what interface{}, opt ...interface{}) *tb.Message {
 	m, err := b.Edit(msg, what, opt...)
-	if err != nil {
-		handleErr(fmt.Errorf("editing msg to %#v: %v", what, err))
+	switch err {
+	case nil:
+		return m
+	case tb.ErrMessageTooLong:
+		b.Edit(msg, "message too long")
+	default:
+		log.Println("[ERROR]", err)
 	}
 	return m
 }

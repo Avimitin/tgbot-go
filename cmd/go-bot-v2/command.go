@@ -24,10 +24,6 @@ var (
 	}
 )
 
-func handleErr(e error) {
-	log.Println(e)
-}
-
 func send(to tb.Recipient, what interface{}, opt ...interface{}) *tb.Message {
 	m, err := b.Send(to, what, opt...)
 	switch err {

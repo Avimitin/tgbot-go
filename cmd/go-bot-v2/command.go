@@ -72,42 +72,16 @@ func cmdWeather(m *tb.Message) {
 func cmdMJX(m *tb.Message) {
 	msg := send(m.Chat, "requesting api...")
 
-	var data []byte
-	var err error
-	rand.Seed(time.Now().UnixNano())
+	url, err := getMJX()
 
-	if rand.Float32() < 0.5 {
-		data, err = net.Get("http://api.vvhan.com/api/tao?type=json")
-	} else {
-		data, err = net.Get("http://api.uomg.com/api/rand.img3?format=json")
-	}
 	if err != nil {
-		edit(msg, "request failed:"+err.Error())
+		edit(msg, fmt.Sprintf("request failed: %v", err))
 		return
 	}
 
-	var mjx = struct {
-		Pic    string `json:"pic"`
-		Imgurl string `json:"imgurl"`
-	}{}
-	err = json.Unmarshal(data, &mjx)
-	if err != nil {
-		edit(msg, "unmarshal failed:"+err.Error())
-		return
-	}
-
-	editURL := func(url string) {
-		edit(msg, fmt.Sprintf(
-			`<a href="tg://user?id=%d">%s</a>, the <a href="%s">pic</a> you request have arrived.`,
-			m.Sender.ID, m.Sender.FirstName, url), &tb.SendOptions{ParseMode: "html"})
-	}
-	if mjx.Imgurl != "" {
-		editURL(mjx.Imgurl)
-	} else if mjx.Pic != "" {
-		editURL(mjx.Pic)
-	} else {
-		edit(msg, "fail to fetch pic")
-	}
+	edit(msg, fmt.Sprintf(
+		`<a href="tg://user?id=%d">%s</a>, the <a href="%s">pic</a> you request have arrived.`,
+		m.Sender.ID, m.Sender.FirstName, url), &tb.SendOptions{ParseMode: "html"})
 }
 
 func cmdGhs(m *tb.Message) {

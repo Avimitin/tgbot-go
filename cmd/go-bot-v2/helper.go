@@ -1,9 +1,12 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
 	"log"
+	"math/rand"
 	"strings"
+	"time"
 
 	"github.com/Avimitin/go-bot/modules/eh"
 	"github.com/Avimitin/go-bot/modules/net"
@@ -145,4 +148,38 @@ func getWeather(city string) (string, error) {
 		return "", fmt.Errorf("get %s weather: %v", city, err)
 	}
 	return fmt.Sprintf(`<a href="%s">%s</a>`, fmt.Sprintf("https://wttr.in/%s.png", city), resp), nil
+}
+
+func getMJX() (string, error) {
+	var data []byte
+	var err error
+	rand.Seed(time.Now().UnixNano())
+
+	if rand.Float32() < 0.5 {
+		data, err = net.Get("http://api.vvhan.com/api/tao?type=json")
+	} else {
+		data, err = net.Get("http://api.uomg.com/api/rand.img3?format=json")
+	}
+	if err != nil {
+		return "", fmt.Errorf("request failed: %w", err)
+	}
+
+	var mjx = struct {
+		Pic    string `json:"pic"`
+		Imgurl string `json:"imgurl"`
+	}{}
+	err = json.Unmarshal(data, &mjx)
+	if err != nil {
+		return "", fmt.Errorf("decode response failed: %w", err)
+	}
+
+	if mjx.Imgurl != "" {
+		return mjx.Imgurl, nil
+	}
+
+	if mjx.Pic != "" {
+		return (mjx.Pic), nil
+	} else {
+		return "", fmt.Errorf("fail to fetch pic")
+	}
 }

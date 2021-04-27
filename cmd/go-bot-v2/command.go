@@ -51,15 +51,6 @@ func cmdDump(m *tb.Message) {
 	send(m.Chat, unwrapMsg(m), &tb.SendOptions{ParseMode: "HTML"})
 }
 
-func getWeather(city string) (string, error) {
-	url := "https://wttr.in/" + city + "?format=%l的天气:+%c+温度:%t+湿度:%h+降雨量:%p"
-	resp, err := net.Get(url)
-	if err != nil {
-		return "", fmt.Errorf("get %s weather: %v", city, err)
-	}
-	return fmt.Sprintf(`<a href="%s">%s</a>`, fmt.Sprintf("https://wttr.in/%s.png", city), resp), nil
-}
-
 func cmdWeather(m *tb.Message) {
 	if m.Payload == "" {
 		send(m.Chat, "no specific city")

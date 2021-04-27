@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	"github.com/Avimitin/go-bot/modules/eh"
+	"github.com/Avimitin/go-bot/modules/net"
 	tb "gopkg.in/tucnak/telebot.v2"
 )
 
@@ -135,4 +136,13 @@ func wrapEHData(m *tb.Message, comment string) (interface{}, interface{}) {
 			Caption: caption,
 		},
 		menu
+}
+
+func getWeather(city string) (string, error) {
+	url := "https://wttr.in/" + city + "?format=%l的天气:+%c+温度:%t+湿度:%h+降雨量:%p"
+	resp, err := net.Get(url)
+	if err != nil {
+		return "", fmt.Errorf("get %s weather: %v", city, err)
+	}
+	return fmt.Sprintf(`<a href="%s">%s</a>`, fmt.Sprintf("https://wttr.in/%s.png", city), resp), nil
 }

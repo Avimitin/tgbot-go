@@ -131,9 +131,8 @@ func wrapEHData(m *tb.Message, comment string) (interface{}, interface{}) {
 	)
 
 	return &tb.Photo{
-			File:      tb.FromURL(metadata.Thumb),
-			Caption:   caption,
-			ParseMode: "HTML",
+			File:    tb.FromURL(metadata.Thumb),
+			Caption: caption,
 		},
 		menu
 }

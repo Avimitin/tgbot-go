@@ -171,5 +171,5 @@ func cmdEH(m *tb.Message) {
 	msg := send(m.Chat, "handling...")
 	defer b.Delete(msg)
 	pht, opt := wrapEHData(m, "")
-	send(m.Chat, pht, opt)
+	send(m.Chat, pht, opt, &tb.SendOptions{ParseMode: "HTML"})
 }

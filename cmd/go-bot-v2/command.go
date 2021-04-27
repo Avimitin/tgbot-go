@@ -3,10 +3,8 @@ package main
 import (
 	"encoding/json"
 	"fmt"
-	"math/rand"
 	"time"
 
-	"github.com/Avimitin/go-bot/modules/net"
 	tb "gopkg.in/tucnak/telebot.v2"
 )
 
@@ -86,39 +84,14 @@ func cmdMJX(m *tb.Message) {
 
 func cmdGhs(m *tb.Message) {
 	msg := send(m.Chat, "requesting...")
+	defer b.Delete(msg)
 
-	baseURL := "https://konachan.com/post.json?limit=50"
-	resp, err := net.Get(baseURL)
+	picURL, fileURL, err := getImage()
 	if err != nil {
-		edit(msg, "Error occur, please try again later")
+		send(m.Chat, "request failed: "+err.Error())
 		return
 	}
 
-	var k []KonachanResponse
-
-	err = json.Unmarshal(resp, &k)
-	if err != nil {
-		edit(msg, "failed to decode msg")
-		return
-	}
-
-	rand.Seed(time.Now().Unix())
-	var i = rand.Intn(50)
-	var picURL string
-	var fileURL string
-
-	if len(k) < i && len(k) > 0 {
-		picURL = k[0].JpegURL
-		fileURL = k[0].FileURL
-	} else if len(k) >= i {
-		picURL = k[i].JpegURL
-		fileURL = k[i].FileURL
-	} else {
-		edit(msg, "api no response")
-		return
-	}
-
-	b.Delete(msg)
 	send(m.Chat, &tb.Photo{
 		File: tb.FromURL(picURL),
 		Caption: fmt.Sprintf(

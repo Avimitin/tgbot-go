@@ -183,3 +183,31 @@ func getMJX() (string, error) {
 		return "", fmt.Errorf("fail to fetch pic")
 	}
 }
+
+func getImage() (string, string, error) {
+	baseURL := "https://konachan.com/post.json?limit=50"
+	resp, err := net.Get(baseURL)
+	if err != nil {
+		return "", "", fmt.Errorf("Error occur, please try again later")
+	}
+
+	var k []KonachanResponse
+
+	err = json.Unmarshal(resp, &k)
+	if err != nil {
+		return "", "", fmt.Errorf("failed to decode msg")
+	}
+
+	rand.Seed(time.Now().Unix())
+	var i = rand.Intn(50)
+
+	if len(k) >= i {
+		return k[i].JpegURL, k[i].FileURL, nil
+	}
+
+	if len(k) < i && len(k) > 0 {
+		return k[0].JpegURL, k[0].FileURL, nil
+	}
+
+	return "", "", fmt.Errorf("api no response")
+}

@@ -4,6 +4,7 @@ import (
 	"log"
 	"time"
 
+	"github.com/Avimitin/go-bot/modules/database"
 	tb "gopkg.in/tucnak/telebot.v2"
 )
 
@@ -12,13 +13,28 @@ var (
 )
 
 func middleware(u *tb.Update) bool {
-	log.Printf("From: %d | Chat: %d | Content: %s\n",
-		u.Message.Sender.ID, u.Message.Chat.ID, u.Message.Text)
+	user, err := database.DB.GetUser(u.Message.Sender.ID)
+	if err != nil {
+		log.Printf("[Error]get sender %d id: %v", u.Message.Sender.ID, err)
+		return true
+	}
+
+	var content = u.Message.Text
+	if len(content) > 10 {
+		content = content[:10] + "..."
+	}
+
+	log.Printf("From: %d | Chat: %d | Content: %s | Perm: %s\n",
+		u.Message.Sender.ID, u.Message.Chat.ID, content, user.PermDesc)
+
+	if user.PermID == 5 {
+		return false
+	}
 
 	return true
 }
 
-func initBot() {
+func initBot(token string) {
 	var err error
 	poller := tb.NewMiddlewarePoller(
 		&tb.LongPoller{Timeout: 15 * time.Second},
@@ -26,7 +42,7 @@ func initBot() {
 	)
 
 	b, err = tb.NewBot(tb.Settings{
-		Token:  "",
+		Token:  token,
 		Poller: poller,
 	})
 

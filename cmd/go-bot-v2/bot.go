@@ -11,14 +11,18 @@ var (
 	b *tb.Bot
 )
 
-func main() {
+func initBot() {
 	var err error
-	poller := tb.NewMiddlewarePoller(&tb.LongPoller{Timeout: 15 * time.Second}, func(u *tb.Update) bool {
-		log.Printf("From: %d | Chat: %d | Content: %s\n",
-			u.Message.Sender.ID, u.Message.Chat.ID, u.Message.Text)
+	poller := tb.NewMiddlewarePoller(
+		&tb.LongPoller{
+			Timeout: 15 * time.Second,
+		},
+		func(u *tb.Update) bool {
+			log.Printf("From: %d | Chat: %d | Content: %s\n",
+				u.Message.Sender.ID, u.Message.Chat.ID, u.Message.Text)
 
-		return true
-	})
+			return true
+		})
 
 	b, err = tb.NewBot(tb.Settings{
 		Token:  "",
@@ -30,7 +34,9 @@ func main() {
 	}
 
 	log.Println("Establish connection to bot successfully")
+}
 
+func main() {
 	for cmd, fn := range bc {
 		b.Handle(cmd, fn)
 	}

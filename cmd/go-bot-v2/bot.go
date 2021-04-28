@@ -53,7 +53,20 @@ func initBot(token string) {
 	log.Println("Establish connection to bot successfully")
 }
 
+func initDB(dsn string) {
+	var err error
+	database.DB, err = database.NewBotDB(dsn)
+	if err != nil {
+		log.Fatalf("connect to database %q: %v", dsn, err)
+	}
+}
+
 func main() {
+	cfg := ReadConfig()
+
+	initBot(cfg.Bot.Token)
+	initDB(cfg.Database.EncodeMySQLDSN())
+
 	for cmd, fn := range bc {
 		b.Handle(cmd, fn)
 	}

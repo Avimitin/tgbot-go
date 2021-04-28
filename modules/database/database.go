@@ -17,6 +17,9 @@ func NewBotDB(dsn string) (*BotDB, error) {
 	if err != nil {
 		return nil, fmt.Errorf("connect to %s: %w", dsn, err)
 	}
+
+	db.AutoMigrate(&User{})
+
 	return &BotDB{cnct: db}, nil
 }
 

@@ -67,3 +67,24 @@ func (db *BotDB) NewUser(id int, permID int32) (*User, error) {
 
 	return u, nil
 }
+
+func (db *BotDB) SetUser(id int, permID int32) (*User, error) {
+	user, err := db.GetUser(id)
+	if err != nil {
+		return nil, err
+	}
+
+	if user == nil {
+		return nil, nil
+	}
+
+	user.PermID = permID
+	user.PermDesc = permission[permID]
+
+	result := db.cnct.Save(&user)
+	if result.Error != nil {
+		return nil, fmt.Errorf("updating user %d: %v", id, err)
+	}
+
+	return user, nil
+}

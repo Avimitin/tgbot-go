@@ -5,9 +5,11 @@ import (
 	"fmt"
 	"log"
 	"math/rand"
+	"strconv"
 	"strings"
 	"time"
 
+	"github.com/Avimitin/go-bot/modules/database"
 	"github.com/Avimitin/go-bot/modules/eh"
 	"github.com/Avimitin/go-bot/modules/net"
 	tb "gopkg.in/tucnak/telebot.v2"
@@ -210,4 +212,53 @@ func getImage() (string, string, error) {
 	}
 
 	return "", "", fmt.Errorf("api no response")
+}
+
+func setPerm(argument string) string {
+	args := strings.Fields(argument)
+	if len(args) < 2 {
+		return "argument not valid, more descriptions refer to /setperm help"
+	}
+
+	var (
+		idStr = args[0]
+		perm  = args[1]
+		id    int
+	)
+
+	id, convErr := strconv.Atoi(idStr)
+	if convErr != nil {
+		return fmt.Sprintf("parsed argument %q: %v", idStr, convErr)
+	}
+
+	var err error
+	var user *database.User
+	fn := func(id int, permid int32) {
+		user, err = database.DB.SetUser(id, permid)
+	}
+
+	switch perm {
+	case "owner", "o":
+		fn(id, 0)
+	case "admin", "a":
+		fn(id, 1)
+	case "manager", "m":
+		fn(id, 2)
+	case "normal", "n":
+		fn(id, 3)
+	case "ban", "b":
+		fn(id, 4)
+	default:
+		return "argument not valid, more descriptions refer to /setperm help"
+	}
+
+	if user == nil {
+		return "user not found"
+	}
+
+	if err != nil {
+		return fmt.Sprintf("failed to set user %d permission: %v", id, err)
+	}
+
+	return fmt.Sprintf("user %d permission has set to %q successfully", user.UserID, user.PermDesc)
 }

@@ -19,6 +19,7 @@ var (
 		"/mjx":     cmdMJX,
 		"/ghs":     cmdGhs,
 		"/eh":      cmdEH,
+		"/setperm": cmdSetPerm,
 	}
 )
 
@@ -110,4 +111,14 @@ func cmdEH(m *tb.Message) {
 	defer b.Delete(msg)
 	pht, opt := wrapEHData(m, "")
 	send(m.Chat, pht, opt, &tb.SendOptions{ParseMode: "HTML"})
+}
+
+func cmdSetPerm(m *tb.Message) {
+	if m.Payload == "" || m.Payload == "help" {
+		send(m.Chat, "Usage: /setperm <ID> <PERM>\n\n"+
+			"permission options: o(wner)|a(dmin)|m(anager)|n(ormal)|b(an)")
+		return
+	}
+
+	send(m.Chat, setPerm(m.Payload))
 }

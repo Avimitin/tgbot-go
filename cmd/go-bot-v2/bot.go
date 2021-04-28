@@ -19,6 +19,16 @@ func middleware(u *tb.Update) bool {
 		return true
 	}
 
+	if user == nil {
+		_, err := database.DB.NewUser(u.Message.Sender.ID, database.PermNormal)
+		if err != nil {
+			log.Printf(
+				"[Error]Insert user [%q](%d) failed: %v\n",
+				u.Message.Sender.FirstName, u.Message.Sender.ID, err,
+			)
+		}
+	}
+
 	var content = u.Message.Text
 	if len(content) > 10 {
 		content = content[:10] + "..."

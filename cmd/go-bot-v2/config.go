@@ -35,7 +35,7 @@ func (d *DBSetting) EncodeMySQLDSN() string {
 	var buf bytes.Buffer
 
 	if len(d.User) > 0 {
-		buf.WriteString(d.Addr)
+		buf.WriteString(d.User)
 		if len(d.Password) > 0 {
 			buf.WriteByte(':')
 			buf.WriteString(d.Password)

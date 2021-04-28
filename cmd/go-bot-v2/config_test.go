@@ -15,7 +15,7 @@ func TestReadConfig(t *testing.T) {
 	}
 
 	if dsn := cfg.Database.EncodeMySQLDSN(); dsn !=
-		"127.0.0.1:3306:password@tcp(127.0.0.1:3306)/bot_db?param=value&param2=value2" {
+		"root:password@tcp(127.0.0.1:3306)/bot_db?param=value&param2=value2" {
 		t.Errorf("dsn is not wanted, got %s", dsn)
 	}
 }

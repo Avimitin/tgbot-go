@@ -1,5 +1,5 @@
 package database
 
 var (
-	DB *BotDB
+	DB DataController
 )

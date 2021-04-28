@@ -1,0 +1,11 @@
+[bot]
+token="1234567"
+
+[database]
+user="root"
+password="password"
+protocol="tcp"
+addr="127.0.0.1:3306"
+name="bot_db"
+params="param=value&param2=value2"
+

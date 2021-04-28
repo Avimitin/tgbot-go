@@ -32,7 +32,7 @@ func (db *BotDB) GetUser(id int) (*User, error) {
 	case nil:
 		break
 	case gorm.ErrRecordNotFound:
-		return nil, fmt.Errorf("id %d not found", id)
+		return nil, nil
 	default:
 		return nil, fmt.Errorf("get user %d: %w", id, result.Error)
 	}

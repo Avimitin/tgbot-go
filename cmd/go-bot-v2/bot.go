@@ -11,18 +11,19 @@ var (
 	b *tb.Bot
 )
 
+func middleware(u *tb.Update) bool {
+	log.Printf("From: %d | Chat: %d | Content: %s\n",
+		u.Message.Sender.ID, u.Message.Chat.ID, u.Message.Text)
+
+	return true
+}
+
 func initBot() {
 	var err error
 	poller := tb.NewMiddlewarePoller(
-		&tb.LongPoller{
-			Timeout: 15 * time.Second,
-		},
-		func(u *tb.Update) bool {
-			log.Printf("From: %d | Chat: %d | Content: %s\n",
-				u.Message.Sender.ID, u.Message.Chat.ID, u.Message.Text)
-
-			return true
-		})
+		&tb.LongPoller{Timeout: 15 * time.Second},
+		middleware,
+	)
 
 	b, err = tb.NewBot(tb.Settings{
 		Token:  "",

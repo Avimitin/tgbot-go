@@ -13,6 +13,10 @@ var (
 )
 
 func middleware(u *tb.Update) bool {
+	if u.Message == nil {
+		return false
+	}
+
 	user, err := database.DB.GetUser(u.Message.Sender.ID)
 	if err != nil {
 		log.Printf("[Error]get sender %d id: %v", u.Message.Sender.ID, err)

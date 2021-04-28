@@ -37,7 +37,7 @@ func middleware(u *tb.Update) bool {
 	log.Printf("From: %d | Chat: %d | Content: %s | Perm: %s\n",
 		u.Message.Sender.ID, u.Message.Chat.ID, content, user.PermDesc)
 
-	if user.PermID == 5 {
+	if user.PermID == database.PermBan {
 		return false
 	}
 

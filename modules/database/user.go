@@ -1,5 +1,7 @@
 package database
 
+import "gorm.io/gorm"
+
 var (
 	permission = map[int32]string{
 		0: "owner",
@@ -12,7 +14,9 @@ var (
 
 //User describe a user
 type User struct {
-	ID int
+	gorm.Model
+
+	UserID int
 
 	// PermDesc describe what PermID mean
 	PermDesc string

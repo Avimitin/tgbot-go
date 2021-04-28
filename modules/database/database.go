@@ -39,7 +39,7 @@ func (db *BotDB) GetUser(id int) (*User, error) {
 
 func (db *BotDB) NewUser(id int, permID int32) (*User, error) {
 	u := &User{
-		ID:       id,
+		UserID:   id,
 		PermID:   permID,
 		PermDesc: permission[permID],
 	}

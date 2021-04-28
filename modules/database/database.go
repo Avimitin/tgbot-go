@@ -26,7 +26,7 @@ func NewBotDB(dsn string) (*BotDB, error) {
 func (db *BotDB) GetUser(id int) (*User, error) {
 	var u User
 
-	result := db.cnct.First(&u, id)
+	result := db.cnct.Where("user_id = ?", id).First(&u)
 
 	switch result.Error {
 	case nil:

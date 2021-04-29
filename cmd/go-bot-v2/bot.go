@@ -1,15 +1,19 @@
 package main
 
 import (
-	"log"
+	"fmt"
+	"os"
 	"time"
 
 	"github.com/Avimitin/go-bot/modules/database"
+	"github.com/rs/zerolog"
+	"github.com/rs/zerolog/log"
 	tb "gopkg.in/tucnak/telebot.v2"
 )
 
 var (
-	b *tb.Bot
+	b      *tb.Bot
+	logger zerolog.Logger
 )
 
 func middleware(u *tb.Update) bool {
@@ -19,29 +23,31 @@ func middleware(u *tb.Update) bool {
 
 	user, err := database.DB.GetUser(u.Message.Sender.ID)
 	if err != nil {
-		log.Printf("[Error]get sender %d id: %v", u.Message.Sender.ID, err)
-		return true
+		log.Error().Err(err).Msg("")
 	}
 
 	if user == nil {
 		_, err := database.DB.NewUser(u.Message.Sender.ID, database.PermNormal)
 		if err != nil {
-			log.Printf(
-				"[Error]Insert user [%q](%d) failed: %v\n",
-				u.Message.Sender.FirstName, u.Message.Sender.ID, err,
-			)
+			logger.Error().
+				Err(err).
+				Msgf("insert user [%q](%d) failed",
+					u.Message.Sender.FirstName, u.Message.Sender.ID)
 		}
 	}
 
 	var content = u.Message.Text
-	if len(content) > 10 {
-		content = content[:10] + "..."
+	if len(content) > 20 {
+		content = content[:20] + "..."
 	}
 
-	log.Printf("From: %d | Chat: %d | Content: %s | Perm: %s\n",
-		u.Message.Sender.ID, u.Message.Chat.ID, content, user.PermDesc)
+	logger.Info().
+		Msgf("From: [%s](%d) | Chat: [%s](%d) | MSGID: %d | Content: %s",
+			u.Message.Sender.FirstName, u.Message.Sender.ID,
+			u.Message.Chat.FirstName, u.Message.Chat.ID,
+			u.Message.ID, content)
 
-	if user.PermID == database.PermBan {
+	if user != nil && user.PermID == database.PermBan {
 		return false
 	}
 
@@ -61,23 +67,27 @@ func initBot(token string) {
 	})
 
 	if err != nil {
-		log.Fatal(err)
+		logger.Fatal().
+			Err(err).
+			Msg("can not connect bot")
 	}
 
-	log.Println("Establish connection to bot successfully")
+	logger.Info().Msg("Establish connection to bot successfully")
 }
 
 func initDB(dsn string) {
 	var err error
 	database.DB, err = database.NewBotDB(dsn)
 	if err != nil {
-		log.Fatalf("connect to database %q: %v", dsn, err)
+		logger.Fatal().
+			Err(fmt.Errorf("connect to database %q: %v", dsn, err)).
+			Msg("can not connect database")
 	}
 }
 
 func main() {
 	cfg := ReadConfig()
-
+	logger = zerolog.New(zerolog.ConsoleWriter{Out: os.Stdout}).With().Timestamp().Logger()
 	initBot(cfg.Bot.Token)
 	initDB(cfg.Database.EncodeMySQLDSN())
 

@@ -83,16 +83,20 @@ func initDB(dsn string) {
 			Err(fmt.Errorf("connect to database %q: %v", dsn, err)).
 			Msg("can not connect database")
 	}
+
+	botLog.Info().Msg("Establish connection to database successfully")
 }
 
 func main() {
-	botLog = logger.NewZeroLogger("debug")
+	cfg := ReadConfig()
+
+	botLog = logger.NewZeroLogger(cfg.Bot.LogLevel)
 	if botLog == nil {
 		log.Fatal().Msg("log level not valid")
 	}
 
-	cfg := ReadConfig()
 	initBot(cfg.Bot.Token)
+
 	initDB(cfg.Database.EncodeMySQLDSN())
 
 	for cmd, fn := range bc {

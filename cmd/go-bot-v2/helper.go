@@ -43,7 +43,6 @@ func authPerm(perm int32, cmd string) bool {
 func send(to tb.Recipient, what interface{}, opt ...interface{}) *tb.Message {
 	botLog.Trace().
 		Str("SEND TO", to.Recipient()).
-		Str("CONTENT", what.(string)).
 		Interface("DETAILED", what).
 		Send()
 	m, err := b.Send(to, what, opt...)
@@ -122,20 +121,20 @@ func replaceTag(inputTags []string, c chan string) {
 	c <- tags
 }
 
-func wrapEHData(m *tb.Message, comment string) (interface{}, interface{}) {
-	data, err := eh.GetComic(m.Payload)
+func wrapEHData(ehURL string, comment string) (interface{}, *tb.ReplyMarkup, error) {
+	data, err := eh.GetComic(ehURL)
 	if err != nil {
-		return fmt.Sprintf("Request failed: %v", err), nil
+		return nil, nil, fmt.Errorf("Request failed: %v", err)
 	}
 
 	if len(data.Medas) < 1 {
-		return "Request failed: comic not found", nil
+		return nil, nil, fmt.Errorf("Request failed: comic not found")
 	}
 
 	metadata := data.Medas[0]
 
 	if metadata.Error != "" {
-		return fmt.Sprintf("Request failed: %s", metadata.Error), nil
+		return nil, nil, fmt.Errorf("Request failed: %s", metadata.Error)
 	}
 
 	tagC := make(chan string)
@@ -174,7 +173,8 @@ func wrapEHData(m *tb.Message, comment string) (interface{}, interface{}) {
 			File:    tb.FromURL(metadata.Thumb),
 			Caption: caption,
 		},
-		menu
+		menu,
+		nil
 }
 
 func getWeather(city string) (string, error) {

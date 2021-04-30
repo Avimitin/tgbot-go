@@ -9,4 +9,5 @@ protocol="tcp"
 addr="127.0.0.1:3306"
 name="bot_db"
 params="param=value&param2=value2"
+loglevel="info"
 

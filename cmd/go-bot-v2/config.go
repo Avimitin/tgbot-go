@@ -29,6 +29,7 @@ type DBSetting struct {
 	Addr     string
 	Name     string
 	Params   string
+	LogLevel string
 }
 
 // EncodeMySQLDSN use DBSetting to encode a mysql data source link

@@ -26,7 +26,7 @@ func NewZeroLogger(level string) *zerolog.Logger {
 	case "trace":
 		zerolog.SetGlobalLevel(zerolog.TraceLevel)
 	default:
-		return nil
+		zerolog.SetGlobalLevel(zerolog.Disabled)
 	}
 
 	output := zerolog.ConsoleWriter{

@@ -26,6 +26,7 @@ func TestMain(m *testing.M) {
 	model, err = database.NewBotDB(
 		envFB("GO_BOT_MYSQL_DSN",
 			"root:goBotDB@tcp(127.0.0.1:3306)/goBotDB?charset=utf8mb4&parseTime=True&loc=Local"),
+		"info",
 	)
 
 	if err != nil {

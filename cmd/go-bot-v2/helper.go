@@ -3,7 +3,6 @@ package main
 import (
 	"encoding/json"
 	"fmt"
-	"log"
 	"math/rand"
 	"strconv"
 	"strings"
@@ -23,7 +22,8 @@ func send(to tb.Recipient, what interface{}, opt ...interface{}) *tb.Message {
 	case tb.ErrMessageTooLong:
 		b.Send(to, "message too long")
 	default:
-		log.Println("[ERROR]", err)
+		b.Send(to, "operation failed: "+err.Error())
+		botLog.Error().Err(err)
 	}
 	return m
 }
@@ -36,7 +36,8 @@ func edit(msg tb.Editable, what interface{}, opt ...interface{}) *tb.Message {
 	case tb.ErrMessageTooLong:
 		b.Edit(msg, "message too long")
 	default:
-		log.Println("[ERROR]", err)
+		b.Edit(msg, "operation failed: "+err.Error())
+		botLog.Error().Err(err)
 	}
 	return m
 }

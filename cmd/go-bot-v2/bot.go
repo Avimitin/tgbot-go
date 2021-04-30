@@ -66,6 +66,22 @@ func middleware(u *tb.Update) bool {
 		return false
 	}
 
+	if payload := getRegis(u.Message.Chat.ID, u.Message.Sender.ID); payload != nil {
+		log.Trace().Msgf("%d steping next funcion", u.Message.Sender.ID)
+
+		err := payload.fn(u.Message, payload.data)
+		if err != nil {
+			log.Error().Err(err).Msg("error occur when handle next func")
+			send(u.Message.Chat, err.Error())
+		}
+
+		delContext(u.Message.Chat.ID, u.Message.Sender.ID)
+
+		log.Trace().Msgf("remaining next step: %+v", cmdCtx)
+		// abandon this message as it is been handled gracefully
+		return false
+	}
+
 	if cmd, ok := msgCommand(u.Message); ok {
 		log.Trace().Str("command", cmd).Int32("permission", perm).Send()
 

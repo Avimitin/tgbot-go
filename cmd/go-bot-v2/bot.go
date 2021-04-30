@@ -83,7 +83,7 @@ func middleware(u *tb.Update) bool {
 	}
 
 	if cmd, ok := msgCommand(u.Message); ok {
-		log.Trace().Str("command", cmd).Int32("permission", perm).Send()
+		log.Trace().Str("command", cmd).Int32("permission", perm).Msg("user command request details")
 
 		if authPerm(perm, cmd) {
 			return true

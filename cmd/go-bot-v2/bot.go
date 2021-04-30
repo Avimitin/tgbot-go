@@ -75,9 +75,9 @@ func initBot(token string) {
 	botLog.Info().Msg("Establish connection to bot successfully")
 }
 
-func initDB(dsn string) {
+func initDB(dsn string, logLevel string) {
 	var err error
-	database.DB, err = database.NewBotDB(dsn)
+	database.DB, err = database.NewBotDB(dsn, logLevel)
 	if err != nil {
 		botLog.Fatal().
 			Err(fmt.Errorf("connect to database %q: %v", dsn, err)).
@@ -91,13 +91,10 @@ func main() {
 	cfg := ReadConfig()
 
 	botLog = logger.NewZeroLogger(cfg.Bot.LogLevel)
-	if botLog == nil {
-		log.Fatal().Msg("log level not valid")
-	}
 
 	initBot(cfg.Bot.Token)
 
-	initDB(cfg.Database.EncodeMySQLDSN())
+	initDB(cfg.Database.EncodeMySQLDSN(), cfg.Database.LogLevel)
 
 	for cmd, fn := range bc {
 		b.Handle(cmd, fn)

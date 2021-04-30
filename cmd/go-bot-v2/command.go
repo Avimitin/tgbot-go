@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/rs/zerolog/log"
 	tb "gopkg.in/tucnak/telebot.v2"
 )
 
@@ -19,6 +20,7 @@ var (
 		"/mjx":     cmdMJX,
 		"/ghs":     cmdGhs,
 		"/eh":      cmdEH,
+		"/ehp":     cmdEHPost,
 		"/setperm": cmdSetPerm,
 	}
 )
@@ -107,10 +109,48 @@ func cmdEH(m *tb.Message) {
 		send(m.Chat, "Usage: /eh <URL>")
 		return
 	}
+
 	msg := send(m.Chat, "handling...")
 	defer b.Delete(msg)
-	pht, opt := wrapEHData(m, "")
-	send(m.Chat, pht, opt, &tb.SendOptions{ParseMode: "HTML"})
+
+	pht, opt, err := wrapEHData(m.Payload, "")
+	if err != nil {
+		log.Error().Err(err).Str("FUNC", "cmdEH").Msg("wrap eh data failed")
+		send(m.Chat, err.Error())
+	}
+
+	send(m.Chat, pht, &tb.SendOptions{ParseMode: "HTML", ReplyMarkup: opt})
+}
+
+func cmdEHPost(m *tb.Message) {
+	if !assertPayload(m) {
+		send(m.Chat, "Usage: /ehp <URL>")
+		return
+	}
+
+	send(m.Chat, "any comment?")
+	regisNextStep(m.Chat.ID, m.Sender.ID, contextData{"url": m.Payload}, postEhComicToCh4nn3l)
+}
+
+func postEhComicToCh4nn3l(m *tb.Message, p contextData) error {
+	ehURL, ok := p["url"]
+	if !ok {
+		send(m.Chat, "internal error: url missing")
+		return fmt.Errorf("internal error: url missing")
+	}
+
+	msg := send(m.Chat, "requesting...")
+	defer b.Delete(msg)
+
+	pht, opt, err := wrapEHData(ehURL, m.Text)
+
+	if err != nil {
+		return err
+	}
+
+	send(m.Chat, pht, &tb.SendOptions{ParseMode: "HTML", ReplyMarkup: opt})
+
+	return nil
 }
 
 func cmdSetPerm(m *tb.Message) {

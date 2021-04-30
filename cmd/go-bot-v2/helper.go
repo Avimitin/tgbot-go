@@ -273,3 +273,30 @@ func setPerm(argument string) string {
 
 	return fmt.Sprintf("user %d permission has set to %q successfully", user.UserID, user.PermDesc)
 }
+
+// isCommand returns true if message starts with a "bot_command" entity.
+func isCommand(m *tb.Message) bool {
+	if m.Entities == nil || len(m.Entities) == 0 {
+		return false
+	}
+
+	entity := m.Entities[0]
+	return entity.Offset == 0 && entity.Type == "bot_command"
+}
+
+func msgCommand(m *tb.Message) (string, bool) {
+	if !isCommand(m) {
+		return "", false
+	}
+
+	entity := m.Entities[0]
+	// match commands like /start@exampleBot
+	commandWithAt := m.Text[:entity.Length]
+
+	// get only command
+	if i := strings.Index(commandWithAt, "@"); i != -1 {
+		commandWithAt = commandWithAt[:i]
+	}
+
+	return commandWithAt, true
+}

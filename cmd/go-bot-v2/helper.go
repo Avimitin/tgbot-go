@@ -15,6 +15,11 @@ import (
 )
 
 func send(to tb.Recipient, what interface{}, opt ...interface{}) *tb.Message {
+	botLog.Trace().
+		Str("SEND TO", to.Recipient()).
+		Str("CONTENT", what.(string)).
+		Interface("DETAILED", what).
+		Send()
 	m, err := b.Send(to, what, opt...)
 	switch err {
 	case nil:
@@ -29,6 +34,8 @@ func send(to tb.Recipient, what interface{}, opt ...interface{}) *tb.Message {
 }
 
 func edit(msg tb.Editable, what interface{}, opt ...interface{}) *tb.Message {
+	ms, cs := msg.MessageSig()
+	botLog.Trace().Msgf("Editing msg %s, %d", ms, cs)
 	m, err := b.Edit(msg, what, opt...)
 	switch err {
 	case nil:

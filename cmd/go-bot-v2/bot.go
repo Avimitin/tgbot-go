@@ -27,7 +27,7 @@ func middleware(u *tb.Update) bool {
 
 	// insert user only when last query has no error
 	if user == nil && err == nil {
-		_, err := database.DB.NewUser(u.Message.Sender.ID, database.PermNormal)
+		user, err = database.DB.NewUser(u.Message.Sender.ID, database.PermNormal)
 		if err != nil {
 			botLog.Error().
 				Err(err).

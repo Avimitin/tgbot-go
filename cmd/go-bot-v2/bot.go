@@ -2,10 +2,10 @@ package main
 
 import (
 	"fmt"
-	"os"
 	"time"
 
 	"github.com/Avimitin/go-bot/modules/database"
+	"github.com/Avimitin/go-bot/modules/logger"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 	tb "gopkg.in/tucnak/telebot.v2"
@@ -13,7 +13,7 @@ import (
 
 var (
 	b      *tb.Bot
-	logger zerolog.Logger
+	botLog *zerolog.Logger
 )
 
 func middleware(u *tb.Update) bool {
@@ -29,7 +29,7 @@ func middleware(u *tb.Update) bool {
 	if user == nil {
 		_, err := database.DB.NewUser(u.Message.Sender.ID, database.PermNormal)
 		if err != nil {
-			logger.Error().
+			botLog.Error().
 				Err(err).
 				Msgf("insert user [%q](%d) failed",
 					u.Message.Sender.FirstName, u.Message.Sender.ID)
@@ -41,7 +41,7 @@ func middleware(u *tb.Update) bool {
 		content = content[:20] + "..."
 	}
 
-	logger.Info().
+	botLog.Info().
 		Msgf("From: [%s](%d) | Chat: [%s](%d) | MSGID: %d | Content: %s",
 			u.Message.Sender.FirstName, u.Message.Sender.ID,
 			u.Message.Chat.FirstName, u.Message.Chat.ID,
@@ -67,27 +67,31 @@ func initBot(token string) {
 	})
 
 	if err != nil {
-		logger.Fatal().
+		botLog.Fatal().
 			Err(err).
 			Msg("can not connect bot")
 	}
 
-	logger.Info().Msg("Establish connection to bot successfully")
+	botLog.Info().Msg("Establish connection to bot successfully")
 }
 
 func initDB(dsn string) {
 	var err error
 	database.DB, err = database.NewBotDB(dsn)
 	if err != nil {
-		logger.Fatal().
+		botLog.Fatal().
 			Err(fmt.Errorf("connect to database %q: %v", dsn, err)).
 			Msg("can not connect database")
 	}
 }
 
 func main() {
+	botLog = logger.NewZeroLogger("debug")
+	if botLog == nil {
+		log.Fatal().Msg("log level not valid")
+	}
+
 	cfg := ReadConfig()
-	logger = zerolog.New(zerolog.ConsoleWriter{Out: os.Stdout}).With().Timestamp().Logger()
 	initBot(cfg.Bot.Token)
 	initDB(cfg.Database.EncodeMySQLDSN())
 

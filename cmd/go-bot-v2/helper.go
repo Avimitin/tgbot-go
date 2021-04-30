@@ -161,15 +161,18 @@ func getWeather(city string) (string, error) {
 }
 
 func getMJX() (string, error) {
-	var data []byte
-	var err error
+	var mjxURL string
 	rand.Seed(time.Now().UnixNano())
 
 	if rand.Float32() < 0.5 {
-		data, err = net.Get("http://api.vvhan.com/api/tao?type=json")
+		mjxURL = "http://api.vvhan.com/api/tao?type=json"
 	} else {
-		data, err = net.Get("http://api.uomg.com/api/rand.img3?format=json")
+		mjxURL = "http://api.uomg.com/api/rand.img3?format=json"
 	}
+
+	botLog.Trace().Str("func", "getMJX").Msgf("requesting url %s", mjxURL)
+
+	data, err := net.Get(mjxURL)
 	if err != nil {
 		return "", fmt.Errorf("request failed: %w", err)
 	}

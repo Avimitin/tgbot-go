@@ -6,21 +6,13 @@ import (
 	"gorm.io/gorm"
 )
 
-const (
-	PermOwner = iota
-	PermAdmin
-	PermChannelManager
-	PermNormal
-	PermBan
-)
-
 var (
 	permission = map[int32]string{
-		PermOwner:          "owner",
-		PermAdmin:          "admin",
-		PermChannelManager: "channelManager",
-		PermNormal:         "normal",
-		PermBan:            "ban",
+		0: "owner",
+		1: "admin",
+		2: "channelManager",
+		3: "normal",
+		4: "ban",
 	}
 )
 

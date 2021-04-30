@@ -54,6 +54,8 @@ func middleware(u *tb.Update) bool {
 		Str("CONTENT", content).
 		Send()
 
+	botLog.Trace().Interface("ORIG_MSG", u.Message)
+
 	if user != nil && user.PermID == database.PermBan {
 		return false
 	}

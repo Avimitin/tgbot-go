@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"time"
 
 	"github.com/Avimitin/go-bot/modules/database"
@@ -43,10 +42,17 @@ func middleware(u *tb.Update) bool {
 	}
 
 	botLog.Info().
-		Msgf("From: [%s](%d) | Chat: [%s](%d) | MSGID: %d | Content: %s",
-			u.Message.Sender.FirstName, u.Message.Sender.ID,
-			u.Message.Chat.FirstName, u.Message.Chat.ID,
-			u.Message.ID, content)
+		Dict("FROM", zerolog.Dict().
+			Str("NAME", u.Message.Sender.FirstName).
+			Int("ID", u.Message.Sender.ID),
+		).
+		Dict("CHAT", zerolog.Dict().
+			Str("NAME", u.Message.Chat.FirstName).
+			Int64("ID", u.Message.Chat.ID),
+		).
+		Int("MSGID", u.Message.ID).
+		Str("CONTENT", content).
+		Send()
 
 	if user != nil && user.PermID == database.PermBan {
 		return false

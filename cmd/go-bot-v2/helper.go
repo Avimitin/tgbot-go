@@ -25,7 +25,8 @@ const (
 var (
 	// cmdIR store identity requirement for command
 	cmdIR = map[string]int32{
-		"setperm": PermAdmin,
+		"/setperm": PermAdmin,
+		"/ehp":     PermChannelManager,
 	}
 )
 

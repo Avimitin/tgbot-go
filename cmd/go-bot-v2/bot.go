@@ -81,7 +81,7 @@ func initDB(dsn string, logLevel string) {
 	database.DB, err = database.NewBotDB(dsn, logLevel)
 	if err != nil {
 		botLog.Fatal().
-			Err(fmt.Errorf("connect to database %q: %v", dsn, err)).
+			Err(err).
 			Msg("can not connect database")
 	}
 

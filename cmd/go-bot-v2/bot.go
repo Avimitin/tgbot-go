@@ -27,7 +27,7 @@ func middleware(u *tb.Update) bool {
 
 	// insert user only when last query has no error
 	if user == nil && err == nil {
-		user, err = database.DB.NewUser(u.Message.Sender.ID, database.PermNormal)
+		user, err = database.DB.NewUser(u.Message.Sender.ID, PermNormal)
 		if err != nil {
 			botLog.Error().
 				Err(err).
@@ -56,7 +56,24 @@ func middleware(u *tb.Update) bool {
 
 	botLog.Trace().Interface("ORIG_MSG", u.Message).Send()
 
-	if user != nil && user.PermID == database.PermBan {
+	var perm = PermNormal
+
+	if user != nil {
+		perm = user.PermID
+	}
+
+	if perm == PermBan {
+		return false
+	}
+
+	if cmd, ok := msgCommand(u.Message); ok {
+		log.Trace().Str("command", cmd).Int32("permission", perm).Send()
+
+		if authPerm(perm, cmd) {
+			return true
+		}
+
+		send(u.Message.Chat, "permission denied")
 		return false
 	}
 

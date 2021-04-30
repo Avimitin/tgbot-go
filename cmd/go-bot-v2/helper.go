@@ -14,6 +14,32 @@ import (
 	tb "gopkg.in/tucnak/telebot.v2"
 )
 
+const (
+	PermOwner int32 = iota
+	PermAdmin
+	PermChannelManager
+	PermNormal
+	PermBan
+)
+
+var (
+	// cmdIR store identity requirement for command
+	cmdIR = map[string]int32{
+		"setperm": PermAdmin,
+	}
+)
+
+func authPerm(perm int32, cmd string) bool {
+	orderPerm, ok := cmdIR[cmd]
+
+	// return true if given command have no identity requirement assigned
+	if !ok {
+		return true
+	}
+
+	return perm <= orderPerm
+}
+
 func send(to tb.Recipient, what interface{}, opt ...interface{}) *tb.Message {
 	botLog.Trace().
 		Str("SEND TO", to.Recipient()).

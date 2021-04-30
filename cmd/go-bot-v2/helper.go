@@ -326,3 +326,15 @@ func msgCommand(m *tb.Message) (string, bool) {
 
 	return commandWithAt, true
 }
+
+func assertPayload(m *tb.Message, sub ...string) bool {
+	if len(m.Payload) == 0 {
+		return false
+	}
+
+	if len(sub) < 1 {
+		return true
+	}
+
+	return m.Payload == sub[0]
+}

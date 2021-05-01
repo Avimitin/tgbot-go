@@ -129,6 +129,18 @@ func initDB(dsn string, logLevel string) {
 	botLog.Info().Msg("Establish connection to database successfully")
 }
 
+func initOwner(id int) {
+	if u, err := database.DB.GetUser(id); err != nil && u != nil {
+		log.Trace().Interface("user_info", u).Err(err).Msg("initialize owner")
+		return
+	}
+
+	_, err := database.DB.SetUser(id, PermOwner)
+	if err != nil {
+		botLog.Fatal().Err(err).Msgf("failed to grant user %d to owner", id)
+	}
+}
+
 func main() {
 	cfg := ReadConfig()
 
@@ -137,6 +149,8 @@ func main() {
 	initBot(cfg.Bot.Token)
 
 	initDB(cfg.Database.EncodeMySQLDSN(), cfg.Database.LogLevel)
+
+	initOwner(cfg.Bot.Owner)
 
 	for cmd, fn := range bc {
 		b.Handle(cmd, fn)

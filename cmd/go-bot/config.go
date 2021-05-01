@@ -19,6 +19,7 @@ type Configuration struct {
 type BotSetting struct {
 	Token    string
 	LogLevel string
+	Owner    int
 }
 
 // DBSetting contain database configuration at runtime

@@ -1,6 +1,7 @@
 [bot]
 token="1234567"
 loglevel="info"
+owner="114514" # telegram user id
 
 [database]
 user="root"

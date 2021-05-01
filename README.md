@@ -1,15 +1,19 @@
 # go-bot
 
-## INFO
+A telegram bot with basic commands.
 
-This is my first `Golang` project for exercising my go programming skill.
+## build
 
-## TODO
+```bash
+go build -o ./bin/go-bot -ldflags '-s -w' ./cmd/go-bot
+```
 
-- [ ] rebuild @avimitin_bot with Golang
+## run
 
-## DEPENDENCE
+```bash
+mkdir -p ~/.config/go-bot
+cat ./fixtures/config.toml > ~/.config/go-bot/config.toml
 
-- [go-telegram-bot-api](https://github.com/go-telegram-bot-api/telegram-bot-api)
+./bin/go-bot
+```
 
-- [ini.v1](https://gopkg.in/ini.v1)

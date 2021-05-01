@@ -148,7 +148,7 @@ func postEhComicToCh4nn3l(m *tb.Message, p contextData) error {
 		return err
 	}
 
-	send(m.Chat, pht, &tb.SendOptions{ParseMode: "HTML", ReplyMarkup: opt})
+	send(&tb.Chat{ID: -1001462940665}, pht, &tb.SendOptions{ParseMode: "HTML", ReplyMarkup: opt})
 
 	return nil
 }

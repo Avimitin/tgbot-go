@@ -1,15 +1,16 @@
 version: '3'
 
 networks:
-  tgbot:
+  gobot_network:
     external: false
 
 services:
   bot:
     image: 'avimitin/go-bot:latest'
-    container_name: tgbot
+    restart: always
+    container_name: gobot_core
     networks:
-      - 'tgbot'
+      - gobot_network
     volumes:
       - './data:/data'
     depends_on:
@@ -18,15 +19,13 @@ services:
   db:
     image: 'mariadb:10'
     restart: always
-    container_name: tgbot_db
+    container_name: gobot_db
     environment:
-      - MYSQL_RANDOM_ROOT_PASSWORD=yes
-      - MYSQL_USER=tgbot
+      - MYSQL_ROOT_PASSWORD=password
+      - MYSQL_USER=gobot
       - MYSQL_PASSWORD=password
-      - MYSQL_DATABASE=tgbot
+      - MYSQL_DATABASE=gobot_db
     networks:
-      - 'tgbot'
-    ports:
-      - '127.0.0.1:3306:3306'
+      - 'gobot_network'
     volumes:
       - './mysql:/var/liv/mysql'

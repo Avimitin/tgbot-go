@@ -1,40 +1,21 @@
 package main
 
 import (
-	"os"
-	"os/user"
 	"testing"
 )
 
-func TestWhereCFG(t *testing.T) {
-	const PATH string = "PATH/TO/CFG"
-	if path := WhereCFG(PATH); path != PATH {
-		t.Fatalf("Want %s got %s", PATH, path)
+func TestReadConfig(t *testing.T) {
+	cfg := ReadConfig()
+	if cfg == nil {
+		t.Error("cfg is nil")
 	}
 
-	err := os.Setenv("BOTCFGPATH", PATH)
-	if err != nil {
-		t.Fatalf("Error happen when setting config path env")
-	}
-	if path := WhereCFG(""); path != PATH {
-		t.Fatalf("Env test fail. Want %s got %s", PATH, path)
-	}
-	err = os.Unsetenv("BOTCFGPATH")
-	if err != nil {
-		t.Log(err)
+	if cfg.Bot.Token != "1234567" {
+		t.Errorf("token is not wanted, got %s", cfg.Bot.Token)
 	}
 
-	u, err := user.Current()
-	if err != nil {
-		t.Fatal(err)
-	}
-	dir := u.HomeDir + "/.config/go-bot"
-	err = os.MkdirAll(dir, os.ModePerm)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	if path := WhereCFG(""); path != dir {
-		t.Fatalf("home path test failed, want %s got %s", dir, path)
+	if dsn := cfg.Database.EncodeMySQLDSN(); dsn !=
+		"root:password@tcp(127.0.0.1:3306)/bot_db?param=value&param2=value2" {
+		t.Errorf("dsn is not wanted, got %s", dsn)
 	}
 }

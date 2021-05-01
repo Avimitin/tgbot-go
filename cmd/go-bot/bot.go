@@ -1,156 +1,146 @@
 package main
 
 import (
-	"errors"
-	"fmt"
-	"log"
 	"time"
 
-	bapi "github.com/go-telegram-bot-api/telegram-bot-api"
+	"github.com/Avimitin/go-bot/modules/database"
+	"github.com/Avimitin/go-bot/modules/logger"
+	"github.com/rs/zerolog"
+	"github.com/rs/zerolog/log"
+	tb "gopkg.in/tucnak/telebot.v2"
 )
 
 var (
-	bot      *bapi.BotAPI
-	setting  SettingsGetter
-	registry = NewRegistration()
+	b      *tb.Bot
+	botLog *zerolog.Logger
 )
 
-func Run(s SettingsGetter) error {
-	if s == nil {
-		return errors.New("no setting")
-	}
-	setting = s
-
-	botToken := setting.Secret().Get("bot_token")
-	if botToken == "" {
-		return errors.New("no bot token")
-	}
-	var err error
-	bot, err = bapi.NewBotAPI(botToken)
-	if err != nil {
-		return fmt.Errorf("connect to api server: %v", err)
-	}
-	bot.Debug = false
-	log.Printf("Successfully establish connection to bot: %s", bot.Self.UserName)
-
-	updateChanConfiguration := bapi.NewUpdate(0)
-	updateChanConfiguration.Timeout = 15
-
-	updates, err := bot.GetUpdatesChan(updateChanConfiguration)
-	if err != nil {
-		return fmt.Errorf("get update chan:%v", err)
-	}
-
-	safeExit()
-	errChan := make(chan error)
-	go func() {
-		saveConfigError := <-errChan
-		log.Println(saveConfigError)
-		sendT(saveConfigError.Error(), 649191333)
-	}()
-	cancel := autoSaveConfig(errChan, 30*time.Second)
-	defer cancel()
-
-	for update := range updates {
-		if update.Message != nil {
-			go func() {
-				e := messageHandler(update.Message)
-				if e != nil {
-					log.Println(e)
-				}
-			}()
-		}
-	}
-	return nil
-}
-
-func messageHandler(msg *bapi.Message) error {
-	log.Printf(
-		"CHAT:[%q](%d) FROM:[%q](%d) MSG:[%q] ISCMD:[%v]",
-		msg.Chat.FirstName, msg.Chat.ID,
-		msg.From.FirstName, msg.From.ID,
-		msg.Text,
-		msg.IsCommand(),
-	)
-
-	// identify
-	switch msg.Chat.Type {
-	case "supergroup", "group":
-		if perm := setting.GetGroups().Get(msg.Chat.ID); perm == "" {
-			sendT("unauthorized groups", msg.Chat.ID)
-			leaveGroup(msg.Chat)
-			return nil
-		} else if perm == permBanned {
-			log.Printf("banned chat [%s](%d) keep using the bot", msg.Chat.FirstName, msg.Chat.ID)
-			leaveGroup(msg.Chat)
-			return nil
-		}
-	case "private":
-		if perm := setting.GetUsers().Get(msg.From.ID); perm == permBanned {
-			return nil
-		}
-	}
-
-	if fn := registry.getFn(msg.From.ID); fn != nil {
-		return fn(msg)
-	}
-
-	if msg.IsCommand() {
-		err := handleCommand(msg)
-		if err != nil {
-			err = fmt.Errorf("handle command:[%d]%s:%v", msg.From.ID, msg.Command(), err)
-			log.Println(err)
-			return err
-		}
-		return nil
-	}
-	err := handleMsgText(msg)
-	if err != nil {
-		err = fmt.Errorf("handle msg:[%s]%s :%s", msg.From.FirstName, msg.Text, err)
-		log.Println(err)
-		return err
-	}
-	return nil
-}
-
-func handleCommand(msg *bapi.Message) error {
-	cmd := msg.Command()
-	if fn, ok := botCMD.hasCommand(cmd); ok {
-		err := fn(msg)
-		if err != nil {
-			log.Printf("do cmd %s: %v", cmd, err)
-			return err
-		}
-	}
-	return nil
-}
-
-func handleMsgText(msg *bapi.Message) error {
-	if hasOsuDomain(msg.Text) {
-		err := handleOsuLink(msg.Text)
-		if err != nil {
-			err = fmt.Errorf("handle %s: %v", msg.Text, err)
-			log.Println(err)
-			return err
-		}
-		return nil
-	}
-	return nil
-}
-
-func hasOsuDomain(url string) bool {
-	const OSUDOMAIN = "https://osu.ppy.sh"
-	if len(url) < len(OSUDOMAIN) {
+func middleware(u *tb.Update) bool {
+	if u.Message == nil {
 		return false
 	}
-	for i := 0; i < len(OSUDOMAIN); i++ {
-		if url[i] != OSUDOMAIN[i] {
-			return false
+
+	user, err := database.DB.GetUser(u.Message.Sender.ID)
+	if err != nil {
+		log.Error().Err(err).Msg("")
+	}
+
+	// insert user only when last query has no error
+	if user == nil && err == nil {
+		user, err = database.DB.NewUser(u.Message.Sender.ID, PermNormal)
+		if err != nil {
+			botLog.Error().
+				Err(err).
+				Msgf("insert user [%q](%d) failed",
+					u.Message.Sender.FirstName, u.Message.Sender.ID)
 		}
 	}
+
+	var content = u.Message.Text
+	if len(content) > 20 {
+		content = content[:20] + "..."
+	}
+
+	botLog.Info().
+		Dict("FROM", zerolog.Dict().
+			Str("NAME", u.Message.Sender.FirstName).
+			Int("ID", u.Message.Sender.ID),
+		).
+		Dict("CHAT", zerolog.Dict().
+			Str("NAME", u.Message.Chat.FirstName).
+			Int64("ID", u.Message.Chat.ID),
+		).
+		Int("MSGID", u.Message.ID).
+		Str("CONTENT", content).
+		Send()
+
+	botLog.Trace().Interface("ORIG_MSG", u.Message).Send()
+
+	var perm = PermNormal
+
+	if user != nil {
+		perm = user.PermID
+	}
+
+	if perm == PermBan {
+		return false
+	}
+
+	if payload := getRegis(u.Message.Chat.ID, u.Message.Sender.ID); payload != nil {
+		log.Trace().Msgf("%d steping next funcion", u.Message.Sender.ID)
+
+		err := payload.fn(u.Message, payload.data)
+		if err != nil {
+			log.Error().Err(err).Msg("error occur when handle next func")
+			send(u.Message.Chat, err.Error())
+		}
+
+		delContext(u.Message.Chat.ID, u.Message.Sender.ID)
+
+		log.Trace().Msgf("remaining next step: %+v", cmdCtx)
+		// abandon this message as it is been handled gracefully
+		return false
+	}
+
+	if cmd, ok := msgCommand(u.Message); ok {
+		log.Trace().Str("command", cmd).Int32("permission", perm).Msg("user command request details")
+
+		if authPerm(perm, cmd) {
+			return true
+		}
+
+		send(u.Message.Chat, "permission denied")
+		return false
+	}
+
 	return true
 }
 
-func handleOsuLink(url string) error {
-	return nil
+func initBot(token string) {
+	var err error
+	poller := tb.NewMiddlewarePoller(
+		&tb.LongPoller{Timeout: 15 * time.Second},
+		middleware,
+	)
+
+	b, err = tb.NewBot(tb.Settings{
+		Token:  token,
+		Poller: poller,
+	})
+
+	if err != nil {
+		botLog.Fatal().
+			Err(err).
+			Msg("can not connect bot")
+	}
+
+	botLog.Info().Msg("Establish connection to bot successfully")
+}
+
+func initDB(dsn string, logLevel string) {
+	var err error
+	database.DB, err = database.NewBotDB(dsn, logLevel)
+	if err != nil {
+		botLog.Fatal().
+			Err(err).
+			Msg("can not connect database")
+	}
+
+	botLog.Info().Msg("Establish connection to database successfully")
+}
+
+func main() {
+	cfg := ReadConfig()
+
+	botLog = logger.NewZeroLogger(cfg.Bot.LogLevel)
+
+	initBot(cfg.Bot.Token)
+
+	initDB(cfg.Database.EncodeMySQLDSN(), cfg.Database.LogLevel)
+
+	for cmd, fn := range bc {
+		b.Handle(cmd, fn)
+	}
+
+	b.Start()
 }

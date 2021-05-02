@@ -10,6 +10,7 @@ import (
 
 	"github.com/Avimitin/go-bot/modules/database"
 	"github.com/Avimitin/go-bot/modules/eh"
+	"github.com/Avimitin/go-bot/modules/konachan"
 	"github.com/Avimitin/go-bot/modules/net"
 	tb "gopkg.in/tucnak/telebot.v2"
 )
@@ -231,7 +232,7 @@ func getImage() (string, string, error) {
 		return "", "", fmt.Errorf("Error occur, please try again later")
 	}
 
-	var k []KonachanResponse
+	var k []konachan.KonachanResponse
 
 	err = json.Unmarshal(resp, &k)
 	if err != nil {

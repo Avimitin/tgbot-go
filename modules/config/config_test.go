@@ -1,11 +1,12 @@
-package main
+package config
 
 import (
+	"os"
 	"testing"
 )
 
 func TestReadConfig(t *testing.T) {
-	cfg := ReadConfig()
+	os.Setenv("GOBOT_CONFIG_PATH", os.Getenv("PROJECT_PATH")+"/fixtures/config.toml")
 	if cfg == nil {
 		t.Error("cfg is nil")
 	}

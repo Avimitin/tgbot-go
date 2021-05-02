@@ -6,6 +6,7 @@ import (
 	"math/rand"
 	"strconv"
 	"strings"
+	"text/template"
 	"time"
 
 	"github.com/Avimitin/go-bot/modules/database"
@@ -81,40 +82,17 @@ func edit(msg tb.Editable, what interface{}, opt ...interface{}) *tb.Message {
 }
 
 func unwrapMsg(m *tb.Message) string {
-	var text = "<b>Message Information</b>\n" +
-		"=== <b>CHAT</b> ===\n" +
-		"<b>ID:</b> <code>%v</code>\n" +
-		"<b>TYPE:</b> <code>%v</code>\n" +
-		"<b>USERNAME:</b> <code>%v</code>\n" +
-		"=== <b>USER</b> ===\n" +
-		"<b>ID:</b> <code>%v</code>\n" +
-		"<b>USERNAME:</b> <code>%v</code>\n" +
-		"<b>NICKNAME:</b> <code>%v %v</code>\n" +
-		"<b>LANGUAGE:</b> <code>%v</code>\n" +
-		"=== <b>MSG</b> ===\n" +
-		"<b>ID:</b> <code>%v</code>\n"
-
-	if !m.IsReply() {
-		text = fmt.Sprintf(text,
-			m.Chat.ID, m.Chat.Type, m.Chat.Username,
-			m.Sender.ID, m.Sender.Username, m.Sender.FirstName,
-			m.Sender.LastName, m.Sender.LanguageCode,
-			m.ID)
-	} else if m.ReplyTo.OriginalChat != nil && m.ReplyTo.OriginalSender != nil {
-		text = fmt.Sprintf(text,
-			m.Chat.ID, m.Chat.Type, m.Chat.Username,
-			m.ReplyTo.OriginalChat.ID, m.ReplyTo.OriginalChat.Type,
-			m.ReplyTo.OriginalSender.Username, m.ReplyTo.OriginalSender.FirstName,
-			m.ReplyTo.OriginalSender.LastName, m.ReplyTo.OriginalSender.LanguageCode,
-			m.ReplyTo.ID)
-	} else {
-		text = fmt.Sprintf(text,
-			m.ReplyTo.Chat.ID, m.ReplyTo.Chat.Type, m.ReplyTo.Chat.Username,
-			m.ReplyTo.Sender.ID, m.ReplyTo.Sender.Username, m.ReplyTo.Sender.FirstName,
-			m.ReplyTo.Sender.LastName, m.ReplyTo.Sender.LanguageCode,
-			m.ReplyTo.ID)
+	tmpl, err := template.New("msg-tmpl").Parse(unwrapTemplate)
+	if err != nil {
+		botLog.Trace().Err(err).Send()
+		return ""
 	}
-	return text
+	var buf strings.Builder
+	err = tmpl.Execute(&buf, m)
+	if err != nil {
+		botLog.Trace().Err(err).Send()
+	}
+	return buf.String()
 }
 
 func replaceTag(inputTags []string, c chan string) {

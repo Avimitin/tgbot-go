@@ -9,6 +9,7 @@ import (
 // contextData store key-value data
 type contextData map[string]string
 
+// nextFunc is like a callback function, called as to handle next message
 type nextFunc func(*tb.Message, contextData) error
 
 // contextPayload store next function to execute and the needed context data
@@ -46,6 +47,9 @@ func regisNextStep(cid int64, uid int, d contextData, nf nextFunc) {
 }
 
 func delContext(cid int64, uid int) {
+	mu.Lock()
+	defer mu.Unlock()
+
 	uc, ok := cmdCtx[cid]
 	if !ok {
 		return
@@ -60,6 +64,9 @@ func delContext(cid int64, uid int) {
 }
 
 func getRegis(cid int64, uid int) *contextPayload {
+	mu.Lock()
+	defer mu.Unlock()
+
 	uc, ok := cmdCtx[cid]
 	if !ok {
 		return nil

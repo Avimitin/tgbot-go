@@ -17,21 +17,21 @@ type Configuration struct {
 
 // BotSetting contain bot configuration at runtime
 type BotSetting struct {
-	Token         string
-	LogLevel      string
-	Owner         int
-	EhPostChannel int64
+	Token    string `toml:"token"`
+	LogLevel string `toml:"log_level"`
+	Owner    int    `toml:"owner"`
+	EhChatID int64  `toml:"eh_chat_id"`
 }
 
 // DBSetting contain database configuration at runtime
 type DBSetting struct {
-	User     string
-	Password string
-	Protocol string
-	Addr     string
-	Name     string
-	Params   string
-	LogLevel string
+	User     string `toml:"user"`
+	Password string `toml:"password"`
+	Protocol string `toml:"protocol"`
+	Addr     string `toml:"address"`
+	Name     string `toml:"db_name"`
+	Params   string `toml:"params"`
+	LogLevel string `toml:"log_level"`
 }
 
 // EncodeMySQLDSN use DBSetting to encode a mysql data source link

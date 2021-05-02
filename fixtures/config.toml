@@ -2,13 +2,13 @@
 token="1234567"
 log_level="info"
 owner=114514 # telegram user id
-eh_post_chat_id=-1145141919810
+eh_chat_id=-1145141919810
 
 [database]
 user="root"
 password="password"
 protocol="tcp"
-addr="127.0.0.1:3306"
+address="127.0.0.1:3306"
 db_name="bot_db"
 params="param=value&param2=value2"
 log_level="info"

@@ -27,5 +27,5 @@ func GetBotLogLevel() string {
 
 // GetEhPostChannelID return channel id to send the data
 func GetEhPostChannelID() int64 {
-	return cfg.Bot.EhPostChannel
+	return cfg.Bot.EhChatID
 }

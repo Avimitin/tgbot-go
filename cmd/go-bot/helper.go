@@ -122,7 +122,7 @@ func replaceTag(inputTags []string, c chan string) {
 	c <- tags
 }
 
-func wrapEHData(ehURL string, comment string) (interface{}, *tb.ReplyMarkup, error) {
+func wrapEHData(ehURL string, comment string) (*tb.Photo, *tb.ReplyMarkup, error) {
 	data, err := eh.GetComic(ehURL)
 	if err != nil {
 		return nil, nil, fmt.Errorf("Request failed: %v", err)

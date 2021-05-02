@@ -3,6 +3,7 @@ package main
 import (
 	"time"
 
+	"github.com/Avimitin/go-bot/modules/config"
 	"github.com/Avimitin/go-bot/modules/database"
 	"github.com/Avimitin/go-bot/modules/logger"
 	"github.com/rs/zerolog"
@@ -143,13 +144,13 @@ func initOwner(id int) {
 }
 
 func main() {
-	botLog = logger.NewZeroLogger(cfg.Bot.LogLevel)
+	botLog = logger.NewZeroLogger(config.GetBotLogLevel())
 
-	initBot(cfg.Bot.Token)
+	initBot(config.GetBotToken())
 
-	initDB(cfg.Database.EncodeMySQLDSN(), cfg.Database.LogLevel)
+	initDB(config.GetDatabaseDSN(), config.GetDatabaseLogLevel())
 
-	initOwner(cfg.Bot.Owner)
+	initOwner(config.GetOwner())
 
 	for cmd, fn := range bc {
 		b.Handle(cmd, fn)

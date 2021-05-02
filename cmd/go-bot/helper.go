@@ -345,10 +345,12 @@ var formatCharSucc = map[tb.EntityType]string{
 func encodeEntity(m *tb.Message) string {
 	var buf = strings.Builder{}
 	var i = 0
+	var text = []rune(m.Text)
+	botLog.Trace().Str("text", string(text)).Int("len", len(text)).Int("rune_len", len(string(m.Text))).Send()
 
 	for _, entity := range m.Entities {
 		for i < entity.Offset {
-			buf.WriteByte(m.Text[i])
+			buf.WriteRune(text[i])
 			i++
 		}
 
@@ -362,7 +364,7 @@ func encodeEntity(m *tb.Message) string {
 
 		var j int
 		for j = entity.Offset; j < entity.Offset+entity.Length; j++ {
-			buf.WriteByte(m.Text[j])
+			buf.WriteRune(text[j])
 		}
 
 		buf.Write([]byte(formatCharSucc[entity.Type]))
@@ -370,8 +372,8 @@ func encodeEntity(m *tb.Message) string {
 		i = j
 	}
 
-	for ; i < len(m.Text); i++ {
-		buf.WriteByte(m.Text[i])
+	for ; i < len(text); i++ {
+		buf.WriteRune(text[i])
 	}
 
 	return buf.String()

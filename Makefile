@@ -15,6 +15,7 @@ GO_TEST_ARGS=-v
 
 DOCKER_REPO_NAME=avimitin/go-bot
 DOCKER_BUILD_TAG=$(DOCKER_REPO_NAME):$(TAG)
+DOCKER_BUILD_ARGS=-t $(DOCKER_BUILD_TAG)
 
 .PHONY: build
 build:
@@ -27,4 +28,4 @@ test:
 .PHONY: build-docker
 build-docker:
 	@echo "build docker image: "$(DOCKER_BUILD_TAG)
-	@docker build -t "$(DOCKER_BUILD_TAG)" .
+	@docker build $(DOCKER_BUILD_ARGS) .

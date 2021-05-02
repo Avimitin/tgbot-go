@@ -322,3 +322,57 @@ func assertPayload(m *tb.Message, sub ...string) bool {
 
 	return m.Payload == sub[0]
 }
+
+var formatCharPrev = map[tb.EntityType]string{
+	tb.EntityBold:          "<b>",
+	tb.EntityItalic:        "<i>",
+	tb.EntityUnderline:     "<u>",
+	tb.EntityStrikethrough: "<s>",
+	tb.EntityCode:          "<code>",
+	tb.EntityCodeBlock:     "<pre>",
+}
+
+var formatCharSucc = map[tb.EntityType]string{
+	tb.EntityBold:          "</b>",
+	tb.EntityItalic:        "</i>",
+	tb.EntityUnderline:     "</u>",
+	tb.EntityStrikethrough: "</s>",
+	tb.EntityCode:          "</code>",
+	tb.EntityCodeBlock:     "</pre>",
+	tb.EntityTextLink:      "</a>",
+}
+
+func encodeEntity(m *tb.Message) string {
+	var buf = strings.Builder{}
+	var i = 0
+
+	for _, entity := range m.Entities {
+		for i < entity.Offset {
+			buf.WriteByte(m.Text[i])
+			i++
+		}
+
+		if entity.Type == tb.EntityTextLink {
+			buf.Write([]byte(`<a href="`))
+			buf.Write([]byte(entity.URL))
+			buf.Write([]byte(`">`))
+		} else {
+			buf.Write([]byte(formatCharPrev[entity.Type]))
+		}
+
+		var j int
+		for j = entity.Offset; j < entity.Offset+entity.Length; j++ {
+			buf.WriteByte(m.Text[j])
+		}
+
+		buf.Write([]byte(formatCharSucc[entity.Type]))
+
+		i = j
+	}
+
+	for ; i < len(m.Text); i++ {
+		buf.WriteByte(m.Text[i])
+	}
+
+	return buf.String()
+}

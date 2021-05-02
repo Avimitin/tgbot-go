@@ -13,6 +13,7 @@ import (
 var (
 	b      *tb.Bot
 	botLog *zerolog.Logger
+	DB     database.DataController
 )
 
 func middleware(u *tb.Update) bool {
@@ -20,14 +21,14 @@ func middleware(u *tb.Update) bool {
 		return false
 	}
 
-	user, err := database.DB.GetUser(u.Message.Sender.ID)
+	user, err := DB.GetUser(u.Message.Sender.ID)
 	if err != nil {
 		log.Error().Err(err).Msg("")
 	}
 
 	// insert user only when last query has no error
 	if user == nil && err == nil {
-		user, err = database.DB.NewUser(u.Message.Sender.ID, PermNormal)
+		user, err = DB.NewUser(u.Message.Sender.ID, PermNormal)
 		if err != nil {
 			botLog.Error().
 				Err(err).
@@ -119,7 +120,7 @@ func initBot(token string) {
 
 func initDB(dsn string, logLevel string) {
 	var err error
-	database.DB, err = database.NewBotDB(dsn, logLevel)
+	DB, err = database.NewBotDB(dsn, logLevel)
 	if err != nil {
 		botLog.Fatal().
 			Err(err).
@@ -130,12 +131,12 @@ func initDB(dsn string, logLevel string) {
 }
 
 func initOwner(id int) {
-	if u, err := database.DB.GetUser(id); err != nil && u != nil {
+	if u, err := DB.GetUser(id); err != nil && u != nil {
 		log.Trace().Interface("user_info", u).Err(err).Msg("initialize owner")
 		return
 	}
 
-	_, err := database.DB.SetUser(id, PermOwner)
+	_, err := DB.SetUser(id, PermOwner)
 	if err != nil {
 		botLog.Fatal().Err(err).Msgf("failed to grant user %d to owner", id)
 	}

@@ -272,7 +272,7 @@ func setPerm(argument string) string {
 	var err error
 	var user *database.User
 	fn := func(id int, permid int32) {
-		user, err = database.DB.SetUser(id, permid)
+		user, err = DB.SetUser(id, permid)
 	}
 
 	switch perm {

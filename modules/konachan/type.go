@@ -1,4 +1,4 @@
-package main
+package konachan
 
 type KonachanResponse struct {
 	ID                  int           `json:"id"`

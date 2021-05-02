@@ -187,5 +187,5 @@ func cmdRepeat(m *tb.Message) {
 		return
 	}
 
-	send(m.Chat, encodeEntity(m.ReplyTo))
+	send(m.Chat, encodeEntity(m.ReplyTo), &tb.SendOptions{ParseMode: "HTML"})
 }

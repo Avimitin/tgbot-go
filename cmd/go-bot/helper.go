@@ -105,7 +105,7 @@ func replaceTag(inputTags []string, c chan string) {
 	c <- tags
 }
 
-func wrapEHData(ehURL string, comment string) (*tb.Photo, *tb.ReplyMarkup, error) {
+func wrapEHData(ehURL string, comment *tb.Message) (*tb.Photo, *tb.ReplyMarkup, error) {
 	data, err := eh.GetComic(ehURL)
 	if err != nil {
 		return nil, nil, fmt.Errorf("Request failed: %v", err)
@@ -128,8 +128,8 @@ func wrapEHData(ehURL string, comment string) (*tb.Photo, *tb.ReplyMarkup, error
 	caption += fmt.Sprintf("📖标题: <code>%s</code>\n", metadata.TitleJpn)
 	caption += fmt.Sprintf("🗂️类别: %s\n", metadata.Category)
 	caption += fmt.Sprintf("🏷️标签: %v\n", <-tagC)
-	if comment != "" {
-		caption += fmt.Sprintf("💬评论: %v", comment)
+	if comment != nil {
+		caption += fmt.Sprintf("💬评论: %v", encodeEntity(comment))
 	}
 
 	menu := &tb.ReplyMarkup{}

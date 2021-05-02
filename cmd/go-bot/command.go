@@ -115,7 +115,7 @@ func cmdEH(m *tb.Message) {
 	msg := send(m.Chat, "handling...")
 	defer b.Delete(msg)
 
-	pht, opt, err := wrapEHData(m.Payload, "")
+	pht, opt, err := wrapEHData(m.Payload, nil)
 	if err != nil {
 		log.Error().Err(err).Str("FUNC", "cmdEH").Msg("wrap eh data failed")
 		send(m.Chat, err.Error())
@@ -143,7 +143,7 @@ func postEhComicToCh4nn3l(m *tb.Message, p contextData) error {
 
 	msg := send(m.Chat, "requesting...")
 
-	pht, opt, err := wrapEHData(ehURL, m.Text)
+	pht, opt, err := wrapEHData(ehURL, m)
 
 	if err != nil {
 		return err

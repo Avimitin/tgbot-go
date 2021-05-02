@@ -1,0 +1,8 @@
+# DATABASE TEST DESCRIPTIONS
+
+## DOCKER
+
+```bash
+docker run -e MYSQL_ROOT_PASSWORD=goBotDB MYSQL_DATABASE=goBotDB -p 127.0.0.1:3306:3306 -d mariadb:10
+```
+

@@ -68,6 +68,8 @@ func (d *DBSetting) EncodeMySQLDSN() string {
 	return buf.String()
 }
 
+var cfg *Configuration
+
 // ReadConfig parse toml document from $GOBOT_CONFIG_PATH or $HOME/.config/go-bot/config.toml
 func ReadConfig() *Configuration {
 	configPath := os.Getenv("GOBOT_CONFIG_PATH")
@@ -89,4 +91,8 @@ func ReadConfig() *Configuration {
 	}
 
 	return &cfg
+}
+
+func init() {
+	cfg = ReadConfig()
 }

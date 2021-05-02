@@ -143,8 +143,6 @@ func initOwner(id int) {
 }
 
 func main() {
-	cfg := ReadConfig()
-
 	botLog = logger.NewZeroLogger(cfg.Bot.LogLevel)
 
 	initBot(cfg.Bot.Token)

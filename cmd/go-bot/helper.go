@@ -157,7 +157,7 @@ func wrapEHData(ehURL string, comment string) (*tb.Photo, *tb.ReplyMarkup, error
 	menu := &tb.ReplyMarkup{}
 
 	var (
-		btnLike    = menu.Text("👍 " + metadata.Rating)
+		btnLike    = menu.Data("👍 "+metadata.Rating, "like-button")
 		btnCollect = menu.URL("⭐ 点击收藏",
 			fmt.Sprintf(
 				"https://e-hentai.org/gallerypopups.php?gid=%d&t=%s&act=addfav",

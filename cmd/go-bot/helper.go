@@ -59,7 +59,7 @@ func send(to tb.Recipient, what interface{}, opt ...interface{}) *tb.Message {
 		b.Send(to, "operation failed: "+err.Error())
 		botLog.Error().Err(err).Send()
 	}
-	return m
+	return nil
 }
 
 func edit(msg tb.Editable, what interface{}, opt ...interface{}) *tb.Message {

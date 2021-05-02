@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/Avimitin/go-bot/modules/config"
 	"github.com/rs/zerolog/log"
 	tb "gopkg.in/tucnak/telebot.v2"
 )
@@ -148,7 +149,18 @@ func postEhComicToCh4nn3l(m *tb.Message, p contextData) error {
 		return err
 	}
 
-	send(&tb.Chat{ID: -1001462940665}, pht, &tb.SendOptions{ParseMode: "HTML", ReplyMarkup: opt})
+	send(
+		&tb.Chat{
+			ID: config.GetEhPostChannelID(),
+		},
+
+		pht,
+
+		&tb.SendOptions{
+			ParseMode:   "HTML",
+			ReplyMarkup: opt,
+		},
+	)
 
 	return nil
 }

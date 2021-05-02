@@ -53,9 +53,11 @@ func send(to tb.Recipient, what interface{}, opt ...interface{}) *tb.Message {
 		return m
 	case tb.ErrMessageTooLong:
 		b.Send(to, "message too long")
+	case tb.ErrChatNotFound:
+		botLog.Error().Err(err).Msg("bot not in chat")
 	default:
 		b.Send(to, "operation failed: "+err.Error())
-		botLog.Error().Err(err)
+		botLog.Error().Err(err).Send()
 	}
 	return m
 }
@@ -69,9 +71,11 @@ func edit(msg tb.Editable, what interface{}, opt ...interface{}) *tb.Message {
 		return m
 	case tb.ErrMessageTooLong:
 		b.Edit(msg, "message too long")
+	case tb.ErrChatNotFound:
+		botLog.Error().Err(err).Msg("bot not in chat")
 	default:
 		b.Edit(msg, "operation failed: "+err.Error())
-		botLog.Error().Err(err)
+		botLog.Error().Err(err).Send()
 	}
 	return m
 }

@@ -17,9 +17,10 @@ type Configuration struct {
 
 // BotSetting contain bot configuration at runtime
 type BotSetting struct {
-	Token    string
-	LogLevel string
-	Owner    int
+	Token         string
+	LogLevel      string
+	Owner         int
+	EhPostChannel int64
 }
 
 // DBSetting contain database configuration at runtime

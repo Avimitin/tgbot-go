@@ -1,7 +1,8 @@
 [bot]
 token="1234567"
 loglevel="info"
-owner="114514" # telegram user id
+owner=114514 # telegram user id
+eh_post_channel=-1145141919810
 
 [database]
 user="root"

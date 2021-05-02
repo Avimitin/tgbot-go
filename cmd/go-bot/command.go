@@ -141,7 +141,6 @@ func postEhComicToCh4nn3l(m *tb.Message, p contextData) error {
 	}
 
 	msg := send(m.Chat, "requesting...")
-	defer b.Delete(msg)
 
 	pht, opt, err := wrapEHData(ehURL, m.Text)
 
@@ -149,7 +148,7 @@ func postEhComicToCh4nn3l(m *tb.Message, p contextData) error {
 		return err
 	}
 
-	send(
+	success := send(
 		&tb.Chat{
 			ID: config.GetEhPostChannelID(),
 		},
@@ -161,6 +160,12 @@ func postEhComicToCh4nn3l(m *tb.Message, p contextData) error {
 			ReplyMarkup: opt,
 		},
 	)
+
+	if success == nil {
+		edit(msg, "post failed")
+	} else {
+		edit(msg, "post success")
+	}
 
 	return nil
 }

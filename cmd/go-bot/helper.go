@@ -100,7 +100,7 @@ func unwrapMsg(m *tb.Message) string {
 			m.Sender.ID, m.Sender.Username, m.Sender.FirstName,
 			m.Sender.LastName, m.Sender.LanguageCode,
 			m.ID)
-	} else if m.ReplyTo.IsForwarded() {
+	} else if m.ReplyTo.IsForwarded() && m.ReplyTo.OriginalSender != nil {
 		text = fmt.Sprintf(text,
 			m.Chat.ID, m.Chat.Type, m.Chat.Username,
 			m.ReplyTo.OriginalChat.ID, m.ReplyTo.OriginalChat.Type,

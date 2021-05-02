@@ -132,12 +132,19 @@ func initDB(dsn string, logLevel string) {
 }
 
 func initOwner(id int) {
-	if u, err := DB.GetUser(id); err != nil && u != nil {
-		log.Trace().Interface("user_info", u).Err(err).Msg("initialize owner")
+	u, err := DB.GetUser(id)
+
+	if err != nil {
+		botLog.Fatal().Err(err).Msg("initialize owner")
+	}
+
+	if u != nil {
+		botLog.Trace().Interface("user_detail", u).Msg("owner exist")
 		return
 	}
 
-	_, err := DB.SetUser(id, PermOwner)
+	// if owner not exist
+	_, err = DB.NewUser(id, PermOwner)
 	if err != nil {
 		botLog.Fatal().Err(err).Msgf("failed to grant user %d to owner", id)
 	}

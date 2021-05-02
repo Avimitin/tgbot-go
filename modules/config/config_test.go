@@ -27,4 +27,8 @@ func TestReadConfig(t *testing.T) {
 	if cfg.Bot.Owner != 114514 {
 		t.Errorf("Owner is not wanted, got %d", cfg.Bot.Owner)
 	}
+
+	if cfg.Bot.EhChatID != -1145141919810 {
+		t.Errorf("eh chat id is not wanted, got %d", cfg.Bot.EhChatID)
+	}
 }

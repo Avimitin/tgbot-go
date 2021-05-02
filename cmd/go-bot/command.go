@@ -23,6 +23,7 @@ var (
 		"/eh":      cmdEH,
 		"/ehp":     cmdEHPost,
 		"/setperm": cmdSetPerm,
+		"/repeat":  cmdRepeat,
 	}
 )
 
@@ -178,4 +179,13 @@ func cmdSetPerm(m *tb.Message) {
 	}
 
 	send(m.Chat, setPerm(m.Payload))
+}
+
+func cmdRepeat(m *tb.Message) {
+	if !m.IsReply() {
+		send(m.Chat, "use reply")
+		return
+	}
+
+	send(m.Chat, encodeEntity(m.ReplyTo))
 }

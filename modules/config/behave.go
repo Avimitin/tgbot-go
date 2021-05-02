@@ -24,3 +24,8 @@ func GetDatabaseLogLevel() string {
 func GetBotLogLevel() string {
 	return cfg.Bot.LogLevel
 }
+
+// GetEhPostChannelID return channel id to send the data
+func GetEhPostChannelID() int64 {
+	return cfg.Bot.EhPostChannel
+}

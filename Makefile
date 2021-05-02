@@ -11,7 +11,10 @@ PROJECT_PATH=$(GOPATH)/src/github.com/Avimitin/go-bot
 export GOBOT_CONFIG_PATH=$(PROJECT_PATH)/fixtures/config.toml
 export GO111MODULE=on
 
-GO_TEST_ARGS='-v'
+GO_TEST_ARGS=-v
+
+DOCKER_REPO_NAME=avimitin/go-bot
+DOCKER_BUILD_TAG=$(DOCKER_REPO_NAME):$(TAG)
 
 .PHONY: build
 build:
@@ -20,3 +23,8 @@ build:
 .PHONY: test
 test:
 	$(GO) test $(GO_TEST_ARGS) $(PROJECT_PATH)/...
+
+.PHONY: build-docker
+build-docker:
+	@echo "build docker image: "$(DOCKER_BUILD_TAG)
+	@docker build -t "$(DOCKER_BUILD_TAG)" .

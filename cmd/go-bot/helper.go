@@ -256,6 +256,14 @@ func setPerm(argument string) string {
 	var user *database.User
 	fn := func(id int, permid int32) {
 		user, err = DB.SetUser(id, permid)
+
+		if err != nil {
+			return
+		}
+
+		if user == nil {
+			user, err = DB.NewUser(id, permid)
+		}
 	}
 
 	switch perm {
@@ -271,10 +279,6 @@ func setPerm(argument string) string {
 		fn(id, 4)
 	default:
 		return "argument not valid, more descriptions refer to /setperm help"
-	}
-
-	if user == nil {
-		return "user not found"
 	}
 
 	if err != nil {

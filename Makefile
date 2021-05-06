@@ -29,3 +29,8 @@ test:
 build-docker:
 	@echo "build docker image: "$(DOCKER_BUILD_TAG)
 	@docker build $(DOCKER_BUILD_ARGS) .
+
+.PHONY: build-docker-latest
+build-docker-latest:
+	@echo "build docker image: "$(DOCKER_BUILD_TAG)
+	@docker build $(DOCKER_BUILD_ARGS) -t avimitin/go-bot:latest .

@@ -189,3 +189,12 @@ func cmdRepeat(m *tb.Message) {
 
 	send(m.Chat, encodeEntity(m.ReplyTo), &tb.SendOptions{ParseMode: "HTML"})
 }
+
+func cmdRemake(m *tb.Message) {
+	user := fmt.Sprintf(`<a href="tg://user?id=%d">%s</a>`, m.Sender.ID, m.Sender.FirstName)
+
+	send(m.Chat,
+		user+" 你复活啦？你知道你寄吧谁吗？",
+		&tb.SendOptions{ParseMode: "HTML"},
+	)
+}

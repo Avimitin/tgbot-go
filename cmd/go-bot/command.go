@@ -24,6 +24,7 @@ var (
 		"/ehp":     cmdEHPost,
 		"/setperm": cmdSetPerm,
 		"/repeat":  cmdRepeat,
+		"/remake":  cmdRemake,
 	}
 )
 

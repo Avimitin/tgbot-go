@@ -147,7 +147,7 @@ func Exchange(from, to string) (map[string]interface{}, error) {
 
 func FetchRate(from, to string) (float64, error) {
 	if !BufferIsOutDated() {
-		if rate, err := BufferHasRate(from, to); err != nil {
+		if rate, err := BufferHasRate(from, to); err == nil {
 			return rate, nil
 		}
 	}

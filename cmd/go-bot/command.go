@@ -3,9 +3,12 @@ package main
 import (
 	"encoding/json"
 	"fmt"
+	"strconv"
+	"strings"
 	"time"
 
 	"github.com/Avimitin/go-bot/modules/config"
+	"github.com/Avimitin/go-bot/modules/currency"
 	"github.com/rs/zerolog/log"
 	tb "gopkg.in/tucnak/telebot.v2"
 )
@@ -14,17 +17,18 @@ type botCommands map[string]func(*tb.Message)
 
 var (
 	bc = botCommands{
-		"/start":   cmdHello,
-		"/ping":    cmdPing,
-		"/dump":    cmdDump,
-		"/weather": cmdWeather,
-		"/mjx":     cmdMJX,
-		"/ghs":     cmdGhs,
-		"/eh":      cmdEH,
-		"/ehp":     cmdEHPost,
-		"/setperm": cmdSetPerm,
-		"/repeat":  cmdRepeat,
-		"/remake":  cmdRemake,
+		"/start":    cmdHello,
+		"/ping":     cmdPing,
+		"/dump":     cmdDump,
+		"/weather":  cmdWeather,
+		"/mjx":      cmdMJX,
+		"/ghs":      cmdGhs,
+		"/eh":       cmdEH,
+		"/ehp":      cmdEHPost,
+		"/setperm":  cmdSetPerm,
+		"/repeat":   cmdRepeat,
+		"/remake":   cmdRemake,
+		"/exchange": cmdExchange,
 	}
 )
 
@@ -198,4 +202,33 @@ func cmdRemake(m *tb.Message) {
 		user+" 你复活啦？你知道你寄吧谁吗？",
 		&tb.SendOptions{ParseMode: "HTML"},
 	)
+}
+
+func cmdExchange(m *tb.Message) {
+	if m.Payload == "" || m.Payload == "help" {
+		send(m.Chat, "Usage: /exchange 100 cny usd")
+		return
+	}
+
+	args := strings.Fields(m.Payload)
+
+	if len(args) < 3 {
+		send(m.Chat, "Usage: /exchange 100 cny usd")
+		return
+	}
+
+	amount, err := strconv.ParseFloat(args[0], 64)
+	if err != nil {
+		send(m.Chat, fmt.Sprintf("Unsupport amount: %q", args[0]))
+		return
+	}
+
+	msg := send(m.Chat, "requesting...")
+	result, err := currency.CalculateExchange(amount, args[1], args[2])
+	if err != nil {
+		send(m.Chat, fmt.Sprintf("calculate failed: %v", err))
+		return
+	}
+
+	edit(msg, fmt.Sprintf("%s %s\n=\n%s %f", args[1], args[0], args[2], result))
 }

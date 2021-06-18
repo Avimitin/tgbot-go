@@ -85,5 +85,8 @@ func TestCalculate(t *testing.T) {
 		t.Fatal("no data calculated")
 	}
 
-	t.Log(result)
+	_, err = CalculateExchange(100, "aaa", "ccc")
+	if err == nil {
+		t.Error("expect error output")
+	}
 }

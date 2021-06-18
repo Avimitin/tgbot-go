@@ -75,7 +75,7 @@ func BufferIsNil() bool {
 	buffer.locker.RLock()
 	defer buffer.locker.RUnlock()
 
-	return buffer.currencies == nil
+	return len(buffer.currencies) == 0
 }
 
 // ListAllCurrenciesDescriptions return a map of the currency code and

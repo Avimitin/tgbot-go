@@ -172,6 +172,14 @@ func FetchRate(from, to string) (float64, error) {
 
 // CalculateExchange convert the currency amount with given currency code.
 func CalculateExchange(amount float64, from, to string) (float64, error) {
+	if !CodeIsValid(from) {
+		return 0, fmt.Errorf("%q is not valid code", from)
+	}
+
+	if !CodeIsValid(to) {
+		return 0, fmt.Errorf("%q is not valid code", to)
+	}
+
 	rate, err := FetchRate(from, to)
 	if err != nil {
 		return 0, err
@@ -182,4 +190,16 @@ func CalculateExchange(amount float64, from, to string) (float64, error) {
 	}
 
 	return amount * rate, nil
+}
+
+// CodeIsValid test if the given code is supported
+func CodeIsValid(code string) bool {
+	result, err := ListAllCurrenciesDescriptions()
+	if err != nil {
+		return false
+	}
+
+	_, ok := result[code]
+
+	return ok
 }

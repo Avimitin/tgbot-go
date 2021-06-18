@@ -85,7 +85,9 @@ func ListAllCurrenciesDescriptions() (map[string]string, error) {
 		return buffer.currencies, nil
 	}
 
-	response, err := net.Get("https://cdn.jsdelivr.net/gh/fawazahmed0/currency-api@1/latest/currencies.min.json")
+	response, err := net.Get(
+		"https://cdn.jsdelivr.net/gh/fawazahmed0/currency-api@1/latest/currencies.min.json",
+	)
 	if err != nil {
 		return nil, fmt.Errorf("request currency API: %w", err)
 	}

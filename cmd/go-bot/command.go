@@ -9,6 +9,7 @@ import (
 
 	"github.com/Avimitin/go-bot/modules/config"
 	"github.com/Avimitin/go-bot/modules/currency"
+	"github.com/Avimitin/go-bot/modules/mark"
 	"github.com/rs/zerolog/log"
 	tb "gopkg.in/tucnak/telebot.v2"
 )
@@ -29,6 +30,9 @@ var (
 		"/repeat":   cmdRepeat,
 		"/remake":   cmdRemake,
 		"/exchange": cmdExchange,
+		"/mark":     cmdAddMark,
+		"/lsmark":   cmdGetMark,
+		"/delmark":  cmdDelMark,
 	}
 )
 
@@ -231,4 +235,62 @@ func cmdExchange(m *tb.Message) {
 	}
 
 	edit(msg, fmt.Sprintf("%s %s\n=\n%s %f", args[1], args[0], args[2], result))
+}
+
+func cmdAddMark(m *tb.Message) {
+	if !m.IsReply() {
+		send(m.Chat, "reply to a message to mark it")
+		return
+	}
+
+	description := m.ReplyTo.Text
+	if len(description) > 15 {
+		description = description[:15] + "..."
+	}
+
+	chatID := fmt.Sprintf("%d", m.Chat.ID)
+	if m.Chat.Type == tb.ChatGroup {
+		chatID = chatID[4:]
+	}
+
+	link := fmt.Sprintf("https://t.me/c/%s/%d", chatID, m.ReplyTo.ID)
+	mark.AddMark(m.Sender.FirstName, link, description)
+
+	send(m.Chat,
+		fmt.Sprintf("%q marked", description))
+}
+
+func cmdGetMark(m *tb.Message) {
+	result, err := mark.GetMark(m.Sender.FirstName)
+	if err != nil {
+		send(m.Chat, fmt.Sprintf("getting mark: %v", err))
+		return
+	}
+
+	var text string
+	for _, entry := range result {
+		text += fmt.Sprintf(`[%d] %q <a href="%s">link</a>`, entry.ID, entry.Description, entry.Link)
+		text += "\n"
+	}
+
+	send(m.Chat, text, &tb.SendOptions{ParseMode: "HTML"})
+}
+
+func cmdDelMark(m *tb.Message) {
+	targetID, err := strconv.ParseInt(m.Payload, 10, 32)
+	if err != nil {
+		send(m.Chat,
+			fmt.Sprintf("Usage example: /delmark {{target id (int32)}}"))
+		return
+	}
+
+	err = mark.DelMark(m.Sender.FirstName, int32(targetID))
+
+	if err != nil {
+		send(m.Chat,
+			fmt.Sprintf("delete mark: %v", err))
+		return
+	}
+
+	send(m.Chat, "delete success")
 }

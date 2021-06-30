@@ -249,7 +249,7 @@ func cmdAddMark(m *tb.Message) {
 	}
 
 	chatID := fmt.Sprintf("%d", m.Chat.ID)
-	if m.Chat.Type == tb.ChatGroup {
+	if m.Chat.Type == tb.ChatGroup || m.Chat.Type == tb.ChatChannelPrivate {
 		chatID = chatID[4:]
 	}
 

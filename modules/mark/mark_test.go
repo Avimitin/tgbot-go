@@ -13,6 +13,25 @@ func TestAddMark(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
+
+	err = AddMark(user, msgLink, description)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if innerDB.amount != 2 {
+		t.Errorf("database is not wanted size, got %d", innerDB.amount)
+	}
+
+	if length := len(innerDB.db[user]); length != 2 {
+		t.Fatalf("no enough data in db, got %d", length)
+	}
+
+	for _, entry := range innerDB.db[user] {
+		if entry.Link != msgLink {
+			t.Errorf("got %s want %s", entry.Link, msgLink)
+		}
+	}
 }
 
 func TestGetMark(t *testing.T) {
@@ -35,7 +54,7 @@ func TestGetMark(t *testing.T) {
 	}
 
 	for _, result := range links {
-		if result.link == link {
+		if result.Link == link {
 			return
 		}
 	}
@@ -59,8 +78,11 @@ func TestDelMark(t *testing.T) {
 	AddMark(user, link2, desc)
 
 	originalLength := len(innerDB.db[user])
-	links, _ := GetMark(user)
-	err := DelMark(user, int32(len(links)))
+	links, err := GetMark(user)
+	if err != nil {
+		t.Fatal(err)
+	}
+	err = DelMark(user, int32(len(links)-1))
 	if err != nil {
 		t.Errorf("delete user: %v", err)
 	}

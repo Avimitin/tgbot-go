@@ -1,0 +1,18 @@
+name: build
+
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
+
+jobs:
+  Test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/cedrickring/golang-action@1.6.0
+      - name: test
+        env:
+          GOBOT_CFG_PATH: $PWD/fixtures/config.toml
+        run: go test ./...

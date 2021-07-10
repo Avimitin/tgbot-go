@@ -343,34 +343,22 @@ func collectMessage(m *tb.Message, p contextData) error {
 		return nil
 	}
 
-	is_forward := m.IsForwarded()
-	if !is_forward {
-		is_forward = m.OriginalSenderName != ""
+	var username string
+	if m.OriginalSender != nil && m.OriginalSender.FirstName != "" {
+		username = m.OriginalSender.FirstName
+	} else if m.OriginalSenderName != "" {
+		username = m.OriginalSenderName
+	} else {
+		username = "Anoynomous"
 	}
 
-	log.Trace().Msgf("is forward message? %v", is_forward)
-	if is_forward {
-		var username string
-		if m.OriginalSender != nil && m.OriginalSender.FirstName != "" {
-			username = m.OriginalSender.FirstName
-		} else if m.OriginalSenderName != "" {
-			username = m.OriginalSenderName
-		} else {
-			username = "Anoynomous"
-		}
-
-		currentUserCollectData = append(currentUserCollectData, msgInfoForCollect{
+	currentUserCollectData = append(currentUserCollectData,
+		msgInfoForCollect{
 			username: username,
 			text:     m.Text,
 			date:     m.Time(),
-		})
-	} else {
-		currentUserCollectData = append(currentUserCollectData, msgInfoForCollect{
-			username: m.Sender.FirstName,
-			text:     m.Text,
-			date:     m.Time(),
-		})
-	}
+		},
+	)
 
 	collectedData[m.Sender.ID] = currentUserCollectData
 	regisNextStep(m.Chat.ID, m.Sender.ID, contextData{}, collectMessage)

@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"strconv"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/Avimitin/go-bot/modules/config"
@@ -33,6 +34,7 @@ var (
 		"/mark":     cmdAddMark,
 		"/lsmark":   cmdGetMark,
 		"/delmark":  cmdDelMark,
+		"/collect":  cmdCollectMessage,
 	}
 )
 
@@ -293,4 +295,81 @@ func cmdDelMark(m *tb.Message) {
 	}
 
 	send(m.Chat, "delete success")
+}
+
+// cmdCollectMessage force bot enter collect mode and record all the
+// message from user.
+func cmdCollectMessage(m *tb.Message) {
+	send(m.Chat, "你可以开始发消息给我了。\n输入 /end_collect 结束录入。")
+	regisNextStep(m.Chat.ID, m.Sender.ID, contextData{}, collectMessage)
+}
+
+type msgInfoForCollect struct {
+	text     string
+	username string
+}
+
+var (
+	collectedData   = map[int][]msgInfoForCollect{}
+	collectDataLock = sync.Mutex{}
+)
+
+func collectMessage(m *tb.Message, p contextData) error {
+	collectDataLock.Lock()
+	defer collectDataLock.Unlock()
+
+	currentUserCollectData, exist := collectedData[m.Sender.ID]
+
+	if !exist {
+		currentUserCollectData = make([]msgInfoForCollect, 0, 2)
+	}
+
+	if strings.HasPrefix(m.Text, "/end_collect") {
+		defer delContext(m.Chat.ID, m.Sender.ID)
+		defer func() {
+			delete(collectedData, m.Sender.ID)
+		}()
+
+		send(m.Chat, "录入结束, 正在合成中...")
+
+		collectedDataLiteral := "Collected messages:\n\n"
+		for _, msg := range currentUserCollectData {
+			collectedDataLiteral += fmt.Sprintf("<b>%s:</b> %s", msg.username, msg.text)
+			collectedDataLiteral += "\n---\n"
+		}
+
+		send(m.Chat, collectedDataLiteral, &tb.SendOptions{ParseMode: "HTML"})
+		return nil
+	}
+
+	is_forward := m.IsForwarded()
+	if !is_forward {
+		is_forward = m.OriginalSenderName != ""
+	}
+
+	log.Trace().Msgf("is forward message? %v", is_forward)
+	if is_forward {
+		var username string
+		if m.OriginalSender != nil && m.OriginalSender.FirstName != "" {
+			username = m.OriginalSender.FirstName
+		} else if m.OriginalSenderName != "" {
+			username = m.OriginalSenderName
+		} else {
+			username = "Anoynomous"
+		}
+
+		currentUserCollectData = append(currentUserCollectData, msgInfoForCollect{
+			username: username,
+			text:     m.Text,
+		})
+	} else {
+		currentUserCollectData = append(currentUserCollectData, msgInfoForCollect{
+			username: m.Sender.FirstName,
+			text:     m.Text,
+		})
+	}
+
+	collectedData[m.Sender.ID] = currentUserCollectData
+	regisNextStep(m.Chat.ID, m.Sender.ID, contextData{}, collectMessage)
+	return nil
 }

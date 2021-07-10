@@ -77,8 +77,6 @@ func middleware(u *tb.Update) bool {
 			send(u.Message.Chat, err.Error())
 		}
 
-		delContext(u.Message.Chat.ID, u.Message.Sender.ID)
-
 		log.Trace().Msgf("remaining next step: %+v", cmdCtx)
 		// abandon this message as it is been handled gracefully
 		return false

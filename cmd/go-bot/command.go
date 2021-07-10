@@ -307,7 +307,6 @@ func cmdCollectMessage(m *tb.Message) {
 type msgInfoForCollect struct {
 	text     string
 	username string
-	date     time.Time
 }
 
 var (
@@ -356,7 +355,6 @@ func collectMessage(m *tb.Message, p contextData) error {
 		msgInfoForCollect{
 			username: username,
 			text:     m.Text,
-			date:     m.Time(),
 		},
 	)
 

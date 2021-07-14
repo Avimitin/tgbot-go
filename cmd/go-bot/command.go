@@ -142,10 +142,12 @@ func cmdEHPost(m *tb.Message) {
 	}
 
 	send(m.Chat, "any comment?")
-	regisNextStep(m.Chat.ID, m.Sender.ID, contextData{"url": m.Payload}, postEhComicToCh4nn3l)
+	regisNextStep(m.Chat.ID, m.Sender.ID, contextData{"url": m.Payload}, handleComicMetadata)
 }
 
-func postEhComicToCh4nn3l(m *tb.Message, p contextData) error {
+func handleComicMetadata(m *tb.Message, p contextData) error {
+	defer delContext(m.Chat.ID, m.Sender.ID)
+
 	ehURL, ok := p["url"]
 	if !ok {
 		send(m.Chat, "internal error: url missing")

@@ -35,6 +35,7 @@ var (
 		"/lsmark":   cmdGetMark,
 		"/delmark":  cmdDelMark,
 		"/collect":  cmdCollectMessage,
+		"/me":       cmdMe,
 	}
 )
 
@@ -363,4 +364,14 @@ func collectMessage(m *tb.Message, p contextData) error {
 	collectedData[m.Sender.ID] = currentUserCollectData
 	regisNextStep(m.Chat.ID, m.Sender.ID, contextData{}, collectMessage)
 	return nil
+}
+
+func cmdMe(m *tb.Message) {
+	userLink := createUserLink(m.Sender.FirstName, m.Sender.ID)
+
+	if m.Payload != "" {
+		send(m.Chat, fmt.Sprintf("%s %s 了", userLink, m.Payload), newHTMLParseMode())
+	} else {
+		send(m.Chat, fmt.Sprintf("你是 %s", userLink), newHTMLParseMode())
+	}
 }

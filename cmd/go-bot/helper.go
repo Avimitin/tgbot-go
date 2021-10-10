@@ -384,7 +384,7 @@ func encodeEntity(m *tb.Message) string {
 }
 
 func createUserLink(username string, userid int) string {
-	return fmt.Sprintf("<a href=\"tg://user?id=%d>%s</a>\"", userid, username)
+	return fmt.Sprintf("<a href=\"tg://user?id=%d\">%s</a>", userid, username)
 }
 
 func newHTMLParseMode() *tb.SendOptions {

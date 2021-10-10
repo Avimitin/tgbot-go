@@ -370,7 +370,7 @@ func cmdMe(m *tb.Message) {
 	userLink := createUserLink(m.Sender.FirstName, m.Sender.ID)
 
 	if m.Payload != "" {
-		send(m.Chat, fmt.Sprintf("%s %s 了", userLink, m.Payload), newHTMLParseMode())
+		send(m.Chat, fmt.Sprintf("%s %s了", userLink, m.Payload), newHTMLParseMode())
 	} else {
 		send(m.Chat, fmt.Sprintf("你是 %s", userLink), newHTMLParseMode())
 	}

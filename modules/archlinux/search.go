@@ -53,7 +53,6 @@ type SearchResponse struct {
 type query struct {
 	all  string
 	name string
-	desc string
 }
 
 func fmtURL(query query) string {
@@ -63,9 +62,6 @@ func fmtURL(query query) string {
 	}
 	if query.name != "" {
 		val.Add("name", query.name)
-	}
-	if query.desc != "" {
-		val.Add("desc", query.desc)
 	}
 
 	val.Add("limit", SEARCH_LIMIT)

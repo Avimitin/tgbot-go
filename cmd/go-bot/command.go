@@ -7,6 +7,7 @@ import (
 	"strings"
 	"sync"
 	"time"
+	"math/rand"
 
 	"github.com/Avimitin/go-bot/modules/archlinux"
 	"github.com/Avimitin/go-bot/modules/config"
@@ -382,6 +383,16 @@ func cmdPacman(m *tb.Message) {
 	if m.Payload == "" {
 		send(m.Chat, "Usage: /pacman {PACKAGE}")
 		return
+	}
+
+	if m.Payload == "-Syu" {
+	  if rand.Intn(100) < 20 {
+	    send(m.Chat, "你把系统滚炸了！")
+	    return
+	  } else {
+	    send(m.Chat, "你的 Arch Linux 成功滚了！")
+	    return
+	  }
 	}
 
 	send(m.Chat, "Handling")

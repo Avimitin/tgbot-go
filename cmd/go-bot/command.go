@@ -386,6 +386,8 @@ func cmdPacman(m *tb.Message) {
 	}
 
 	if m.Payload == "-Syu" {
+	  rand.Seed(time.Now().UnixNano())
+
 	  if rand.Intn(100) < 20 {
 	    send(m.Chat, "你把系统滚炸了！")
 	    return

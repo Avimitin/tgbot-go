@@ -398,13 +398,13 @@ func cmdPacman(m *tb.Message) {
 	}
 
 	template := `
-	PKGNAME: %s
-	REPO: %s
-	VER: %s
-	DESCRIPTION: %s
-	LAST_UPDATE_AT: %s
-	LICENSE: %v
-	DEPENDS: %v
+PKGNAME: %s
+REPO: %s
+VER: %s
+DESCRIPTION: %s
+LAST_UPDATE_AT: %s
+LICENSE: %v
+DEPENDS: %v
 	`
 	result := resp.Results[0]
 	format := fmt.Sprintf(template,

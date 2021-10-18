@@ -8,6 +8,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/Avimitin/go-bot/modules/archlinux"
 	"github.com/Avimitin/go-bot/modules/config"
 	"github.com/Avimitin/go-bot/modules/currency"
 	"github.com/Avimitin/go-bot/modules/mark"
@@ -36,6 +37,7 @@ var (
 		"/delmark":  cmdDelMark,
 		"/collect":  cmdCollectMessage,
 		"/me":       cmdMe,
+		"/pacman":   cmdPacman,
 	}
 )
 
@@ -374,4 +376,41 @@ func cmdMe(m *tb.Message) {
 	} else {
 		send(m.Chat, fmt.Sprintf("你是 %s", userLink), newHTMLParseMode())
 	}
+}
+
+func cmdPacman(m *tb.Message) {
+	if m.Payload == "" {
+		send(m.Chat, "Usage: /pacman {PACKAGE}")
+		return
+	}
+
+	send(m.Chat, "Handling")
+
+	resp, err := archlinux.SearchAll(m.Payload)
+	if err != nil {
+		send(m.Chat, fmt.Sprintf("Query package: %v", err))
+		return
+	}
+
+	if len(resp.Results) < 1 {
+		send(m.Chat, fmt.Sprintf("No result for %s", m.Payload))
+		return
+	}
+
+	template := `
+	PKGNAME: %s
+	REPO: %s
+	VER: %s
+	DESCRIPTION: %s
+	LAST_UPDATE_AT: %s
+	LICENSE: %v
+	DEPENDS: %v
+	`
+	result := resp.Results[0]
+	format := fmt.Sprintf(template,
+		result.Pkgname, result.Repo, result.Pkgver,
+		result.Pkgdesc, result.LastUpdate, result.Licenses, result.Depends,
+	)
+
+	send(m.Chat, format)
 }

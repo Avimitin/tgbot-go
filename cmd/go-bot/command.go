@@ -3,13 +3,11 @@ package main
 import (
 	"encoding/json"
 	"fmt"
-	"math/rand"
 	"strconv"
 	"strings"
 	"sync"
 	"time"
 
-	"github.com/Avimitin/go-bot/modules/archlinux"
 	"github.com/Avimitin/go-bot/modules/config"
 	"github.com/Avimitin/go-bot/modules/currency"
 	"github.com/Avimitin/go-bot/modules/mark"

@@ -451,3 +451,59 @@ DEPENDS: %v
 
 	return format
 }
+
+func searchAURAll(name string) string {
+	pkgs, err := archlinux.SearchAllAUR(name)
+	if err != nil {
+		return err.Error()
+	}
+
+	if len(pkgs.Results) < 1 {
+		return fmt.Sprintf("No result for %s", name)
+	}
+
+	details := ""
+
+	for _, result := range pkgs.Results {
+		details += fmt.Sprintf("AUR/%s %s\n", result.Name, result.Version)
+		details += fmt.Sprintf("    %s\n", result.Description)
+	}
+
+	details += "\nTips: use /pacman -Ssa {package} for package details"
+
+	return details
+}
+
+func searchAURSpecific(name string) string {
+	pkg, err := archlinux.SearchInfoAUR(name)
+	if err != nil {
+		return err.Error()
+	}
+
+	if len(pkg.Results) < 1 {
+		return fmt.Sprintf("No result for %s", name)
+	}
+
+	template := `
+PKGNAME: %s
+REPO: %s
+VER: %s
+DESCRIPTION: %s
+LAST_UPDATE_AT: %s
+LICENSE: %v
+DEPENDS: %v
+Outdated: %t
+	`
+	result := pkg.Results[0]
+	outdated := false
+	if result.OutOfDate != 0 {
+		outdated = true
+	}
+	format := fmt.Sprintf(template,
+		result.Name, result.URL, result.Version,
+		result.Description, result.LastModified, result.License, result.Depends,
+		outdated,
+	)
+
+	return format
+}

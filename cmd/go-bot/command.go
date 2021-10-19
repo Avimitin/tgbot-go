@@ -390,16 +390,20 @@ func cmdPacman(m *tb.Message) {
 	if len(arguments) == 1 {
 		if arguments[0] == "-Syu" {
 			send(m.Chat, upgradeArchLinux())
-		} else  {
+		} else {
 			send(m.Chat, searchAllPkg(arguments[0]))
 		} // inner if condition
 		return
 	} // outer if condition
 
-	if arguments[0] == "-Ss" {
+	switch arguments[0] {
+	case "-Ss":
 		send(m.Chat, searchPkgByName(arguments[1]))
-		return
-	} else {
+	case "-Sa":
+		send(m.Chat, searchAURAll(arguments[1]))
+	case "-Ssa":
+		send(m.Chat, searchAURSpecific(arguments[1]))
+	default:
 		send(m.Chat, "Illegal argument.\nTips: Currently supported argument: -Ss")
 	}
 }

@@ -4,51 +4,15 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/url"
-	"time"
 
 	"github.com/Avimitin/go-bot/modules/net"
 )
 
 const (
 	ARCH_LINUX_SEARCH_BASE_URL = "https://www.archlinux.org/packages/search/json"
+	AUR_SEARCH_BASE_URL        = "https://aur.archlinux.org/rpc/"
 	SEARCH_LIMIT               = "5"
 )
-
-type SearchResponse struct {
-	Version int  `json:"version"`
-	Limit   int  `json:"limit"`
-	Valid   bool `json:"valid"`
-	Results []struct {
-		Pkgname        string        `json:"pkgname"`
-		Pkgbase        string        `json:"pkgbase"`
-		Repo           string        `json:"repo"`
-		Arch           string        `json:"arch"`
-		Pkgver         string        `json:"pkgver"`
-		Pkgrel         string        `json:"pkgrel"`
-		Epoch          int           `json:"epoch"`
-		Pkgdesc        string        `json:"pkgdesc"`
-		URL            string        `json:"url"`
-		Filename       string        `json:"filename"`
-		CompressedSize int           `json:"compressed_size"`
-		InstalledSize  int           `json:"installed_size"`
-		BuildDate      time.Time     `json:"build_date"`
-		LastUpdate     time.Time     `json:"last_update"`
-		FlagDate       interface{}   `json:"flag_date"`
-		Maintainers    []string      `json:"maintainers"`
-		Packager       string        `json:"packager"`
-		Groups         []interface{} `json:"groups"`
-		Licenses       []string      `json:"licenses"`
-		Conflicts      []interface{} `json:"conflicts"`
-		Provides       []interface{} `json:"provides"`
-		Replaces       []interface{} `json:"replaces"`
-		Depends        []string      `json:"depends"`
-		Optdepends     []interface{} `json:"optdepends"`
-		Makedepends    []string      `json:"makedepends"`
-		Checkdepends   []interface{} `json:"checkdepends"`
-	} `json:"results"`
-	NumPages int `json:"num_pages"`
-	Page     int `json:"page"`
-}
 
 type query struct {
 	all  string
@@ -97,4 +61,47 @@ func requestAndParse(q *query, sr *SearchResponse) error {
 	}
 
 	return nil
+}
+
+func SearchAllAUR(q string) (AURSearchResponse, error) {
+	res := AURSearchResponse{}
+	v := url.Values{}
+	v.Add("v", "5")
+	v.Add("type", "search")
+	v.Add("by", "name-desc")
+	v.Add("arg", q)
+
+	url := fmt.Sprintf("%s?%s", AUR_SEARCH_BASE_URL, v.Encode())
+	resp, err := net.Get(url)
+	if err != nil {
+		return res, err
+	}
+
+	err = json.Unmarshal(resp, &res)
+	if err != nil {
+		return res, fmt.Errorf("Fail to unmarshal data from AUR packages: %w", err)
+	}
+
+	return res, err
+}
+
+func SearchInfoAUR(q string) (AURInfoResponse, error) {
+	res := AURInfoResponse{}
+	v := url.Values{}
+	v.Add("v", "5")
+	v.Add("type", "info")
+	v.Add("arg[]", q)
+
+	url := fmt.Sprintf("%s?%s", AUR_SEARCH_BASE_URL, v.Encode())
+	resp, err := net.Get(url)
+	if err != nil {
+		return res, err
+	}
+
+	err = json.Unmarshal(resp, &res)
+	if err != nil {
+		return res, fmt.Errorf("Fail to unmarshal data from AUR packages: %w", err)
+	}
+
+	return res, err
 }

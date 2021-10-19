@@ -501,7 +501,7 @@ Outdated: %t
 	}
 	format := fmt.Sprintf(template,
 		result.Name, result.URL, result.Version,
-		result.Description, result.LastModified, result.License, result.Depends,
+		result.Description, time.Unix(int64(result.LastModified), 0), result.License, result.Depends,
 		outdated,
 	)
 

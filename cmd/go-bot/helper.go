@@ -486,13 +486,13 @@ func searchAURSpecific(name string) string {
 
 	template := `
 PKGNAME: %s
-REPO: %s
+SOURCE: %s
 VER: %s
 DESCRIPTION: %s
-LAST_UPDATE_AT: %s
+LAST_MODIFIED: %s
 LICENSE: %v
 DEPENDS: %v
-Outdated: %t
+OUTDATED: %t
 	`
 	result := pkg.Results[0]
 	outdated := false
@@ -501,7 +501,7 @@ Outdated: %t
 	}
 	format := fmt.Sprintf(template,
 		result.Name, result.URL, result.Version,
-		result.Description, time.Unix(int64(result.LastModified), 0), result.License, result.Depends,
+		result.Description, time.Unix(int64(result.LastModified), 0).String(), result.License, result.Depends,
 		outdated,
 	)
 

@@ -464,7 +464,10 @@ func searchAURAll(name string) string {
 
 	details := ""
 
-	for _, result := range pkgs.Results {
+	for i, result := range pkgs.Results {
+		if i > 6 {
+			break
+		}
 		details += fmt.Sprintf("AUR/%s %s\n", result.Name, result.Version)
 		details += fmt.Sprintf("    %s\n", result.Description)
 	}

@@ -71,18 +71,30 @@ func fmtURL(query query) string {
 
 func SearchAll(q string) (SearchResponse, error) {
 	query := query{all: q}
-	resp, err := net.Get(fmtURL(query))
+	resp := SearchResponse{}
+	err := requestAndParse(&query, &resp)
+	return resp, err
+}
+
+func SearchName(n string) (SearchResponse, error) {
+	query := query{name: n}
+	resp := SearchResponse{}
+	err := requestAndParse(&query, &resp)
+	return resp, err
+}
+
+func requestAndParse(q *query, sr *SearchResponse) error {
+	resp, err := net.Get(fmtURL(*q))
 
 	if err != nil {
-		return SearchResponse{}, fmt.Errorf("Send request to Arch Linux package: %w", err)
+		return fmt.Errorf("Send request to Arch Linux package: %w", err)
 	}
 
-	sr := SearchResponse{}
 	err = json.Unmarshal(resp, &sr)
 
 	if err != nil {
-		return sr, fmt.Errorf("Fail to unmarshal data from Arch Linux package search")
+		return fmt.Errorf("Fail to unmarshal data from Arch Linux package search")
 	}
 
-	return sr, nil
+	return nil
 }

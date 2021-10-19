@@ -9,6 +9,7 @@ import (
 	"text/template"
 	"time"
 
+	"github.com/Avimitin/go-bot/modules/archlinux"
 	"github.com/Avimitin/go-bot/modules/database"
 	"github.com/Avimitin/go-bot/modules/eh"
 	"github.com/Avimitin/go-bot/modules/konachan"
@@ -389,4 +390,64 @@ func createUserLink(username string, userid int) string {
 
 func newHTMLParseMode() *tb.SendOptions {
 	return &tb.SendOptions{ParseMode: "HTML"}
+}
+
+func upgradeArchLinux() string {
+	rand.Seed(time.Now().UnixNano())
+
+	if rand.Intn(100) < 20 {
+		return "你把系统滚炸了！"
+	} else {
+		return "你的 Arch Linux 成功更新了！"
+	}
+}
+
+func searchAllPkg(query string) string {
+	resp, err := archlinux.SearchAll(query)
+	if err != nil {
+		return fmt.Sprintf("Query package %q: %v", query, err)
+	}
+
+	if len(resp.Results) < 1 {
+		return fmt.Sprintf("No result for %s", query)
+	}
+
+	details := ""
+
+	for _, result := range resp.Results {
+		details += fmt.Sprintf("%s/%s %s\n", result.Repo, result.Pkgname, result.Pkgver)
+		details += fmt.Sprintf("    %s\n", result.Pkgdesc)
+	}
+
+	details += "\nTips: use /pacman -Ss {package} for package details"
+
+	return details
+}
+
+func searchPkgByName(name string) string {
+	resp, err := archlinux.SearchName(name)
+	if err != nil {
+		return fmt.Sprintf("Query package: %v", err)
+	}
+
+	if len(resp.Results) < 1 {
+		return fmt.Sprintf("No result for %s", name)
+	}
+
+	template := `
+PKGNAME: %s
+REPO: %s
+VER: %s
+DESCRIPTION: %s
+LAST_UPDATE_AT: %s
+LICENSE: %v
+DEPENDS: %v
+	`
+	result := resp.Results[0]
+	format := fmt.Sprintf(template,
+		result.Pkgname, result.Repo, result.Pkgver,
+		result.Pkgdesc, result.LastUpdate, result.Licenses, result.Depends,
+	)
+
+	return format
 }

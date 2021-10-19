@@ -3,11 +3,11 @@ package main
 import (
 	"encoding/json"
 	"fmt"
+	"math/rand"
 	"strconv"
 	"strings"
 	"sync"
 	"time"
-	"math/rand"
 
 	"github.com/Avimitin/go-bot/modules/archlinux"
 	"github.com/Avimitin/go-bot/modules/config"
@@ -381,49 +381,27 @@ func cmdMe(m *tb.Message) {
 
 func cmdPacman(m *tb.Message) {
 	if m.Payload == "" {
-		send(m.Chat, "Usage: /pacman {PACKAGE}")
+		send(m.Chat, "Normal usage: /pacman {PACKAGE}")
 		return
 	}
 
-	if m.Payload == "-Syu" {
-	  rand.Seed(time.Now().UnixNano())
+	respMsg := send(m.Chat, "Handling")
+	defer b.Delete(respMsg)
 
-	  if rand.Intn(100) < 20 {
-	    send(m.Chat, "你把系统滚炸了！")
-	    return
-	  } else {
-	    send(m.Chat, "你的 Arch Linux 成功滚了！")
-	    return
-	  }
-	}
-
-	send(m.Chat, "Handling")
-
-	resp, err := archlinux.SearchAll(m.Payload)
-	if err != nil {
-		send(m.Chat, fmt.Sprintf("Query package: %v", err))
+	arguments := strings.Fields(m.Payload)
+	if len(arguments) == 1 {
+		if arguments[0] == "-Syu" {
+			send(m.Chat, upgradeArchLinux())
+		} else  {
+			send(m.Chat, searchAllPkg(arguments[0]))
+		} // inner if condition
 		return
-	}
+	} // outer if condition
 
-	if len(resp.Results) < 1 {
-		send(m.Chat, fmt.Sprintf("No result for %s", m.Payload))
+	if arguments[0] == "-Ss" {
+		send(m.Chat, searchPkgByName(arguments[1]))
 		return
+	} else {
+		send(m.Chat, "Illegal argument.\nTips: Currently supported argument: -Ss")
 	}
-
-	template := `
-PKGNAME: %s
-REPO: %s
-VER: %s
-DESCRIPTION: %s
-LAST_UPDATE_AT: %s
-LICENSE: %v
-DEPENDS: %v
-	`
-	result := resp.Results[0]
-	format := fmt.Sprintf(template,
-		result.Pkgname, result.Repo, result.Pkgver,
-		result.Pkgdesc, result.LastUpdate, result.Licenses, result.Depends,
-	)
-
-	send(m.Chat, format)
 }

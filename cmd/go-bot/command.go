@@ -379,7 +379,15 @@ func cmdMe(m *tb.Message) {
 
 func cmdPacman(m *tb.Message) {
 	if m.Payload == "" {
-		send(m.Chat, "Normal usage: /pacman {PACKAGE}")
+		send(m.Chat, `
+Usage: /pacman [arguments] {package}
+Available arguments: Omit | -Ss | -Sa | -Ssa | -Syu
+Example:
+    * Search packages by keyword: /pacman firefox
+		* Search package detail: /pacman -Ss fcitx5
+		* Search AUR by keyword: /pacman -Sa neovide
+		* Search AUR package detail: /pacman -Ssa brave-git
+`)
 		return
 	}
 
@@ -404,6 +412,6 @@ func cmdPacman(m *tb.Message) {
 	case "-Ssa":
 		send(m.Chat, searchAURSpecific(arguments[1]))
 	default:
-		send(m.Chat, "Illegal argument.\nTips: Currently supported argument: -Ss")
+		send(m.Chat, "Illegal argument.\nTips: Currently supported argument: -Ss, -Sa, -Ssa")
 	}
 }

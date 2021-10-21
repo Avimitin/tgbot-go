@@ -20,8 +20,8 @@ cat ./fixtures/config.toml > ~/.config/go-bot/config.toml
 ## docker
 
 ```bash
-git clone https://github.com/Avimitin/go-bot.git
-mkdir bot-runtime
-mv ./go-bot/docker-compose.yml.example ./bot-runtime/docker-compose.yml
-cd ./bot-runtime && docker-compose up -d
+mkdir bot
+curl -o ./bot/docker-compose.yml \
+       -sSL "https://raw.githubusercontent.com/Avimitin/go-bot/master/docker-compose.yml.example"
+cd ./bot; docker-compose up -d
 ```

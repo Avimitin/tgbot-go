@@ -3,9 +3,11 @@ package main
 import (
 	"encoding/json"
 	"fmt"
+	"math"
 	"strconv"
 	"strings"
 	"sync"
+	"sync/atomic"
 	"time"
 
 	"github.com/Avimitin/go-bot/modules/config"
@@ -37,6 +39,7 @@ var (
 		"/collect":  cmdCollectMessage,
 		"/me":       cmdMe,
 		"/pacman":   cmdPacman,
+		"/hitksyx":  cmdHitKsyx,
 	}
 )
 
@@ -413,5 +416,26 @@ Example:
 		send(m.Chat, searchAURSpecific(arguments[1]))
 	default:
 		send(m.Chat, "Illegal argument.\nTips: Currently supported argument: -Ss, -Sa, -Ssa")
+	}
+}
+
+func cmdHitKsyx(m *tb.Message) {
+	// robust assert
+	if ctx.ksyxHitCounter == math.MaxUint64-100 {
+		send(m.Chat, fmt.Sprintf("不能再打了，要...要溢出了"))
+	} else if ctx.ksyxHitCounter == math.MaxUint64-1 {
+		send(m.Chat, fmt.Sprintf("要溢出啦！正在重置计数器！"))
+		ctx.ksyxHitCounter = 0
+	}
+
+	var (
+		after = atomic.AddUint64(&ctx.ksyxHitCounter, 1)
+		user  = m.Sender.FirstName
+	)
+
+	if after%2 == 0 {
+		send(m.Chat, fmt.Sprintf("%s 爱抚了 ksyx (Counter: %d)", user, after))
+	} else {
+		send(m.Chat, fmt.Sprintf("%s 暴打了 ksyx (Counter: %d)", user, after))
 	}
 }

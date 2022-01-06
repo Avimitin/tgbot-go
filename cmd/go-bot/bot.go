@@ -15,7 +15,12 @@ var (
 	b      *tb.Bot
 	botLog *zerolog.Logger
 	DB     database.DataController
+	ctx    RuntimeContext
 )
+
+type RuntimeContext struct {
+	ksyxHitCounter uint64
+}
 
 func middleware(u *tb.Update) bool {
 	if u.Message == nil {

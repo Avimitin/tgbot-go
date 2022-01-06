@@ -209,7 +209,12 @@ func cmdRepeat(m *tb.Message) {
 }
 
 func cmdRemake(m *tb.Message) {
-	user := fmt.Sprintf(`<a href="tg://user?id=%d">%s</a>`, m.Sender.ID, m.Sender.FirstName)
+	var user string
+	if m.IsReply() {
+		user = createUserLink(m.ReplyTo.Sender.FirstName, m.ReplyTo.ID)
+	} else {
+		user = createUserLink(m.Sender.FirstName, m.Sender.ID)
+	}
 
 	send(m.Chat,
 		user+" 你复活啦？你知道你寄吧谁吗？",

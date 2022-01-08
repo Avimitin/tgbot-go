@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"math"
+	"math/rand"
 	"strconv"
 	"strings"
 	"sync"
@@ -438,9 +439,7 @@ func cmdHitKsyx(m *tb.Message) {
 		user  = m.Sender.FirstName
 	)
 
-	if after%2 == 0 {
-		send(m.Chat, fmt.Sprintf("%s 爱抚了 ksyx (Counter: %d)", user, after))
-	} else {
-		send(m.Chat, fmt.Sprintf("%s 暴打了 ksyx (Counter: %d)", user, after))
-	}
+	var verb_list = []string{"爱抚", "中出", "暴打", "后入", "膜", "贴贴", "狂踹"}
+
+	send(m.Chat, fmt.Sprintf("%s %s了 ksyx，ksyx 被动手动脚了 %d 次", user, verb_list[rand.Intn(len(verb_list))], after))
 }

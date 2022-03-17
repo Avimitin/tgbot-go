@@ -22,25 +22,26 @@ type botCommands map[string]func(*tb.Message)
 
 var (
 	bc = botCommands{
-		"/start":    cmdHello,
-		"/ping":     cmdPing,
-		"/dump":     cmdDump,
-		"/weather":  cmdWeather,
-		"/mjx":      cmdMJX,
-		"/ghs":      cmdGhs,
-		"/eh":       cmdEH,
-		"/ehp":      cmdEHPost,
-		"/setperm":  cmdSetPerm,
-		"/repeat":   cmdRepeat,
-		"/remake":   cmdRemake,
-		"/exchange": cmdExchange,
-		"/mark":     cmdAddMark,
-		"/lsmark":   cmdGetMark,
-		"/delmark":  cmdDelMark,
-		"/collect":  cmdCollectMessage,
-		"/me":       cmdMe,
-		"/pacman":   cmdPacman,
-		"/hitksyx":  cmdHitKsyx,
+		"/start":     cmdHello,
+		"/ping":      cmdPing,
+		"/dump":      cmdDump,
+		"/weather":   cmdWeather,
+		"/mjx":       cmdMJX,
+		"/ghs":       cmdGhs,
+		"/eh":        cmdEH,
+		"/ehp":       cmdEHPost,
+		"/setperm":   cmdSetPerm,
+		"/repeat":    cmdRepeat,
+		"/remake":    cmdRemake,
+		"/exchange":  cmdExchange,
+		"/mark":      cmdAddMark,
+		"/lsmark":    cmdGetMark,
+		"/delmark":   cmdDelMark,
+		"/collect":   cmdCollectMessage,
+		"/me":        cmdMe,
+		"/pacman":    cmdPacman,
+		"/hitksyx":   cmdHitKsyx,
+		"/cookpiggy": cmdCookPiggy,
 	}
 )
 
@@ -442,4 +443,34 @@ func cmdHitKsyx(m *tb.Message) {
 	var verb_list = []string{"爱抚", "中出", "暴打", "后入", "膜", "贴贴", "狂踹"}
 
 	send(m.Chat, fmt.Sprintf("%s %s了 ksyx，ksyx 被动手动脚了 %d 次", user, verb_list[rand.Intn(len(verb_list))], after))
+}
+
+func cmdCookPiggy(m *tb.Message) {
+	var recipe = []string{
+		"自制猪肉脯",
+		"猪肉香菇鸡蛋卷",
+		"自制腊肠",
+		"猪肉焖笋",
+		"肉饼蒸蛋",
+		"青菜猪肉煎饺",
+		"烤猪排",
+		"韭黄猪肉春卷",
+		"猪肉炖粉条",
+		"香菇猪肉锅贴",
+		"味增烧猪肉",
+		"炸猪肉丸",
+		"奶香肉包",
+		"白萝卜炖猪肉",
+		"双椒回锅肉",
+		"韭菜猪肉薄饼",
+		"猪肉炖粉条",
+		"粉条鲜肉包",
+		"照烧香菇酿肉",
+		"卤肉",
+		"蒸肉饼",
+		"肉丸汤",
+		"木须肉",
+		"溜肉段",
+	}
+	send(m.Chat, fmt.Sprintf("今天我们这样吃 piggy：\n%s", recipe[rand.Intn(len(recipe))]))
 }

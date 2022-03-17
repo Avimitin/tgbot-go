@@ -22,26 +22,27 @@ type botCommands map[string]func(*tb.Message)
 
 var (
 	bc = botCommands{
-		"/start":     cmdHello,
-		"/ping":      cmdPing,
-		"/dump":      cmdDump,
-		"/weather":   cmdWeather,
-		"/mjx":       cmdMJX,
-		"/ghs":       cmdGhs,
-		"/eh":        cmdEH,
-		"/ehp":       cmdEHPost,
-		"/setperm":   cmdSetPerm,
-		"/repeat":    cmdRepeat,
-		"/remake":    cmdRemake,
-		"/exchange":  cmdExchange,
-		"/mark":      cmdAddMark,
-		"/lsmark":    cmdGetMark,
-		"/delmark":   cmdDelMark,
-		"/collect":   cmdCollectMessage,
-		"/me":        cmdMe,
-		"/pacman":    cmdPacman,
-		"/hitksyx":   cmdHitKsyx,
-		"/cookpiggy": cmdCookPiggy,
+		"/start":          cmdHello,
+		"/ping":           cmdPing,
+		"/dump":           cmdDump,
+		"/weather":        cmdWeather,
+		"/mjx":            cmdMJX,
+		"/ghs":            cmdGhs,
+		"/eh":             cmdEH,
+		"/ehp":            cmdEHPost,
+		"/setperm":        cmdSetPerm,
+		"/repeat":         cmdRepeat,
+		"/remake":         cmdRemake,
+		"/exchange":       cmdExchange,
+		"/mark":           cmdAddMark,
+		"/lsmark":         cmdGetMark,
+		"/delmark":        cmdDelMark,
+		"/collect":        cmdCollectMessage,
+		"/me":             cmdMe,
+		"/pacman":         cmdPacman,
+		"/hitksyx":        cmdHitKsyx,
+		"/cookpiggy":      cmdCookPiggy,
+		"/breaktableware": cmdBreakTableware,
 	}
 )
 
@@ -473,4 +474,15 @@ func cmdCookPiggy(m *tb.Message) {
 		"溜肉段",
 	}
 	send(m.Chat, fmt.Sprintf("今天我们这样吃 piggy：\n%s", recipe[rand.Intn(len(recipe))]))
+}
+
+func cmdBreakTableware(m *tb.Message) {
+	var sound = []string{
+		"乒",
+		"砰",
+		"铛",
+		"咣",
+		"啪",
+	}
+	send(m.Chat, fmt.Sprintf("餐具被%s的一声摔碎了\n", sound[rand.Intn(len(sound))]))
 }

@@ -190,7 +190,7 @@ func getMJX() (string, error) {
 	}{}
 	err = json.Unmarshal(data, &mjx)
 	if err != nil {
-		return "", fmt.Errorf("decode response failed: %w", err)
+		return "", fmt.Errorf("fail to deserialize response to struct: %w", err)
 	}
 
 	if mjx.Imgurl != "" {

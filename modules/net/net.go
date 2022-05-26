@@ -43,6 +43,9 @@ func Get(url string) ([]byte, error) {
 	if err != nil {
 		return nil, fmt.Errorf("get %s: %v", url, err)
 	}
+	if resp.StatusCode != 200 {
+		return nil, fmt.Errorf("Fail to send request, get status code: %d", resp.StatusCode)
+	}
 	body, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
 		return nil, fmt.Errorf("read %q:%v", resp.Body, err)

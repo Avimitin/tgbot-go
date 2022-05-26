@@ -172,20 +172,16 @@ func getWeather(city string) (string, error) {
 }
 
 func getMJX() (string, error) {
-	var mjxURL string
-	rand.Seed(time.Now().UnixNano())
+	mjxURLA := "http://api.vvhan.com/api/tao?type=json"
+	mjxURLB := "http://api.uomg.com/api/rand.img3?format=json"
 
-	if rand.Float32() < 0.5 {
-		mjxURL = "http://api.vvhan.com/api/tao?type=json"
-	} else {
-		mjxURL = "http://api.uomg.com/api/rand.img3?format=json"
-	}
-
-	botLog.Trace().Str("func", "getMJX").Msgf("requesting url %s", mjxURL)
-
-	data, err := net.Get(mjxURL)
+	data, err := net.Get(mjxURLA)
 	if err != nil {
-		return "", fmt.Errorf("request failed: %w", err)
+		botLog.Trace().Str("func", "getMJX").Msgf("fail to get image from url %s", mjxURLA)
+		data, err = net.Get(mjxURLB)
+		if err != nil {
+			return "", fmt.Errorf("request failed: %w", err)
+		}
 	}
 
 	var mjx = struct {
@@ -209,7 +205,7 @@ func getMJX() (string, error) {
 }
 
 func getImage() (string, string, error) {
-	baseURL := "https://konachan.com/post.json?limit=50"
+	baseURL := "https://konachan.com/post.json?limit=200&%20order:score%20rating:explicit"
 	resp, err := net.Get(baseURL)
 	if err != nil {
 		return "", "", fmt.Errorf("Error occur, please try again later")
@@ -223,7 +219,7 @@ func getImage() (string, string, error) {
 	}
 
 	rand.Seed(time.Now().Unix())
-	var i = rand.Intn(50)
+	var i = rand.Intn(200)
 
 	if len(k) >= i {
 		return k[i].JpegURL, k[i].FileURL, nil

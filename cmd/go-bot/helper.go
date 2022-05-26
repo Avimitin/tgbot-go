@@ -205,7 +205,7 @@ func getMJX() (string, error) {
 }
 
 func getImage() (string, string, error) {
-	baseURL := "https://konachan.com/post.json?limit=200&%20order:score%20rating:explicit"
+	baseURL := "https://konachan.com/post.json?limit=200&tags=%20order:score%20rating:explicit"
 	resp, err := net.Get(baseURL)
 	if err != nil {
 		return "", "", fmt.Errorf("Error occur, please try again later")

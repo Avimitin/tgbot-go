@@ -21,6 +21,13 @@ var (
 	}
 )
 
+func LastUpdateTime() time.Time {
+	buffer.locker.Lock()
+	defer buffer.locker.Unlock()
+
+	return buffer.lastUpdateTime
+}
+
 func StoreRateInBuffer(from, to string, rate float64) {
 	buffer.locker.Lock()
 	defer buffer.locker.Unlock()

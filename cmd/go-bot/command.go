@@ -251,7 +251,7 @@ func cmdExchange(m *tb.Message) {
 		return
 	}
 
-	edit(msg, fmt.Sprintf("%s %s\n=\n%s %f", args[1], args[0], args[2], result))
+	edit(msg, fmt.Sprintf("%s %s\n=\n%s %f\nDate: %v", args[1], args[0], args[2], result, currency.LastUpdateTime()))
 }
 
 func cmdAddMark(m *tb.Message) {
